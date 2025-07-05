@@ -1,9 +1,144 @@
-Tin Helm
-Community Handbook
-Version 1.13 | 07 January 2022
-Tin Helm is designed by Jason Glover, and illustrated by Jason Glover & Daniel F. Walthall.
-Copyright © 2021 by Grey Gnome Games & Jason Glover. All Rights Reserved.
-The Tin Helm Community Handbook is compiled and edited by Michael Sewall (BGG user thecrazyscotsman).
+# Tin Helm Game Rules
+
+**Based on Community Handbook Version 1.13 (07 January 2022)**
+
+## 1. Objective
+
+The player is an adventurer trapped in the Red Cloth stronghold, whose clerics have been corrupted. The player must:
+
+*   Locate all three Shards of Brahm to release the clerics from the spell.
+*   Escape the dungeon.
+
+The game is lost if the player fails to achieve this by the end of the fifth dungeon level and becomes corrupted.
+
+## 2. Game Components
+
+*   7 Rule Cards
+*   12 Dungeon Cards
+*   8 Enemy Cards
+*   8 Loot Cards
+*   4 Trapping Cards (double-sided, item on each side)
+*   4 Race/Class Cards
+*   4 Tracking Cards
+*   3 Reference Cards (double-sided, Altar, Grove, Etc.)
+*   3 Purple Shards of Brahm
+*   5 Tracking Cubes
+*   2 Dice
+*   1 Meeple
+
+## 3. Setup
+
+1.  Separate all cards and components by type.
+2.  Place all 4 Tracker Cards face-up in a 2x2 grid.
+3.  **Race/Class Selection:**
+    *   Choose a Race card.
+    *   Flip the remaining Race/Class cards to their Class side.
+    *   Choose a Class card.
+    *   The adventurer is the combination of the chosen Race and Class.
+4.  **Determine Starting Stats:**
+    *   **Health:** Combine the health values on the Race and Class cards (heart icon). Place a red cube on the health tracker. Maximum health cannot exceed this starting value.
+    *   **Energy:** Combine the energy values on the Race and Class cards (lightning icon). Place a green cube on the energy tracker. Maximum energy cannot exceed this starting value.
+    *   **Food:** If the Race card has a food value (ration icon), place a blue cube on the corresponding value. Otherwise, place the cube below the space with a value of 1. Maximum food is 5.
+5.  Locate the two Trapping cards indicated on the bottom of the Class card and place them next to the adventurer cards.
+6.  Place the meeple on level 1 of the dungeon tracker.
+7.  Place a red cube on the pile of bones on the dungeon tracker (for tracking enemy health).
+8.  Place a white cube on the favor tracker below the space with the value 1 (starting with zero favor).
+9.  Place the reference cards, enemy deck (face up), and loot deck (face up) within reach.
+10. Shuffle the 12 dungeon cards (map side up) and place them in a central location.
+
+## 4. Gameplay
+
+The game is played in levels, representing areas of the dungeon. Each level consists of six rooms, representing locations within the level. A level ends after resolving the sixth room.
+
+### 4.1 Turn Sequence (Room Exploration)
+
+1.  **Determine Action:** Decide whether to **RESOLVE** or **SKIP** the top dungeon card.
+2.  **RESOLVE:**
+    *   Take the top card (room side up) and place it to the side of the dungeon deck.
+    *   Take the next card, flip it to its result side, and place it next to the first card. This creates a room.
+    *   Resolve each icon on the room card from left to right, using the corresponding results on the result card.
+3.  **SKIP:**
+    *   Flip the top card to its result side and place it to the side of the dungeon deck.
+    *   Take the next card (room side up) and place it next to the result card.
+    *   Resolve the second card using the results on the back of the first card.
+
+### 4.2 Dungeon Icons
+
+(Further details on dungeon icons would be described here)
+
+### 4.3 Food
+
+The player may consume 1 food at any time to increase either health or energy by 1.
+
+### 4.4 Shards of Brahm
+
+The player wins the game immediately upon acquiring 3 shards. Shards can be obtained by:
+
+*   Defeating the Possessor
+*   Finding the Shrine
+*   Trading a Turnip to the Pigman
+*   Having enough favor when locating the Altar
+*   Finding one in a chest
+
+## 5. Combat
+
+### 5.1 Initiating Combat
+
+To initiate combat, locate the enemy card of the foe being fought. Note the enemy's special power.
+
+### 5.2 Combat Sequence
+
+1.  The player always attacks first (unless the enemy's special power states otherwise). If the enemy is defeated in the first attack, they do not attack back.
+2.  **Player Attack:**
+    *   Decide how much energy to expend on the attack (refer to the chart on the Class card).
+    *   Adjust energy accordingly.
+    *   Roll both dice. Doubles result in a miss (zero damage).
+    *   Calculate raw attack value: Subtract one die from the other.
+    *   Calculate total attack damage: Raw attack value + bonus damage from energy spent.
+    *   Subtract enemy defense (if any) from the total attack damage.
+    *   Reduce the enemy's health by the remaining damage.
+    *   If the enemy's health is reduced to zero or less, the enemy is defeated. The player gains favor as indicated on the enemy card.
+3.  **Zero-Energy Attack:** If the player has no energy or chooses not to spend energy, they can perform a zero-energy attack, dealing 1 damage (ignoring defense values).
+4.  **Enemy Attack:**
+    *   The enemy rolls both dice. Doubles result in a miss (unless otherwise indicated).
+    *   Subtract the results of both dice to determine the damage dealt.
+    *   Add any bonus damage.
+    *   If the player has a shield, subtract 1 damage.
+    *   Reduce the player's health accordingly.
+    *   If the player's health is reduced to zero or less, the game ends (player loses).
+5.  Combat continues until either the enemy or the player is defeated.
+
+## 6. Ending a Level
+
+After exhausting the twelve-card dungeon deck:
+
+1.  Move the meeple one space down on the level tracker. (The player must find 3 shards before the end of the fifth level to win.)
+2.  The player must consume 1 food. If the player has no food, they suffer 3 damage to their health.
+3.  Shuffle the dungeon deck and create a new pile of cards (room side up) to form the next level of the dungeon.
+
+## 7. Ending a Game
+
+*   **Victory:** The player wins immediately upon gaining their third shard.
+*   **Defeat:** The player loses if they run out of health or complete the 5th level of the dungeon before gaining their third shard.
+
+### 7.1 Scoring
+
+*   10 points per shard
+*   2 points per favor
+*   Points equal to the sum of health, energy, and food
+*   Subtract double the value of the ending dungeon level.
+
+## 8. Errata
+
+*   **Gill Net:**
+    *   **Original Text:** When fishing, you may roll 3 times instead of 1. Each success gains you 1 food.
+    *   **Corrected Text:** When you find water, you may roll 3 times instead of 1. Each success gains you 1 food.
+*   **Mimic:**
+    *   **Original Text:** When you defeat a mimic, you gain fate points equal to the dungeon level you are on.
+    *   **Corrected Text:** When you defeat a mimic, you gain favor points equal to the dungeon level you are on.
+*   **Shield:**
+    *   **Original Text:** Reduce damage from attacks by 1. Discard the shield if you take 6 or more damage in a single blow.
+    *   **Corrected Text:** Reduce damage from attacks by 1. Discard the shield after reducing damage if an enemy’s attack value is 6 or more in a single blow.
 
 🎦 A video tutorial is available .
 1.0 Objective

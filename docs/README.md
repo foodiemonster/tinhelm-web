@@ -12,6 +12,12 @@ The rules are provided in full in GAMERULES.md, which should be used as the basi
 
 ---
 
+## Save and Load
+
+Starting in the early prototype you can save your progress to the browser's `localStorage` and load it again later. Use the **Save Game** and **Load Game** buttons below the stat bar. The data is stored under the key `tinhelm-save` and includes all values from the global `gameState` object (player stats, level, inventory, etc.).
+
+---
+
 ## ✅ Project Roadmap
 
 ### Phase 1: Scaffolding & Structure

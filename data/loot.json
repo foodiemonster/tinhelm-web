@@ -1,0 +1,120 @@
+[
+  {
+    "id": "LT01",
+    "name": "GillNet",
+    "abilities": [
+      {
+        "trigger": "on_water_encounter",
+        "action": "roll_dice",
+        "amount": 3,
+        "details": "instead of 1. gain 1 ration per success."
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT02",
+    "name": "Ring",
+    "abilities": [
+      {
+        "action": "bypass_encounter",
+        "target": "enemy",
+        "details": "spend 1 favor to bypass enemy encounter (limit once per dungeon level)"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT03",
+    "name": "Shield",
+    "abilities": [
+      {
+        "action": "damage_reduction",
+        "amount": 1,
+        "condition": "single attack damage is 6 or more",
+        "details": "all damage reduction 1. if single attack damage is 6 or more"
+      },
+      {
+        "action": "discard_item",
+        "target": "self"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT04",
+    "name": "Sword",
+    "abilities": [
+      {
+        "trigger": "on_roll_double",
+        "action": "ignore_miss"
+      },
+      {
+        "action": "apply_damage",
+        "target": "enemy",
+        "amount": 5
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT05",
+    "name": "Symbol",
+    "abilities": [
+      {
+        "action": "modify_altar_reward",
+        "target": "altar",
+        "details": "reward level = current favor + 1"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT06",
+    "name": "Turnip",
+    "abilities": [
+      {
+        "trigger": "during ref=pigman",
+        "action": "discard_to_gain",
+        "target": "shard"
+      },
+      {
+        "action": "gain_resource",
+        "target": "energy",
+        "amount": 3,
+        "details": "discard anytime to gain en +3"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT07",
+    "name": "Wedge",
+    "abilities": [
+      {
+        "action": "avoid_encounter",
+        "target": "combat"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "LT08",
+    "name": "Potion",
+    "abilities": [
+      {
+        "trigger": "on_discard",
+        "action": "gain_resource",
+        "target": "health",
+        "amount": 2
+      },
+      {
+        "trigger": "on_discard",
+        "action": "gain_resource",
+        "target": "energy",
+        "amount": 2
+      }
+    ],
+    "effects": []
+  }
+]

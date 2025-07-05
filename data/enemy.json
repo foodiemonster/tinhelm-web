@@ -1,0 +1,139 @@
+[
+  {
+    "id": "ENE01",
+    "name": "DoomSkull",
+    "health": 4,
+    "attack": 0,
+    "defense": 0,
+    "favor": 1,
+    "enemyType": "Undead",
+    "abilities": [
+      {
+        "trigger": "on_attack",
+        "action": "attack_first",
+        "target": "enemy"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "ENE02",
+    "name": "Mimic",
+    "health": 4,
+    "attack": 1,
+    "defense": 1,
+    "favor": "EqualsDungeonLevel",
+    "enemyType": null,
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ENE03",
+    "name": "Possessor",
+    "health": 6,
+    "attack": 1,
+    "defense": 1,
+    "favor": 2,
+    "enemyType": null,
+    "abilities": [
+      {
+        "trigger": "on_defeat",
+        "action": "gain_resource",
+        "target": "shard",
+        "amount": 1
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "ENE04",
+    "name": "DarkRats",
+    "health": 2,
+    "attack": 0,
+    "defense": 0,
+    "favor": 1,
+    "enemyType": null,
+    "abilities": [
+      {
+        "trigger": "on_defeat",
+        "action": "gain_resource",
+        "target": "ration",
+        "amount": 1
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "ENE05",
+    "name": "Skelepede",
+    "health": 3,
+    "attack": 0,
+    "defense": 1,
+    "favor": 1,
+    "enemyType": "Undead",
+    "abilities": [
+      {
+        "action": "ignore_miss"
+      },
+      {
+        "trigger": "on_roll_double",
+        "action": "reroll_dice"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "ENE06",
+    "name": "Speyeder",
+    "health": 3,
+    "attack": 1,
+    "defense": 0,
+    "favor": 1,
+    "enemyType": null,
+    "abilities": [
+      {
+        "trigger": "on_hit_player",
+        "action": "lose_resource",
+        "target": "energy",
+        "amount": 1
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "ENE07",
+    "name": "Watcher",
+    "health": 4,
+    "attack": 1,
+    "defense": 1,
+    "favor": 2,
+    "enemyType": null,
+    "abilities": [
+      {
+        "trigger": "on_combat_start",
+        "action": "lose_resource",
+        "target": "energy",
+        "amount": 1
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "ENE08",
+    "name": "Wraith",
+    "health": 5,
+    "attack": 1,
+    "defense": 0,
+    "favor": 2,
+    "enemyType": "Undead",
+    "abilities": [
+      {
+        "trigger": "on_hit_player",
+        "action": "lose_resource",
+        "target": "favor",
+        "amount": 1
+      }
+    ],
+    "effects": []
+  }
+]

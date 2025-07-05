@@ -1,0 +1,140 @@
+[
+  {
+    "id": "TRA01",
+    "name": "Axe",
+    "blocks": "Books",
+    "abilities": [
+      {
+        "trigger": "on_attack",
+        "action": "reroll",
+        "target": "dice",
+        "condition": "on_doubles",
+        "extra": "optional"
+      },
+      {
+        "cost": "discard",
+        "action": "damage",
+        "target": "enemy",
+        "amount": "2d6_added"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA02",
+    "name": "Bedroll",
+    "blocks": "Potion",
+    "abilities": [
+      {
+        "trigger": "on_campsite",
+        "action": "recover",
+        "target": "hp",
+        "amount": 1,
+        "extra": "additional"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA03",
+    "name": "Dagger",
+    "blocks": "Mace",
+    "abilities": [
+      {
+        "trigger": "on_attack",
+        "action": "add",
+        "target": "damage",
+        "amount": 1,
+        "condition": "resolving_first_room_card"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA04",
+    "name": "Scroll",
+    "blocks": "Toolkit",
+    "abilities": [
+      {
+        "trigger": "on_discard",
+        "action": "defeat",
+        "target": "enemy",
+        "condition": "enemy_type_undead",
+        "extra": "auto_defeat"
+      },
+      {
+        "trigger": "on_defeat",
+        "action": "lose",
+        "target": "favor",
+        "amount": 0,
+        "condition": "enemy_type_undead",
+        "extra": "defeated_by_scroll"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA05",
+    "name": "Books",
+    "blocks": "Axe",
+    "abilities": [
+      {
+        "trigger": "on_campsite",
+        "action": "recover",
+        "target": "energy",
+        "amount": 1,
+        "extra": "additional"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA06",
+    "name": "Potion",
+    "blocks": "Bedroll",
+    "abilities": [
+      {
+        "trigger": "on_discard",
+        "action": "add",
+        "target": "hp",
+        "amount": 2
+      },
+      {
+        "trigger": "on_discard",
+        "action": "add",
+        "target": "energy",
+        "amount": 2
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA07",
+    "name": "Mace",
+    "blocks": "Dagger",
+    "abilities": [
+      {
+        "trigger": "on_attack",
+        "action": "add",
+        "target": "damage",
+        "amount": 1,
+        "condition": "enemy_type_undead"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "TRA08",
+    "name": "Toolkit",
+    "blocks": "Scroll",
+    "abilities": [
+      {
+        "trigger": "on_trap",
+        "action": "resolve",
+        "target": "trap",
+        "extra": "optional_disarm"
+      }
+    ],
+    "effects": []
+  }
+]

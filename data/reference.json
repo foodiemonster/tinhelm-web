@@ -1,0 +1,68 @@
+[
+  {
+    "id": "REF01",
+    "name": "Altar",
+    "abilities": [],
+    "effects": [
+      {
+        "action": "favor_check",
+        "details": "(0;3=hp+1)(4;5=hp+2 and en+1)(6;7=hp+3 and en+2)(8;9=hp+4 and en+3)(10+=gainshard or hpmax)"
+      }
+    ]
+  },
+  {
+    "id": "REF02",
+    "name": "Campsite",
+    "abilities": [],
+    "effects": [
+      {
+        "action": "choose_effect",
+        "details": "(hp+2 and en+1) or (+1ration)"
+      }
+    ]
+  },
+  {
+    "id": "REF03",
+    "name": "Grove",
+    "abilities": [],
+    "effects": [
+      {
+        "action": "roll_dice",
+        "details": "d6. (1=hp-1)(2=noeffect)(3;4=+1ration)(5;6=+2ration)"
+      }
+    ]
+  },
+  {
+    "id": "REF04",
+    "name": "Labyrinth",
+    "abilities": [],
+    "effects": [
+      {
+        "action": "lose_resource",
+        "details": "lose1ration or lose2en or lose3hp (must choose first available if possible)"
+      }
+    ]
+  },
+  {
+    "id": "REF05",
+    "name": "Pigman",
+    "abilities": [],
+    "effects": [
+      {
+        "action": "choose_effect",
+        "details": "gain1favor or discard turnip to gainshard"
+      }
+    ]
+  },
+  {
+    "id": "REF06",
+    "name": "Shrine",
+    "abilities": [],
+    "effects": [
+      {
+        "action": "gain_resource",
+        "target": "shard"
+      }
+    ]
+  }
+]

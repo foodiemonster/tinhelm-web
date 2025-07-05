@@ -1,0 +1,126 @@
+{
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "on_attack",
+            "on_defeat",
+            "on_campsite",
+            "on_discard",
+            "on_water_encounter",
+            "on_reveal",
+            "on_trap",
+            "on_entry",
+            "on_effect",
+            "after_action",
+            null
+          ],
+          "description": "When the effect happens"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "gain",
+            "lose",
+            "reroll",
+            "heal",
+            "damage",
+            "add",
+            "bypass",
+            "resolve",
+            "set",
+            "draw",
+            "reveal",
+            "recover",
+            "gain_resource",
+            "ignore_miss",
+            "roll_dice",
+            "discard_item",
+            "apply_damage",
+            "modify_altar_reward",
+            "discard_to_gain",
+            "avoid_encounter",
+            "flip_dice",
+            "choose_effect"
+          ],
+          "description": "What is being done"
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "enemy",
+            "player",
+            "allies",
+            "trapping",
+            "ration",
+            "hp",
+            "energy",
+            "shard",
+            "class",
+            "race",
+            "loot",
+            "dice",
+            "combat",
+            "health_or_energy",
+            "altar",
+            "self",
+            null
+          ],
+          "description": "Who or what is affected"
+        },
+        "amount": {
+          "type": [
+            "number",
+            "string"
+          ],
+          "description": "Numeric value for the effect"
+        },
+        "condition": {
+          "type": "string",
+          "enum": [
+            "on_doubles",
+            "if_failed",
+            "per_success",
+            "limit_once_per_level",
+            "single attack damage is 6 or more",
+            null
+          ],
+          "description": "Additional condition for effect"
+        },
+        "cost": {
+          "type": "string",
+          "enum": [
+            "discard",
+            "spend_favor",
+            "energy",
+            null
+          ],
+          "description": "What is spent to activate the effect"
+        },
+        "replaces": {
+          "type": "integer",
+          "description": "Indicates a value replaced by effect"
+        },
+        "limit": {
+          "type": "string",
+          "enum": [
+            "once_per_dungeon_level",
+            "unlimited",
+            null
+          ],
+          "description": "Usage restriction or cap"
+        },
+        "details": {
+          "type": "string",
+          "description": "Any extra context needed"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ]
+    }
+  }

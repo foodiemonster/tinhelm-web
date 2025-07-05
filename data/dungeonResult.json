@@ -1,0 +1,134 @@
+[
+  {
+    "id": "RES_01",
+    "name": "Clearing",
+    "icons": "Random, Campsite",
+    "enemy": "Enemy=Skelepede",
+    "trap": "None",
+    "random": "Ref=Shrine",
+    "loot": "Loot=Symbol",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_02",
+    "name": "Old Well",
+    "icons": "Enemy, Water",
+    "enemy": "Enemy=Watcher",
+    "trap": "HP -2",
+    "random": "Enemy=DarkRats",
+    "loot": "Loot=Empty",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_03",
+    "name": "Catacombs",
+    "icons": "Random, Enemy",
+    "enemy": "Enemy=Skelepede",
+    "trap": "HP -2",
+    "random": "Ref=Labyrinth",
+    "loot": "Loot=Potion",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_04",
+    "name": "Corridor",
+    "icons": "Random, Trap",
+    "enemy": "Enemy=Speyeder",
+    "trap": "EN -1",
+    "random": "Ref=Grove",
+    "loot": "Loot=Turnip",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_05",
+    "name": "Quarters",
+    "icons": "Loot, Enemy",
+    "enemy": "Enemy=Wraith",
+    "trap": "HP -2",
+    "random": "Ref=Pigman",
+    "loot": "Loot=Shield",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_06",
+    "name": "Chasm",
+    "icons": "Enemy",
+    "enemy": "Enemy=Wraith",
+    "trap": "EN -2",
+    "random": "Enemy=Skelepede",
+    "loot": "Loot=Empty",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_07",
+    "name": "Kitchen",
+    "icons": "Enemy, Campsite",
+    "enemy": "Enemy=DarkRats",
+    "trap": "HP -2",
+    "random": "Ref=Labyrinth",
+    "loot": "Loot=Wedge",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_08",
+    "name": "Sanctum",
+    "icons": "Enemy, Trap",
+    "enemy": "Enemy=Possessor",
+    "trap": "EN -2",
+    "random": "Enemy=DoomSkull",
+    "loot": "Enemy=Mimic",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_09",
+    "name": "Sewers",
+    "icons": "Trap, Campsite, Water",
+    "enemy": "Enemy=Watcher",
+    "trap": "EN -1",
+    "random": "Ref=Pigman",
+    "loot": "Loot=GillNet",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_10",
+    "name": "Waterfall",
+    "icons": "Random, Water",
+    "enemy": "Enemy=DoomSkull",
+    "trap": "HP -1",
+    "random": "Ref=Altar",
+    "loot": "Loot=Sword",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_11",
+    "name": "Stash",
+    "icons": "Loot",
+    "enemy": "Enemy=DarkRats",
+    "trap": "None",
+    "random": "Ref=Altar",
+    "loot": "GainShard",
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "RES_12",
+    "name": "Statue",
+    "icons": "Trap, Loot",
+    "enemy": "Enemy=DoomSkull",
+    "trap": "HP -1",
+    "random": "Ref=Grove",
+    "loot": "Loot=Ring",
+    "abilities": [],
+    "effects": []
+  }
+]

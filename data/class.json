@@ -1,0 +1,50 @@
+[
+  {
+    "id": "CLA01",
+    "name": "Parson",
+    "race_restriction": "Merfolk",
+    "add_health": 4,
+    "add_energy": 3,
+    "skill_en1": 3,
+    "skill_en2": 5,
+    "skill_en3": 7,
+    "trappings": ["TRA07", "TRA04"],
+    "effects": []
+  },
+  {
+    "id": "CLA02",
+    "name": "Footpad",
+    "race_restriction": "Kroling",
+    "add_health": 3,
+    "add_energy": 3,
+    "skill_en1": 2,
+    "skill_en2": 5,
+    "skill_en3": 7,
+    "trappings": ["TRA03", "TRA08"],
+    "effects": []
+  },
+  {
+    "id": "CLA03",
+    "name": "Marauder",
+    "race_restriction": "Gnome",
+    "add_health": 5,
+    "add_energy": 2,
+    "skill_en1": 3,
+    "skill_en2": 6,
+    "skill_en3": 8,
+    "trappings": ["TRA01", "TRA02"],
+    "effects": []
+  },
+  {
+    "id": "CLA04",
+    "name": "Alchemist",
+    "race_restriction": "Human",
+    "add_health": 3,
+    "add_energy": 4,
+    "skill_en1": 2,
+    "skill_en2": 4,
+    "skill_en3": 8,
+    "trappings": ["TRA06", "TRA05"],
+    "effects": []
+  }
+]

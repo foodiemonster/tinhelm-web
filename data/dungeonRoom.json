@@ -1,0 +1,122 @@
+[
+  {
+    "id": "ROO_01",
+    "name": "Clearing",
+    "icons": "Random, Campsite",
+    "linkedResultId": [
+      "RES_01"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_02",
+    "name": "Old Well",
+    "icons": "Enemy, Water",
+    "linkedResultId": [
+      "RES_02"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_03",
+    "name": "Catacombs",
+    "icons": "Random, Enemy",
+    "linkedResultId": [
+      "RES_03"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_04",
+    "name": "Corridor",
+    "icons": "Random, Trap",
+    "linkedResultId": [
+      "RES_04"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_05",
+    "name": "Quarters",
+    "icons": "Treasure, Enemy",
+    "linkedResultId": [
+      "RES_05"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_06",
+    "name": "Chasm",
+    "icons": "Enemy",
+    "linkedResultId": [
+      "RES_06"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_07",
+    "name": "Kitchen",
+    "icons": "Enemy, Campsite",
+    "linkedResultId": [
+      "RES_07"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_08",
+    "name": "Sanctum",
+    "icons": "Enemy, Trap",
+    "linkedResultId": [
+      "RES_08"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_09",
+    "name": "Sewers",
+    "icons": "Trap, Campsite, Water",
+    "linkedResultId": [
+      "RES_09"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_10",
+    "name": "Waterfall",
+    "icons": "Random, Water",
+    "linkedResultId": [
+      "RES_10"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_11",
+    "name": "Stash",
+    "icons": "Treasure",
+    "linkedResultId": [
+      "RES_11"
+    ],
+    "abilities": [],
+    "effects": []
+  },
+  {
+    "id": "ROO_12",
+    "name": "Statue",
+    "icons": "Trap, Treasure",
+    "linkedResultId": [
+      "RES_12"
+    ],
+    "abilities": [],
+    "effects": []
+  }
+]

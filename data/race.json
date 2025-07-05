@@ -1,0 +1,65 @@
+[
+  {
+    "id": "RAC01",
+    "name": "Human",
+    "classRestriction": "Alchemist",
+    "health": 9,
+    "energy": 7,
+    "rations": 0,
+    "abilities": [
+      {
+        "action": "gain_trapping",
+        "details": "extra trapping"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "RAC02",
+    "name": "Gnome",
+    "classRestriction": "Marauder",
+    "health": 6,
+    "energy": 9,
+    "rations": 1,
+    "abilities": [
+      {
+        "action": "resolve_all",
+        "target": "campsite"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "RAC03",
+    "name": "Krolling",
+    "classRestriction": "Footpad",
+    "health": 8,
+    "energy": 8,
+    "rations": 0,
+    "abilities": [
+      {
+        "action": "flip_dice",
+        "target": "combat",
+        "details": "(once per dungeon level)"
+      }
+    ],
+    "effects": []
+  },
+  {
+    "id": "RAC04",
+    "name": "Merfolk",
+    "classRestriction": "Parson",
+    "health": 7,
+    "energy": 8,
+    "rations": 1,
+    "abilities": [
+      {
+        "trigger": "on_water_resolve",
+        "action": "gain_resource",
+        "target": "health_or_energy",
+        "amount": 1
+      }
+    ],
+    "effects": []
+  }
+]

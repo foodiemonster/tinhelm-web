@@ -53,4 +53,15 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure images fill the card area while respecting rounded corners */
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }

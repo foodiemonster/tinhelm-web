@@ -1,3 +1,5 @@
+Launch Web UI: https://foodiemonster.github.io/tinhelm-web/
+
 # Tin Helm Web Adaptation
 
 This project is a browser-based digital adaptation of the solo dungeon-crawling board game **Tin Helm**, originally designed by Jason Glover. The goal is to recreate the game’s mechanics and flow in an accessible web format, with mobile-friendly design and light visual polish (e.g. card animations, dice rolls, and stat tracking).

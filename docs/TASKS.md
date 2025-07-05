@@ -1,8 +1,92 @@
-# TASKS.md
+# Tin Helm Web Adaptation - Task Roadmap
 
-This file outlines the complete task roadmap for the Tin Helm web adaptation project, based on the content in `README.md`, `AGENTS.md`, and `GAMERULES.md`.
+This file outlines the task roadmap for the Tin Helm web adaptation project, based on the content in `README.md`, `AGENTS.md`, and `GAMERULES.md`.
 
-Each task is organized by phase and assigned to a responsible agent.
+Tasks are prioritized to focus development on the core gameplay loop.
+
+---
+
+## Must Have (Core Gameplay)
+
+These tasks are essential for a minimally viable product (MVP).
+
+### GameLogicAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 1. Player creation flow | `scripts/gameLogic.js` | Allow selection of race and class from card data. Initialize player stats (HP, energy, food, favor) based on chosen cards. |  |
+| 2. Dungeon level loop | `scripts/gameLogic.js` | Implement the six-room turn sequence: draw two cards, decide to resolve or skip, and apply icons in order. |  |
+| 3. Icon resolution handlers | `scripts/gameLogic.js` | Implement functions for each icon type (ENEMY, LOOT, TRAP, etc.) that use data from the paired result card.  **Dependency:** DataModelAgent - Card data structures |  |
+| 4. Win/loss condition checks | `scripts/gameLogic.js` | After each room or level, verify if the player has collected 3 shards or reached level 6 without success, then end the game. |  |
+
+### DataModelAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 5. Define card type schemas | `scripts/data/cards.js`, `data/` | Create JS classes or factory functions for Dungeon, Enemy, Loot, Trap, Race, Class, and Trappings cards. Supply a few example card entries in JSON for testing. |  |
+| 6. Implement deck loading | `scripts/data/cards.js` | Load card data from JSON files or in-memory objects, build shuffled decks, and expose functions for drawing cards. |  |
+
+### CombatAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 7. Dice roll mechanics | `scripts/combat.js` | Implement 2d6 dice rolls with doubles detection and an API for the game logic to call. |  |
+| 8. Energy-based attack bonuses | `scripts/combat.js` | Allow the player to spend energy before rolling to gain bonus damage according to class rules. |  |
+| 9. Enemy response and HP tracking | `scripts/combat.js` | Process enemy defense, attack values, and special powers, applying damage to the player as needed. |  |
+
+### UIAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 10. Room/result card pairing UI | `index.html`, `style.css`, `scripts/ui.js` | Display the current room card next to its result card. Show card flipping animations when resolving rooms.  **Dependency:** DataModelAgent - Card data structures |  |
+| 11. Stat tracking updates | `scripts/gameLogic.js`, `index.html` | Update the displayed stat bars whenever health, energy, food, or favor changes. |  |
+
+---
+
+## Should Have (Enhancements)
+
+These tasks enhance the core gameplay experience.
+
+### GameLogicAgent, UIAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 12. Inventory and loot management | `scripts/gameLogic.js`, `scripts/ui.js` | Track acquired items (trappings, loot) and provide a simple display component for them. |  |
+
+### UIAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 13. Win/loss screen with score | `index.html`, `scripts/ui.js`, `style.css` | Display a final message showing the player's shards, favor, remaining stats, and total score. |  |
+
+---
+
+## Could Have (Polish & Optimization)
+
+These tasks add visual polish and improve performance.
+
+### UIAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 14. Card draw and shuffle animations | `style.css`, `scripts/ui.js` | Animate cards moving from the deck to the play area, and show a shuffle effect between levels. |  |
+| 15. Dice roll visualization | `index.html`, `style.css`, `scripts/ui.js` | Add a dice animation or visual indicator for each combat roll. |  |
+| 16. Turn/room transitions | `scripts/ui.js`, `style.css` | Fade or slide between rooms and levels to make the gameplay flow smoother. |  |
+| 17. Responsive layout adjustments | `style.css`, `scripts/ui.js` | Ensure the game area scales well on smaller screens and orientation changes. |  |
+| 18. Asset optimization | `assets/` | Compress image assets and preload key graphics to keep load times low on mobile devices. |  |
+| 19. Performance tweaks | `scripts/` | Review animations and script behavior for smooth performance on low‑power devices. |  |
+
+### ScaffoldingAgent
+
+| Task | Files/Location | Description | Status |
+|---|---|---|---|
+| 20. Create base HTML layout | `index.html` | Ensure the document has placeholders for the dungeon deck, a dummy card, and stat bars. (already complete) | Complete |
+| 21. Add initial styles for layout | `style.css` | Provide basic mobile‑first styling so the deck placeholder, dummy card, and stat bars appear centered. (already complete) | Complete |
+| 22. Initialize main script | `scripts/main.js` | Add a DOMContentLoaded listener that logs a message, verifying the scaffold loads. (already complete) | Complete |
+
+---
+
+**NOTE:** This task roadmap is a living document and may be updated as the project progresses.
 
 ---
 

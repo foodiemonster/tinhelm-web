@@ -8,7 +8,8 @@
     "random": "Ref=Shrine",
     "loot": "Loot=Symbol",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_01.png"
   },
   {
     "id": "RES_02",
@@ -19,7 +20,8 @@
     "random": "Enemy=DarkRats",
     "loot": "Loot=Empty",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_02.png"
   },
   {
     "id": "RES_03",
@@ -30,7 +32,8 @@
     "random": "Ref=Labyrinth",
     "loot": "Loot=Potion",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_03.png"
   },
   {
     "id": "RES_04",
@@ -41,7 +44,8 @@
     "random": "Ref=Grove",
     "loot": "Loot=Turnip",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_04.png"
   },
   {
     "id": "RES_05",
@@ -52,7 +56,8 @@
     "random": "Ref=Pigman",
     "loot": "Loot=Shield",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_05.png"
   },
   {
     "id": "RES_06",
@@ -63,7 +68,8 @@
     "random": "Enemy=Skelepede",
     "loot": "Loot=Empty",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_06.png"
   },
   {
     "id": "RES_07",
@@ -74,7 +80,8 @@
     "random": "Ref=Labyrinth",
     "loot": "Loot=Wedge",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_07.png"
   },
   {
     "id": "RES_08",
@@ -85,7 +92,8 @@
     "random": "Enemy=DoomSkull",
     "loot": "Enemy=Mimic",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_08.png"
   },
   {
     "id": "RES_09",
@@ -96,7 +104,8 @@
     "random": "Ref=Pigman",
     "loot": "Loot=GillNet",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_09.png"
   },
   {
     "id": "RES_10",
@@ -107,7 +116,8 @@
     "random": "Ref=Altar",
     "loot": "Loot=Sword",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_10.png"
   },
   {
     "id": "RES_11",
@@ -118,7 +128,8 @@
     "random": "Ref=Altar",
     "loot": "GainShard",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_11.png"
   },
   {
     "id": "RES_12",
@@ -129,6 +140,7 @@
     "random": "Ref=Grove",
     "loot": "Loot=Ring",
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomResult/RES_12.png"
   }
 ]

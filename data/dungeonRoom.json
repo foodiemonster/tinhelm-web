@@ -7,7 +7,8 @@
       "RES_01"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_01.png"
   },
   {
     "id": "ROO_02",
@@ -17,7 +18,8 @@
       "RES_02"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_02.png"
   },
   {
     "id": "ROO_03",
@@ -27,7 +29,8 @@
       "RES_03"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_03.png"
   },
   {
     "id": "ROO_04",
@@ -37,7 +40,8 @@
       "RES_04"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_04.png"
   },
   {
     "id": "ROO_05",
@@ -47,7 +51,8 @@
       "RES_05"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_05.png"
   },
   {
     "id": "ROO_06",
@@ -57,7 +62,8 @@
       "RES_06"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_06.png"
   },
   {
     "id": "ROO_07",
@@ -67,7 +73,8 @@
       "RES_07"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_07.png"
   },
   {
     "id": "ROO_08",
@@ -77,7 +84,8 @@
       "RES_08"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_08.png"
   },
   {
     "id": "ROO_09",
@@ -87,7 +95,8 @@
       "RES_09"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_09.png"
   },
   {
     "id": "ROO_10",
@@ -97,7 +106,8 @@
       "RES_10"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_10.png"
   },
   {
     "id": "ROO_11",
@@ -107,7 +117,8 @@
       "RES_11"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_11.png"
   },
   {
     "id": "ROO_12",
@@ -117,6 +128,7 @@
       "RES_12"
     ],
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/roomDungeon/ROO_12.png"
   }
 ]

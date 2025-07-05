@@ -14,7 +14,8 @@
         "target": "enemy"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE01.png"
   },
   {
     "id": "ENE02",
@@ -25,7 +26,8 @@
     "favor": "EqualsDungeonLevel",
     "enemyType": null,
     "abilities": [],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE02.png"
   },
   {
     "id": "ENE03",
@@ -43,7 +45,8 @@
         "amount": 1
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE03.png"
   },
   {
     "id": "ENE04",
@@ -61,7 +64,8 @@
         "amount": 1
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE04.png"
   },
   {
     "id": "ENE05",
@@ -80,7 +84,8 @@
         "action": "reroll_dice"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE05.png"
   },
   {
     "id": "ENE06",
@@ -98,7 +103,8 @@
         "amount": 1
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE06.png"
   },
   {
     "id": "ENE07",
@@ -116,7 +122,8 @@
         "amount": 1
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE07.png"
   },
   {
     "id": "ENE08",
@@ -134,6 +141,7 @@
         "amount": 1
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/enemy/ENE08.png"
   }
 ]

@@ -12,7 +12,8 @@
         "details": "extra trapping"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/race/RAC01.png"
   },
   {
     "id": "RAC02",
@@ -27,7 +28,8 @@
         "target": "campsite"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/race/RAC02.png"
   },
   {
     "id": "RAC03",
@@ -43,7 +45,8 @@
         "details": "(once per dungeon level)"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/race/RAC03.png"
   },
   {
     "id": "RAC04",
@@ -60,6 +63,7 @@
         "amount": 1
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/race/RAC04.png"
   }
 ]

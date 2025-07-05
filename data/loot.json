@@ -10,7 +10,8 @@
         "details": "instead of 1. gain 1 ration per success."
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT01.png"
   },
   {
     "id": "LT02",
@@ -22,7 +23,8 @@
         "details": "spend 1 favor to bypass enemy encounter (limit once per dungeon level)"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT02.png"
   },
   {
     "id": "LT03",
@@ -39,7 +41,8 @@
         "target": "self"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT03.png"
   },
   {
     "id": "LT04",
@@ -55,7 +58,8 @@
         "amount": 5
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT04.png"
   },
   {
     "id": "LT05",
@@ -67,7 +71,8 @@
         "details": "reward level = current favor + 1"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT05.png"
   },
   {
     "id": "LT06",
@@ -85,7 +90,8 @@
         "details": "discard anytime to gain en +3"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT06.png"
   },
   {
     "id": "LT07",
@@ -96,7 +102,8 @@
         "target": "combat"
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT07.png"
   },
   {
     "id": "LT08",
@@ -115,6 +122,7 @@
         "amount": 2
       }
     ],
-    "effects": []
+    "effects": [],
+    "image": "assets/cards/loot/LT08.png"
   }
 ]

@@ -2,6 +2,8 @@ import {
     DungeonCard, EnemyCard, LootCard, TrapCard, RaceCard, ClassCard, TrappingsCard
 } from './data/cards.js';
 
+let drawDungeonCard, drawEnemyCard, drawLootCard, drawTrapCard, drawTrappingsCard;
+let raceDeck, classDeck;
 async function loadCardData() {
     const dungeonResultResponse = await fetch('../../../data/dungeonResult.json');
     const dungeonResultData = await dungeonResultResponse.json();
@@ -32,8 +34,8 @@ async function loadCardData() {
     const enemyDeck = enemyData.map(data => new EnemyCard(data));
     const lootDeck = lootData.map(data => new LootCard(data));
     const trapDeck = []; // No TrapCard objects exist yet
-    const raceDeck = raceData.map(data => new RaceCard(data));
-    const classDeck = classData.map(data => new ClassCard(data));
+    raceDeck = raceData.map(data => new RaceCard(data));
+    classDeck = classData.map(data => new ClassCard(data));
     const trappingsDeck = trappingsData.map(data => new TrappingsCard(data));
 
     // Shuffle function (Fisher-Yates shuffle)
@@ -52,59 +54,92 @@ async function loadCardData() {
     shuffleArray(classDeck);
     shuffleArray(trappingsDeck);
 
-    // Draw card functions
-    window.drawDungeonCard = () => dungeonDeck.pop();
-    window.drawEnemyCard = () => enemyDeck.pop();
-    window.drawLootCard = () => lootDeck.pop();
-    window.drawTrapCard = () => trapDeck.pop();
-    window.drawRaceCard = () => raceDeck.pop();
-    window.drawClassCard = () => classDeck.pop();
-    window.drawTrappingsCard = () => trappingsDeck.pop();
+   // Draw card functions
+    drawDungeonCard = () => dungeonDeck.pop();
+    drawEnemyCard = () => enemyDeck.pop();
+    drawLootCard = () => lootDeck.pop();
+    drawTrapCard = () => trapDeck.pop();
+
+    drawTrappingsCard = () => trappingsDeck.pop();
+
+    return {
+        drawDungeonCard,
+        drawEnemyCard,
+        drawLootCard,
+        drawTrapCard,
+        drawTrappingsCard
+    };
 }
 
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Tin Helm Web scaffold loaded');
 
-    await loadCardData();
+    const { 
+        drawDungeonCard: _drawDungeonCard,
+        drawEnemyCard: _drawEnemyCard,
+        drawLootCard: _drawLootCard,
+        drawTrapCard: _drawTrapCard,
+        drawTrappingsCard: _drawTrappingsCard
+    } = await loadCardData();
 
-    // Draw a card from each deck and log the card's name to the console
-    const dungeonCard = window.drawDungeonCard();
-    if (dungeonCard) {
-        console.log('Dungeon Card: ' + dungeonCard.name);
+    drawDungeonCard = _drawDungeonCard;
+    drawEnemyCard = _drawEnemyCard;
+    drawLootCard = _drawLootCard;
+    drawTrapCard = _drawTrapCard;
+    drawTrappingsCard = _drawTrappingsCard;
+
+    function populateCharacterSelect(selectedRace) {
+        const raceSelect = document.getElementById('race-select');
+        const classSelect = document.getElementById('class-select');
+
+        // Clear existing options
+        raceSelect.innerHTML = '<option value=\"\">--Please choose a race--</option>';
+        classSelect.innerHTML = '<option value=\"\">--Please choose a class--</option>';
+
+        // Populate race options
+        for (let i = 0; i < raceDeck.length; i++) {
+            const raceCard = raceDeck[i];
+            if (raceCard) {
+                const option = document.createElement('option');
+                option.value = raceCard.name;
+                option.text = raceCard.name;
+                raceSelect.add(option);
+            }
+        }
+
+        // Populate class options
+        for (let i = 0; i < classDeck.length; i++) {
+            const classCard = classDeck[i];
+            let restricted = false;
+
+            const selectedRaceObject = raceDeck.find(element => element.name === selectedRace);
+            if (selectedRaceObject) {
+                console.log("classCard.name: " + classCard.name);
+                console.log("selectedRaceObject.classRestriction: " + selectedRaceObject.classRestriction);
+                if (classCard.name === selectedRaceObject.classRestriction) {
+                    restricted = true;
+                }
+            }
+
+            if (classCard && !restricted) {
+                const option = document.createElement('option');
+                option.value = classCard.name;
+                option.text = classCard.name;
+                classSelect.add(option);
+            }
+        }
     }
 
-    const enemyCard = window.drawEnemyCard();
-    if (enemyCard) {
-        console.log('Enemy Card: ' + enemyCard.name);
+    function updateCharacterSelect() {
+        const selectedRace = document.getElementById('race-select').value;
+        populateCharacterSelect(selectedRace);
     }
 
-    const lootCard = window.drawLootCard();
-    if (lootCard) {
-        console.log('Loot Card: ' + lootCard.name);
-    }
+    const raceSelect = document.getElementById('race-select');
+    raceSelect.addEventListener('change', updateCharacterSelect);
 
-    // const trapCard = drawTrapCard();
-    // if (trapCard) {
-    //     console.log('Trap Card: ' + trapCard.name);
-    // }
-
-    const raceCard = window.drawRaceCard();
-    if (raceCard) {
-        console.log('Race Card: ' + raceCard.name);
-    }
-
-    const classCard = window.drawClassCard();
-    if (classCard) {
-        console.log('Class Card: ' + classCard.name);
-    }
-
-    const trappingsCard = window.drawTrappingsCard();
-    if (trappingsCard) {
-        console.log('Trappings Card: ' + trappingsCard.name);
-    }
-
-
+    populateCharacterSelect(null);
     updateUIFromState();
 
     const saveBtn = document.getElementById('save-btn');

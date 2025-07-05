@@ -8,7 +8,8 @@
         "action": "favor_check",
         "details": "(0;3=hp+1)(4;5=hp+2 and en+1)(6;7=hp+3 and en+2)(8;9=hp+4 and en+3)(10+=gainshard or hpmax)"
       }
-    ]
+    ],
+    "image": "assets/cards/reference/REF01.png"
   },
   {
     "id": "REF02",
@@ -19,7 +20,8 @@
         "action": "choose_effect",
         "details": "(hp+2 and en+1) or (+1ration)"
       }
-    ]
+    ],
+    "image": "assets/cards/reference/REF02.png"
   },
   {
     "id": "REF03",
@@ -30,7 +32,8 @@
         "action": "roll_dice",
         "details": "d6. (1=hp-1)(2=noeffect)(3;4=+1ration)(5;6=+2ration)"
       }
-    ]
+    ],
+    "image": "assets/cards/reference/REF03.png"
   },
   {
     "id": "REF04",
@@ -41,7 +44,8 @@
         "action": "lose_resource",
         "details": "lose1ration or lose2en or lose3hp (must choose first available if possible)"
       }
-    ]
+    ],
+    "image": "assets/cards/reference/REF04.png"
   },
   {
     "id": "REF05",
@@ -52,7 +56,8 @@
         "action": "choose_effect",
         "details": "gain1favor or discard turnip to gainshard"
       }
-    ]
+    ],
+    "image": "assets/cards/reference/REF05.png"
   },
   {
     "id": "REF06",
@@ -63,6 +68,7 @@
         "action": "gain_resource",
         "target": "shard"
       }
-    ]
+    ],
+    "image": "assets/cards/reference/REF06.png"
   }
 ]

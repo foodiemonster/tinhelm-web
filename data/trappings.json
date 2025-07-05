@@ -1,140 +1,58 @@
 [
   {
     "id": "TRA01",
-    "name": "Axe",
-    "blocks": "Books",
-    "abilities": [
-      {
-        "trigger": "on_attack",
-        "action": "reroll",
-        "target": "dice",
-        "condition": "on_doubles",
-        "extra": "optional"
-      },
-      {
-        "cost": "discard",
-        "action": "damage",
-        "target": "enemy",
-        "amount": "2d6_added"
-      }
-    ],
-    "effects": []
+    "name": "Books",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA01.png"
   },
   {
     "id": "TRA02",
-    "name": "Bedroll",
-    "blocks": "Potion",
-    "abilities": [
-      {
-        "trigger": "on_campsite",
-        "action": "recover",
-        "target": "hp",
-        "amount": 1,
-        "extra": "additional"
-      }
-    ],
-    "effects": []
+    "name": "Candle",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA02.png"
   },
   {
     "id": "TRA03",
-    "name": "Dagger",
-    "blocks": "Mace",
-    "abilities": [
-      {
-        "trigger": "on_attack",
-        "action": "add",
-        "target": "damage",
-        "amount": 1,
-        "condition": "resolving_first_room_card"
-      }
-    ],
-    "effects": []
+    "name": "Lockpicks",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA03.png"
   },
   {
     "id": "TRA04",
-    "name": "Scroll",
-    "blocks": "Toolkit",
-    "abilities": [
-      {
-        "trigger": "on_discard",
-        "action": "defeat",
-        "target": "enemy",
-        "condition": "enemy_type_undead",
-        "extra": "auto_defeat"
-      },
-      {
-        "trigger": "on_defeat",
-        "action": "lose",
-        "target": "favor",
-        "amount": 0,
-        "condition": "enemy_type_undead",
-        "extra": "defeated_by_scroll"
-      }
-    ],
-    "effects": []
+    "name": "Waterskin",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA04.png"
   },
   {
     "id": "TRA05",
-    "name": "Books",
-    "blocks": "Axe",
-    "abilities": [
-      {
-        "trigger": "on_campsite",
-        "action": "recover",
-        "target": "energy",
-        "amount": 1,
-        "extra": "additional"
-      }
-    ],
-    "effects": []
+    "name": "Rope",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA05.png"
   },
   {
     "id": "TRA06",
-    "name": "Potion",
-    "blocks": "Bedroll",
-    "abilities": [
-      {
-        "trigger": "on_discard",
-        "action": "add",
-        "target": "hp",
-        "amount": 2
-      },
-      {
-        "trigger": "on_discard",
-        "action": "add",
-        "target": "energy",
-        "amount": 2
-      }
-    ],
-    "effects": []
+    "name": "Tinderbox",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA06.png"
   },
   {
     "id": "TRA07",
-    "name": "Mace",
-    "blocks": "Dagger",
-    "abilities": [
-      {
-        "trigger": "on_attack",
-        "action": "add",
-        "target": "damage",
-        "amount": 1,
-        "condition": "enemy_type_undead"
-      }
-    ],
-    "effects": []
+    "name": "Herbs",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA07.png"
   },
   {
     "id": "TRA08",
-    "name": "Toolkit",
-    "blocks": "Scroll",
-    "abilities": [
-      {
-        "trigger": "on_trap",
-        "action": "resolve",
-        "target": "trap",
-        "extra": "optional_disarm"
-      }
-    ],
-    "effects": []
+    "name": "Knife",
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/trappings/TRA08.png"
   }
 ]

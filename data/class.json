@@ -1,50 +1,42 @@
 [
   {
     "id": "CLA01",
-    "name": "Parson",
-    "race_restriction": "Merfolk",
-    "add_health": 4,
-    "add_energy": 3,
-    "skill_en1": 3,
-    "skill_en2": 5,
-    "skill_en3": 7,
-    "trappings": ["TRA07", "TRA04"],
-    "effects": []
+    "name": "Alchemist",
+    "startingTrapping": "TRA01",
+    "healthModifier": 0,
+    "energyModifier": 3,
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/class/CLA01.png"
   },
   {
     "id": "CLA02",
-    "name": "Footpad",
-    "race_restriction": "Kroling",
-    "add_health": 3,
-    "add_energy": 3,
-    "skill_en1": 2,
-    "skill_en2": 5,
-    "skill_en3": 7,
-    "trappings": ["TRA03", "TRA08"],
-    "effects": []
+    "name": "Marauder",
+    "startingTrapping": "TRA02",
+    "healthModifier": 2,
+    "energyModifier": 1,
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/class/CLA02.png"
   },
   {
     "id": "CLA03",
-    "name": "Marauder",
-    "race_restriction": "Gnome",
-    "add_health": 5,
-    "add_energy": 2,
-    "skill_en1": 3,
-    "skill_en2": 6,
-    "skill_en3": 8,
-    "trappings": ["TRA01", "TRA02"],
-    "effects": []
+    "name": "Footpad",
+    "startingTrapping": "TRA03",
+    "healthModifier": 1,
+    "energyModifier": 2,
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/class/CLA03.png"
   },
   {
     "id": "CLA04",
-    "name": "Alchemist",
-    "race_restriction": "Human",
-    "add_health": 3,
-    "add_energy": 4,
-    "skill_en1": 2,
-    "skill_en2": 4,
-    "skill_en3": 8,
-    "trappings": ["TRA06", "TRA05"],
-    "effects": []
+    "name": "Parson",
+    "startingTrapping": "TRA04",
+    "healthModifier": 3,
+    "energyModifier": 0,
+    "abilities": [],
+    "effects": [],
+    "image": "assets/cards/class/CLA04.png"
   }
 ]

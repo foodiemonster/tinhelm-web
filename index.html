@@ -21,10 +21,25 @@
             <button id="load-btn">Load Game</button>
         </div>
 
+        <div id="character-creation">
+            <div class="selection-container">
+                <label for="race-select">Choose your Race:</label>
+                <select id="race-select">
+                    <option value="">--Please choose a race--</option>
+                </select>
+            </div>
+            <div class="selection-container">
+                <label for="class-select">Choose your Class:</label>
+                <select id="class-select">
+                    <option value="">--Please choose a class--</option>
+                </select>
+            </div>
+        </div>
+
         <main id="dungeon-area">
             <div id="deck-placeholder">Dungeon Deck</div>
             <div class="card dummy-card">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Yj8CAAAAAASUVORK5CYII=" alt="Dummy Card">
+                <img alt="Dummy Card">
             </div>
         </main>
     </div>

@@ -143,7 +143,15 @@ export function displayInventory(inventory) {
         inventory.forEach(item => {
             const cardElement = document.createElement('div');
             cardElement.classList.add('card');
-            cardElement.textContent = item.name; // Display card name or image, etc.
+            if (item.image) {
+                const img = document.createElement('img');
+                img.src = item.image;
+                img.alt = item.name;
+                img.className = 'inventory-card-img';
+                cardElement.appendChild(img);
+            } else {
+                cardElement.textContent = item.name;
+            }
             inventoryCardsContainer.appendChild(cardElement);
         });
     }

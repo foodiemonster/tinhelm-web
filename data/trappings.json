@@ -1,56 +1,56 @@
 [
   {
     "id": "TRA01",
-    "name": "Books",
+    "name": "Axe",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA01.png"
   },
   {
     "id": "TRA02",
-    "name": "Candle",
+    "name": "Bedroll",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA02.png"
   },
   {
     "id": "TRA03",
-    "name": "Lockpicks",
+    "name": "Dagger",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA03.png"
   },
   {
     "id": "TRA04",
-    "name": "Waterskin",
+    "name": "Scroll",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA04.png"
   },
   {
     "id": "TRA05",
-    "name": "Rope",
+    "name": "Books",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA05.png"
   },
   {
     "id": "TRA06",
-    "name": "Tinderbox",
+    "name": "Potion",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA06.png"
   },
   {
     "id": "TRA07",
-    "name": "Herbs",
+    "name": "Mace",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA07.png"
   },
   {
     "id": "TRA08",
-    "name": "Knife",
+    "name": "Toolkit",
     "abilities": [],
     "effects": [],
     "image": "assets/cards/trappings/TRA08.png"

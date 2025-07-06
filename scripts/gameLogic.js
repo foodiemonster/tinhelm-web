@@ -62,9 +62,36 @@ function initializePlayer(raceId, classId) {
     gameState.inventory = [];
     gameState.level = 1;
 
-    // Add starting trapping from class
+    // Add starting trappings from class
     if (classCard.startingTrapping) {
-        gameState.inventory.push(getCardById(classCard.startingTrapping));
+        const trappings = Array.isArray(classCard.startingTrapping) ? classCard.startingTrapping : [classCard.startingTrapping];
+        trappings.forEach(trapId => {
+            const card = getCardById(trapId);
+            if (card) gameState.inventory.push(card);
+        });
+    }
+
+    // Special case: Human gets to pick any remaining trapping
+    if (raceCard.name === 'Human') {
+        // Get all trappings
+        const allTrappings = Object.values(getAllCardsData()).filter(card => card.id && card.id.startsWith('TRA'));
+        // Remove the one already given by class
+        const ownedIds = new Set(gameState.inventory.map(card => card.id));
+        const availableTrappings = allTrappings.filter(card => !ownedIds.has(card.id));
+        showChoiceModal({
+            title: 'Human Bonus',
+            message: 'Choose an extra Trapping:',
+            image: raceCard.image,
+            choices: availableTrappings.map(card => ({ label: card.name, value: card.id })),
+            onChoice: (trappingId) => {
+                const chosen = getCardById(trappingId);
+                if (chosen) {
+                    gameState.inventory.push(chosen);
+                    displayInventory(gameState.inventory);
+                    saveGame();
+                }
+            }
+        });
     }
 
     // Track visible cards for restoration

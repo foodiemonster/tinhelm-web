@@ -2,7 +2,7 @@
   {
     "id": "CLA01",
     "name": "Alchemist",
-    "startingTrapping": "TRA01",
+    "startingTrapping": ["TRA05", "TRA06"],
     "healthModifier": 0,
     "energyModifier": 3,
     "abilities": [],
@@ -12,7 +12,7 @@
   {
     "id": "CLA02",
     "name": "Marauder",
-    "startingTrapping": "TRA02",
+    "startingTrapping": ["TRA01", "TRA02"],
     "healthModifier": 2,
     "energyModifier": 1,
     "abilities": [],
@@ -22,7 +22,7 @@
   {
     "id": "CLA03",
     "name": "Footpad",
-    "startingTrapping": "TRA03",
+    "startingTrapping": ["TRA03", "TRA04"],
     "healthModifier": 1,
     "energyModifier": 2,
     "abilities": [],
@@ -32,7 +32,7 @@
   {
     "id": "CLA04",
     "name": "Parson",
-    "startingTrapping": "TRA04",
+    "startingTrapping": ["TRA07", "TRA04"],
     "healthModifier": 3,
     "energyModifier": 0,
     "abilities": [],

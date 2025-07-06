@@ -12,6 +12,19 @@
       // If React is available, define a React modal root and fallback logic
       window.ReactAvailable = typeof React !== 'undefined' && typeof ReactDOM !== 'undefined';
     </script>
+    <!-- Anime.js for animations (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" id="animejs-cdn"></script>
+    <script>
+      // Wait for Anime.js to load before running main.js
+      function runMainWhenAnimeReady() {
+        if (window.anime) {
+          import('./scripts/main.js');
+        } else {
+          setTimeout(runMainWhenAnimeReady, 30);
+        }
+      }
+      runMainWhenAnimeReady();
+    </script>
 </head>
 <body>
     <div id="game-container">

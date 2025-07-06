@@ -19,6 +19,21 @@ export function showCombatModal({ classCard, enemyCard, onRoll, onClose }) {
             const [message, setMessage] = window.React.useState("");
             const [showRollBtn, setShowRollBtn] = window.React.useState(true);
             const [isCombatOver, setIsCombatOver] = window.React.useState(false);
+            // Animate cards in on mount
+            window.React.useEffect(() => {
+                const cards = document.querySelectorAll('.combat-card');
+                if (cards.length && window.anime) {
+                    window.anime.set(cards, { opacity: 0, translateY: 24 });
+                    window.anime({
+                        targets: cards,
+                        opacity: [0, 1],
+                        translateY: [24, 0],
+                        delay: window.anime.stagger(60, { start: 0 }),
+                        duration: 120,
+                        easing: 'easeOutCubic',
+                    });
+                }
+            }, []);
             const handleRoll = () => {
                 setShowRollBtn(false);
                 props.onRoll(({ roll1, roll2, message, showRollBtn, isCombatOver }) => {

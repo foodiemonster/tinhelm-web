@@ -26,19 +26,93 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
             const [selectedRace, setSelectedRace] = window.React.useState(null);
             const [selectedClass, setSelectedClass] = window.React.useState(null);
             const [allowedClasses, setAllowedClasses] = window.React.useState(props.allClasses);
-            const handleRace = (raceId) => {
-                setSelectedRace(raceId);
-                setStep('class');
-                const race = props.allRaces.find(r => r.id === raceId);
-                let filtered = props.allClasses;
-                if (race && race.classRestriction) {
-                    filtered = props.allClasses.filter(cls => cls.name !== race.classRestriction);
+            const [animating, setAnimating] = window.React.useState(false);
+            // Animation effect for fade-in
+            window.React.useEffect(() => {
+                const selector = step === 'race' ? '.race-card' : '.class-card';
+                const cards = document.querySelectorAll(selector);
+                if (cards.length && window.anime) {
+                    window.anime.set(cards, { opacity: 0, translateY: 24 });
+                    window.anime({
+                        targets: cards,
+                        opacity: [0, 1],
+                        translateY: [24, 0],
+                        delay: window.anime.stagger(60, { start: 0 }),
+                        duration: 120,
+                        easing: 'easeOutCubic',
+                    });
                 }
-                setAllowedClasses(filtered);
-                setSelectedClass(null);
+            }, [step, allowedClasses, props.allRaces, props.allClasses]);
+            // Fade out cards before switching step
+            const handleRace = (raceId) => {
+                if (animating) return;
+                setAnimating(true);
+                const cards = document.querySelectorAll('.race-card');
+                if (cards.length && window.anime) {
+                    window.anime({
+                        targets: cards,
+                        opacity: [1, 0],
+                        translateY: [0, -24],
+                        delay: window.anime.stagger(60, { start: 0 }),
+                        duration: 120,
+                        easing: 'easeInCubic',
+                        complete: () => {
+                            setSelectedRace(raceId);
+                            setStep('class');
+                            const race = props.allRaces.find(r => r.id === raceId);
+                            let filtered = props.allClasses;
+                            if (race && race.classRestriction) {
+                                filtered = props.allClasses.filter(cls => cls.name !== race.classRestriction);
+                            }
+                            setAllowedClasses(filtered);
+                            setSelectedClass(null);
+                            setAnimating(false);
+                        }
+                    });
+                } else {
+                    setSelectedRace(raceId);
+                    setStep('class');
+                    const race = props.allRaces.find(r => r.id === raceId);
+                    let filtered = props.allClasses;
+                    if (race && race.classRestriction) {
+                        filtered = props.allClasses.filter(cls => cls.name !== race.classRestriction);
+                    }
+                    setAllowedClasses(filtered);
+                    setSelectedClass(null);
+                    setAnimating(false);
+                }
             };
             const handleClass = (classId) => {
                 setSelectedClass(classId);
+            };
+            // Fade out class cards before reselect
+            const handleReselect = () => {
+                if (animating) return;
+                setAnimating(true);
+                const cards = document.querySelectorAll('.class-card');
+                if (cards.length && window.anime) {
+                    window.anime({
+                        targets: cards,
+                        opacity: [1, 0],
+                        translateY: [0, -24],
+                        delay: window.anime.stagger(60, { start: 0 }),
+                        duration: 120,
+                        easing: 'easeInCubic',
+                        complete: () => {
+                            setStep('race');
+                            setSelectedRace(null);
+                            setSelectedClass(null);
+                            setAllowedClasses(props.allClasses);
+                            setAnimating(false);
+                        }
+                    });
+                } else {
+                    setStep('race');
+                    setSelectedRace(null);
+                    setSelectedClass(null);
+                    setAllowedClasses(props.allClasses);
+                    setAnimating(false);
+                }
             };
             const handleConfirm = () => {
                 if (selectedRace && selectedClass) {
@@ -47,12 +121,6 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
                     }
                     props.onConfirm(selectedRace, selectedClass);
                 }
-            };
-            const handleReselect = () => {
-                setStep('race');
-                setSelectedRace(null);
-                setSelectedClass(null);
-                setAllowedClasses(props.allClasses);
             };
             return window.React.createElement(
                 'div', { className: 'modal-overlay', role: 'dialog', 'aria-modal': 'true' },

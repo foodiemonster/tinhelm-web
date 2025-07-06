@@ -1,95 +1,50 @@
 import {
-    DungeonCard, EnemyCard, LootCard, TrapCard, RaceCard, ClassCard, TrappingsCard
+    loadCardData, getCardById, getAllCardsData, RaceCard, ClassCard
 } from './data/cards.js';
+import {
+    initializePlayer, startDungeonLevel, handleRoom, playerStats
+} from './gameLogic.js';
 
-let drawDungeonCard, drawEnemyCard, drawLootCard, drawTrapCard, drawTrappingsCard;
-let raceDeck, classDeck;
-async function loadCardData() {
-    const dungeonResultResponse = await fetch('../../../data/dungeonResult.json');
-    const dungeonResultData = await dungeonResultResponse.json();
+// Store loaded card data globally in main.js for easy access in UI logic
+let allCardsData = {};
+let raceCards = [];
+let classCards = [];
 
-    const dungeonRoomResponse = await fetch('../../../data/dungeonRoom.json');
-    const dungeonRoomData = await dungeonRoomResponse.json();
+// Function to display drawn cards in the UI
+function displayDrawnCards(roomCard, resultCard) {
+    const roomCardImage = document.getElementById('room-card-image');
+    const resultCardImage = document.getElementById('result-card-image');
 
-    const enemyResponse = await fetch('../../../data/enemy.json');
-    const enemyData = await enemyResponse.json();
-
-    const lootResponse = await fetch('../../../data/loot.json');
-    const lootData = await lootResponse.json();
-
-    const raceResponse = await fetch('../../../data/race.json');
-    const raceData = await raceResponse.json();
-
-    const referenceResponse = await fetch('../../../data/reference.json');
-    const referenceData = await referenceResponse.json();
-
-    const trappingsResponse = await fetch('../../../data/trappings.json');
-    const trappingsData = await trappingsResponse.json();
-
-    const classResponse = await fetch('../../../data/class.json');
-    const classData = await classResponse.json();
-
-    // Deck Building
-    const dungeonDeck = dungeonRoomData.map(data => new DungeonCard(data));
-    const enemyDeck = enemyData.map(data => new EnemyCard(data));
-    const lootDeck = lootData.map(data => new LootCard(data));
-    const trapDeck = []; // No TrapCard objects exist yet
-    raceDeck = raceData.map(data => new RaceCard(data));
-    classDeck = classData.map(data => new ClassCard(data));
-    const trappingsDeck = trappingsData.map(data => new TrappingsCard(data));
-
-    // Shuffle function (Fisher-Yates shuffle)
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
+    if (roomCardImage && roomCard && roomCard.image) {
+        roomCardImage.src = roomCard.image;
+        roomCardImage.alt = roomCard.name;
+    } else {
+        console.warn("Could not display room card.", roomCard);
+        if (roomCardImage) roomCardImage.src = ''; // Clear image on error
     }
 
-    shuffleArray(dungeonDeck);
-    shuffleArray(enemyDeck);
-    shuffleArray(lootDeck);
-    //shuffleArray(trapDeck);
-    shuffleArray(raceDeck);
-    shuffleArray(classDeck);
-    shuffleArray(trappingsDeck);
+     if (resultCardImage && resultCard && resultCard.image) {
+        resultCardImage.src = resultCard.image;
+        resultCardImage.alt = resultCard.name;
+    } else {
+        console.warn("Could not display result card.", resultCard);
+         if (resultCardImage) resultCardImage.src = ''; // Clear image on error
+    }
 
-   // Draw card functions
-    drawDungeonCard = () => dungeonDeck.pop();
-    drawEnemyCard = () => enemyDeck.pop();
-    drawLootCard = () => lootDeck.pop();
-    drawTrapCard = () => trapDeck.pop();
-
-    drawTrappingsCard = () => trappingsDeck.pop();
-
-    return {
-        drawDungeonCard,
-        drawEnemyCard,
-        drawLootCard,
-        drawTrapCard,
-        drawTrappingsCard
-    };
+    // TODO: Add logic to show the card display area and hide character creation
 }
-
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Tin Helm Web scaffold loaded');
 
-    const { 
-        drawDungeonCard: _drawDungeonCard,
-        drawEnemyCard: _drawEnemyCard,
-        drawLootCard: _drawLootCard,
-        drawTrapCard: _drawTrapCard,
-        drawTrappingsCard: _drawTrappingsCard
-    } = await loadCardData();
+    // Load card data using the function from cards.js
+    await loadCardData();
+    // Get the loaded data for UI population
+    allCardsData = getAllCardsData(); // Use the exported function
+    raceCards = Object.values(allCardsData).filter(card => card instanceof RaceCard);
+    classCards = Object.values(allCardsData).filter(card => card instanceof ClassCard);
 
-    drawDungeonCard = _drawDungeonCard;
-    drawEnemyCard = _drawEnemyCard;
-    drawLootCard = _drawLootCard;
-    drawTrapCard = _drawTrapCard;
-    drawTrappingsCard = _drawTrappingsCard;
-
-    function populateCharacterSelect(selectedRace) {
+    function populateCharacterSelect(selectedRaceId) {
         const raceSelect = document.getElementById('race-select');
         const classSelect = document.getElementById('class-select');
 
@@ -98,49 +53,96 @@ document.addEventListener('DOMContentLoaded', async () => {
         classSelect.innerHTML = '<option value=\"\">--Please choose a class--</option>';
 
         // Populate race options
-        for (let i = 0; i < raceDeck.length; i++) {
-            const raceCard = raceDeck[i];
-            if (raceCard) {
-                const option = document.createElement('option');
-                option.value = raceCard.name;
-                option.text = raceCard.name;
-                raceSelect.add(option);
+        raceCards.forEach(raceCard => {
+            const option = document.createElement('option');
+            option.value = raceCard.id; // Use ID as value
+            option.text = raceCard.name;
+            raceSelect.add(option);
+             if (raceCard.id === selectedRaceId) {
+                option.selected = true;
             }
-        }
+        });
 
         // Populate class options
-        for (let i = 0; i < classDeck.length; i++) {
-            const classCard = classDeck[i];
-            let restricted = false;
+        const selectedRaceCard = raceCards.find(card => card.id === selectedRaceId);
 
-            const selectedRaceObject = raceDeck.find(element => element.name === selectedRace);
-            if (selectedRaceObject) {
-                console.log("classCard.name: " + classCard.name);
-                console.log("selectedRaceObject.classRestriction: " + selectedRaceObject.classRestriction);
-                if (classCard.name === selectedRaceObject.classRestriction) {
-                    restricted = true;
-                }
+        classCards.forEach(classCard => {
+            let restricted = false;
+            if (selectedRaceCard && selectedRaceCard.classRestriction) {
+                 // Find the class card object for the restriction name
+                 const restrictionClassCard = classCards.find(card => card.name === selectedRaceCard.classRestriction);
+                 if (restrictionClassCard && classCard.id === restrictionClassCard.id) {
+                     restricted = true;
+                 }
             }
 
-            if (classCard && !restricted) {
+            if (!restricted) {
                 const option = document.createElement('option');
-                option.value = classCard.name;
+                option.value = classCard.id; // Use ID as value
                 option.text = classCard.name;
                 classSelect.add(option);
             }
-        }
+        });
     }
 
     function updateCharacterSelect() {
-        const selectedRace = document.getElementById('race-select').value;
-        populateCharacterSelect(selectedRace);
+        const selectedRaceId = document.getElementById('race-select').value;
+        populateCharacterSelect(selectedRaceId);
     }
 
     const raceSelect = document.getElementById('race-select');
     raceSelect.addEventListener('change', updateCharacterSelect);
 
+    // Initial population with no race selected
     populateCharacterSelect(null);
-    updateUIFromState();
+
+    // --- Start Game Button Logic ---
+    const startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        startGameBtn.addEventListener('click', () => {
+            const selectedRaceId = document.getElementById('race-select').value;
+            const selectedClassId = document.getElementById('class-select').value;
+
+            if (!selectedRaceId || !selectedClassId) {
+                alert('Please select a race and class to start the game.');
+                return;
+            }
+
+            initializePlayer(selectedRaceId, selectedClassId);
+            startDungeonLevel();
+            handleRoom(); // Draw and display the first room
+
+             // TODO: Hide character selection UI and show game UI
+             document.getElementById('character-creation').style.display = 'none';
+             document.getElementById('dungeon-area').style.display = 'flex'; // Assuming flex for layout
+        });
+    }
+
+    // --- Save/Load Logic (Keeping existing for now) ---
+    // Assuming supportsLocalStorage, saveGame, loadGame, and updateUIFromState functions exist elsewhere or will be added.
+    function supportsLocalStorage() {
+         try {
+            return 'localStorage' in window && window['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function saveGame() {
+         // TODO: Implement save game logic using playerStats and current game state
+        console.log("Save game not implemented yet.");
+    }
+
+    function loadGame() {
+         // TODO: Implement load game logic
+        console.log("Load game not implemented yet.");
+         return false; // Indicate no game loaded
+    }
+
+     function updateUIFromState() {
+         // TODO: Implement UI update based on game state
+        console.log("UI update not implemented yet.");
+    }
 
     const saveBtn = document.getElementById('save-btn');
     const loadBtn = document.getElementById('load-btn');
@@ -168,4 +170,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadBtn.disabled = true;
         }
     }
+
+    // Initially hide dungeon area until game starts
+    document.getElementById('dungeon-area').style.display = 'none';
+
 });
+
+export { displayDrawnCards };

@@ -5,6 +5,7 @@ class Card {
     }
     this.id = data.id;
     this.name = data.name;
+    this.image = data.image || '';
   }
 }
 
@@ -15,6 +16,10 @@ class DungeonCard extends Card {
     this.linkedResultId = data.linkedResultId || [];
     this.abilities = data.abilities || [];
     this.effects = data.effects || [];
+    this.enemy = data.enemy || null; // Added enemy property
+    this.trap = data.trap || null; // Added trap property
+    this.random = data.random || null; // Added random property
+    this.loot = data.loot || null; // Added loot property
   }
 }
 

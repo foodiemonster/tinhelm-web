@@ -1,5 +1,5 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
-import { displayDrawnCards } from './main.js';
+import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision } from './ui.js'; // Import UI functions
 
 // Player stats
 let playerStats = {
@@ -42,7 +42,10 @@ function initializePlayer(raceId, classId) {
     }
 
     console.log("Player initialized:", playerStats);
-    // TODO: Update UI with initial stats
+    // Update UI with initial stats and player cards
+    // TODO: Update UI with initial stats (HP, energy, food, favor, level)
+    displayRaceCard(raceCard);
+    displayClassCard(classCard);
 }
 
 // Function to start a new dungeon level
@@ -66,7 +69,7 @@ function shuffleDeck(deck) {
 }
 
 // Function to handle a single room in the dungeon
-function handleRoom() {
+async function handleRoom() {
     currentRoom++;
     console.log(`Entering Room ${currentRoom}`);
 
@@ -86,13 +89,17 @@ function handleRoom() {
     }
 
     console.log("First card drawn:", firstCard.name);
-    // TODO: Display the first card to the player and ask for RESOLVE or SKIP decision
-    // This will require UI interaction. For now, we will simulate the decision.
+    // Display the first card to the player and ask for RESOLVE or SKIP decision
+    // This will require UI interaction.
 
-    // --- Simulate Player Decision (REPLACE WITH UI INTERACTION LATER) ---
-    const playerDecision = Math.random() < 0.5 ? 'RESOLVE' : 'SKIP'; // 50/50 chance for now
-    console.log(`Player decides to ${playerDecision}.`);
-    // --- End Simulate Player Decision ---
+    let playerDecision;
+    try {
+        playerDecision = await awaitPlayerRoomDecision(); // Wait for the player's decision
+        console.log(`Player decides to ${playerDecision}.`);
+    } catch (error) {
+        console.error("Error getting player decision:", error);
+        return; // Handle error (e.g., end game or retry)
+    }
 
     let roomCard, resultCard;
 
@@ -126,8 +133,9 @@ function handleRoom() {
 
     if (roomCard && resultCard) {
         console.log("Room formed:", roomCard.name, "(Room) and", resultCard.name, "(Result).");
-        // TODO: Pass these paired cards to a UI function for display
-        displayDrawnCards(roomCard, resultCard); // This UI function needs to handle displaying two cards in the correct roles
+        // Display the paired cards
+        displayRoomCard(roomCard);
+        displayResultCard(resultCard);
 
         // Resolve icons on the designated result card
         resolveIcons(resultCard);
@@ -215,6 +223,7 @@ function checkWinLossConditions() {
 
 // Function to resolve icons on a result card
 function resolveIcons(resultCard) {
+    console.log("Inspecting resultCard in resolveIcons:", JSON.stringify(resultCard, null, 2)); // Added log
     console.log("Resolving icons for result card:", resultCard.name);
     // Assuming icons are stored as a comma-separated string in resultCard.icons
     if (!resultCard.icons || typeof resultCard.icons !== 'string') {
@@ -546,8 +555,9 @@ function handleReferenceCard(refCard) {
         default:
             console.warn("Unknown Reference Card encountered:", refCard.name);
         }
-     // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
-}
+        // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
+    }
+
 
 
 // Function to update player stats (can be used by icon handlers)
@@ -586,6 +596,7 @@ function rollDice() {
 // Placeholder for combat initiation (will be expanded)
 async function initiateCombat(enemyCard) {
     console.log("Initiating combat with", enemyCard.name);
+    displayEnemyCard(enemyCard); // Display the enemy card in the UI
     // We need to track the enemy's current health during combat
     let currentEnemyHealth = enemyCard.health;
     let isPlayerTurn = true; // Player always attacks first
@@ -669,10 +680,18 @@ async function initiateCombat(enemyCard) {
     // Combat ended. Determine outcome and proceed.
     if (currentEnemyHealth <= 0) {
         console.log("Combat ended: Enemy defeated.");
-        // TODO: Continue resolving other icons in the room or proceed to next step
+        // Add a delay before hiding the enemy card
+        setTimeout(() => {
+            hideEnemyCard(); // Hide the enemy card after combat
+            // TODO: Continue resolving other icons in the room or proceed to next step
+        }, 3000); // Hide after 3 seconds
     } else if (playerStats.health <= 0) {
         console.log("Combat ended: Player defeated.");
-        // Player defeat is now handled by checkWinLossConditions called from updatePlayerStats
+        // Add a delay before hiding the enemy card
+        setTimeout(() => {
+            hideEnemyCard(); // Hide the enemy card after combat
+            // Player defeat is now handled by checkWinLossConditions called from updatePlayerStats
+        }, 3000); // Hide after 3 seconds
     }
      // TODO: After combat, the game flow needs to continue (e.g., resolve next icon or proceed to next room)
 }

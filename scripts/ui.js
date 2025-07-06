@@ -11,6 +11,9 @@ export function displayRoomCard(card) {
     if (roomCardImage && card && card.image) {
         roomCardImage.src = card.image;
         roomCardImage.style.display = 'block';
+    } else if (roomCardImage) {
+        roomCardImage.src = '';
+        roomCardImage.style.display = 'none';
     }
 }
 
@@ -19,6 +22,9 @@ export function displayResultCard(card) {
     if (resultCardImage && card && card.image) {
         resultCardImage.src = card.image;
         resultCardImage.style.display = 'block';
+    } else if (resultCardImage) {
+        resultCardImage.src = '';
+        resultCardImage.style.display = 'none';
     }
 }
 

@@ -45,7 +45,7 @@ export function displayClassCard(card) {
 }
 
 // Function to display enemy card
-export function displayEnemyCard(card) {
+export function displayEnemyCard(card, defeated = false) {
     if (enemyCardImage && enemyCardDisplay && card && card.image) {
         enemyCardImage.src = card.image;
         enemyCardDisplay.style.display = 'block';
@@ -54,6 +54,13 @@ export function displayEnemyCard(card) {
         enemyCardDisplay.style.left = '50%';
         enemyCardDisplay.style.transform = 'translate(-50%, -50%)';
         enemyCardDisplay.style.zIndex = '10';
+        if (defeated) {
+            enemyCardImage.style.filter = 'grayscale(100%) brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(6)';
+            enemyCardImage.style.boxShadow = '0 0 16px 4px #a00, 0 0 32px 8px #000 inset';
+        } else {
+            enemyCardImage.style.filter = '';
+            enemyCardImage.style.boxShadow = '';
+        }
     }
 }
 

@@ -658,6 +658,7 @@ async function initiateCombat(enemyCard) {
     displayEnemyCard(enemyCard); // Show enemy card in UI
     let currentEnemyHealth = enemyCard.health;
     let isPlayerTurn = true;
+    let enemyDefeated = false;
 
     while (currentEnemyHealth > 0 && gameState.player.hp > 0) {
         if (isPlayerTurn) {
@@ -675,6 +676,9 @@ async function initiateCombat(enemyCard) {
             if (currentEnemyHealth <= 0) {
                 logEvent(`${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`);
                 updatePlayerStats('favor', enemyCard.favor);
+                enemyDefeated = true;
+                // Tint the enemy card to indicate defeat
+                displayEnemyCard(enemyCard, true);
                 break;
             }
         } else {
@@ -695,9 +699,7 @@ async function initiateCombat(enemyCard) {
         isPlayerTurn = !isPlayerTurn;
         // Optionally add a delay here for UI pacing
     }
-    setTimeout(() => {
-        hideEnemyCard();
-    }, 2000);
+    // Do not hide the enemy card automatically; it will be hidden on next round
     logEvent(`Combat with ${enemyCard.name} ended.`);
 }
 
@@ -730,6 +732,8 @@ function disableNextRoomButton() {
             const lastRoomId = gameState.discardPile.room.length > 0 ? gameState.discardPile.room[gameState.discardPile.room.length - 1] : null;
             const lastRoomCard = lastRoomId ? getCardById(lastRoomId) : null;
             displayDiscardPile(lastRoomCard);
+            // Hide the enemy card when advancing to the next round
+            hideEnemyCard();
             // Only clear visible cards/state, do NOT call displayRoomCard(null) or displayResultCard(null) here
             gameState.visibleCards = {
                 ...gameState.visibleCards,

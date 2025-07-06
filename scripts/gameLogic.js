@@ -2,6 +2,7 @@ import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData 
 import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard } from './ui.js';
 import { gameState, saveGame } from './gameState.js';
 import { showCombatModal } from './ui.combatModal.js';
+import { showChoiceModal } from './ui.choiceModal.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
@@ -106,7 +107,7 @@ function startDungeonLevel() {
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]]; // Swap elements
+        [deck[i], deck[j] ] = [deck[j], deck[i]]; // Swap elements
     }
 }
 
@@ -356,8 +357,25 @@ function resolveIcons(iconCard, legendCard) {
                 break;
             case 'Campsite':
                 console.log("Campsite found.");
-                console.log("Campsite Options: 1. Gain +2 HP and +1 Energy, or 2. Gain +1 Food.");
-                // TODO: Implement player choice for Campsite benefit
+                // Find the reference card for Campsite to get the image
+                const campsiteCard = Object.values(getAllCardsData()).find(card => card.name === 'Campsite');
+                showChoiceModal({
+                    title: 'Campsite',
+                    message: 'Choose your benefit:',
+                    image: campsiteCard && campsiteCard.image,
+                    choices: [
+                        { label: '+2 HP & +1 Energy', value: 'heal' },
+                        { label: '+1 Food', value: 'food' }
+                    ],
+                    onChoice: (val) => {
+                        if (val === 'heal') {
+                            updatePlayerStats('hp', 2);
+                            updatePlayerStats('energy', 1);
+                        } else if (val === 'food') {
+                            updatePlayerStats('food', 1);
+                        }
+                    }
+                });
                 break;
             case 'Water':
                 console.log("Water encountered.");
@@ -464,30 +482,37 @@ function handleReferenceCard(refCard) {
         case 'Altar':
             console.log("Resolving Altar effect. Checking player Favor...");
             const currentFavor = gameState.player.favor;
-            console.log(`Current Favor: ${currentFavor}`);
-
+            const altarCard = Object.values(getAllCardsData()).find(card => card.name === 'Altar');
             if (currentFavor >= 10) {
-                console.log("Favor is 10 or more. Gain a Shard or increase Max HP.");
-                // TODO: Implement player choice between gaining a shard or increasing max HP
-                // For now, let's default to gaining a shard.
-                 console.log("Defaulting to gaining a Shard (until UI choice is implemented).");
-                updatePlayerStats('shards', 1);
-                 // TODO: Check for win condition
+                showChoiceModal({
+                    title: 'Altar',
+                    message: 'Favor 10+: Choose your reward:',
+                    image: altarCard && altarCard.image,
+                    choices: [
+                        { label: 'Gain a Shard', value: 'shard' },
+                        { label: 'Increase Max HP', value: 'maxhp' }
+                    ],
+                    onChoice: (val) => {
+                        if (val === 'shard') {
+                            updatePlayerStats('shards', 1);
+                        } else if (val === 'maxhp') {
+                            gameState.player.maxHealth += 1;
+                            updatePlayerStats('hp', 1);
+                            updateStatDisplay('hp', gameState.player.hp);
+                        }
+                    }
+                });
             } else if (currentFavor >= 8) {
-                console.log("Favor is 8-9. Gain +4 HP and +3 Energy.");
                 updatePlayerStats('hp', 4);
                 updatePlayerStats('energy', 3);
             } else if (currentFavor >= 6) {
-                console.log("Favor is 6-7. Gain +3 HP and +2 Energy.");
                 updatePlayerStats('hp', 3);
                 updatePlayerStats('energy', 2);
             } else if (currentFavor >= 4) {
-                console.log("Favor is 4-5. Gain +2 HP and +1 Energy.");
                 updatePlayerStats('hp', 2);
                 updatePlayerStats('energy', 1);
             } else if (currentFavor >= 0) {
-                 console.log("Favor is 0-3. Gain +1 HP.");
-                 updatePlayerStats('hp', 1);
+                updatePlayerStats('hp', 1);
             }
             break;
         case 'Campsite': // Note: Campsite is also a direct icon, but can appear via Random
@@ -497,64 +522,75 @@ function handleReferenceCard(refCard) {
             break;
         case 'Grove':
             console.log("Resolving Grove effect.");
-            // TODO: Implement Grove effect (d6 roll for rations or damage) based on GAMERULES.md section 8.0 Errata
-            console.log("Resolving Grove effect. Rolling a d6...");
-            const [groveRoll] = rollDice(); // Use one die from the rollDice function
-            console.log(`Grove roll result: ${groveRoll}`);
-
-            if (groveRoll === 1) {
-                console.log("Grove effect: Lose 1 HP.");
-                updatePlayerStats('hp', -1);
-            } else if (groveRoll === 2) {
-                console.log("Grove effect: No effect.");
-            } else if (groveRoll >= 3 && groveRoll <= 4) {
-                console.log("Grove effect: Gain 1 Ration.");
-                updatePlayerStats('food', 1);
-            } else if (groveRoll >= 5 && groveRoll <= 6) {
-                console.log("Grove effect: Gain 2 Rations.");
-                updatePlayerStats('food', 2);
-            }
+            showChoiceModal({
+                title: 'Grove',
+                message: 'Roll a die for the Grove effect!',
+                dieRoll: true,
+                image: 'assets/cards/reference/REF03.png',
+                onRoll: (groveRoll) => {
+                    if (groveRoll === 1) {
+                        updatePlayerStats('hp', -1);
+                        logEvent('Grove: Lose 1 HP.');
+                    } else if (groveRoll === 2) {
+                        logEvent('Grove: No effect.');
+                    } else if (groveRoll >= 3 && groveRoll <= 4) {
+                        updatePlayerStats('food', 1);
+                        logEvent('Grove: Gain 1 Ration.');
+                    } else if (groveRoll >= 5 && groveRoll <= 6) {
+                        updatePlayerStats('food', 2);
+                        logEvent('Grove: Gain 2 Rations.');
+                    }
+                }
+            });
             break;
         case 'Labyrinth':
             console.log("Resolving Labyrinth effect.");
-            // TODO: Implement Labyrinth effect (lose resource) based on GAMERULES.md section 8.0 Errata
-            console.log("Resolving Labyrinth effect. Must lose a resource.");
-            // Priority: 1 Ration, then 2 Energy, then 3 Health
-
-            if (gameState.player.food >= 1) {
-                console.log("Labyrinth effect: Losing 1 Ration.");
-                updatePlayerStats('food', -1);
-            } else if (gameState.player.energy >= 2) {
-                 console.log("Labyrinth effect: Losing 2 Energy.");
-                 updatePlayerStats('energy', -2);
-            } else if (gameState.player.hp > 0) { // Corrected: Apply damage as long as health is above 0
-                 const damageToTake = Math.min(gameState.player.hp, 3); // Take max 3 damage, not more than current health
-                 console.log(`Labyrinth effect: Losing ${damageToTake} HP.`);
-                 updatePlayerStats('hp', -damageToTake);
-                 // TODO: Check for player defeat after losing health (handled by updatePlayerStats)
-            } else {
-                 // Player health is already 0 or less, no further health loss
-                console.log("Labyrinth effect: Player health already low, no further health loss from Labyrinth.");
-            }
+            const labyrinthCard = Object.values(getAllCardsData()).find(card => card.name === 'Labyrinth');
+            showChoiceModal({
+                title: 'Labyrinth',
+                message: 'Lose 1 Ration, or if you have none, lose 2 Energy, or if you have neither, lose up to 3 HP.',
+                image: labyrinthCard && labyrinthCard.image,
+                choices: [
+                    { label: 'Lose 1 Ration', value: 'ration', disabled: !(gameState.player.food >= 1) },
+                    { label: 'Lose 2 Energy', value: 'energy', disabled: !(gameState.player.food < 1 && gameState.player.energy >= 2) },
+                    { label: 'Lose up to 3 HP', value: 'hp', disabled: !(gameState.player.food < 1 && gameState.player.energy < 2 && gameState.player.hp > 0) }
+                ].filter(opt => !opt.disabled),
+                onChoice: (val) => {
+                    if (val === 'ration') {
+                        updatePlayerStats('food', -1);
+                    } else if (val === 'energy') {
+                        updatePlayerStats('energy', -2);
+                    } else if (val === 'hp') {
+                        const damageToTake = Math.min(gameState.player.hp, 3);
+                        updatePlayerStats('hp', -damageToTake);
+                    }
+                }
+            });
             break;
         case 'Pigman':
             console.log("Resolving Pigman effect.");
-            // Pigman effect: gain 1 favor or discard Turnip to gain shard
-            const turnipIndex = gameState.inventory.findIndex(item => item.id === 'LT06'); // Find Turnip by ID
-
+            const pigmanCard = Object.values(getAllCardsData()).find(card => card.name === 'Pigman');
+            const turnipIndex = gameState.inventory.findIndex(item => item.id === 'LT06');
             if (turnipIndex !== -1) {
-                console.log("You have a Turnip. Pigman offers: 1. Gain 1 Favor, or 2. Discard Turnip to gain 1 Shard.");
-                // TODO: Implement player choice here
-                // For now, let's default to gaining favor if Turnip is available, or always offer both and log the choice needed
-                 // Let's log both options and mark the need for UI choice.
-                 console.log("Player needs to choose: Gain 1 Favor OR Discard Turnip (LT06) to gain 1 Shard.");
-                 // For now, apply the default outcome if no choice is implemented: Gain 1 Favor if no Turnip, or just log if Turnip is present.
-
-                 console.log("Defaulting to gaining 1 Favor (until UI choice is implemented).");
-                 updatePlayerStats('favor', 1);
-
+                showChoiceModal({
+                    title: 'Pigman',
+                    message: 'You have a Turnip! Choose:',
+                    image: pigmanCard && pigmanCard.image,
+                    choices: [
+                        { label: 'Gain 1 Favor', value: 'favor' },
+                        { label: 'Discard Turnip for 1 Shard', value: 'shard' }
+                    ],
+                    onChoice: (val) => {
+                        if (val === 'favor') {
+                            updatePlayerStats('favor', 1);
+                        } else if (val === 'shard') {
+                            gameState.inventory.splice(turnipIndex, 1);
+                            displayInventory(gameState.inventory);
+                            updatePlayerStats('shards', 1);
+                        }
+                    }
+                });
             } else {
-                console.log("You do not have a Turnip. Gaining 1 Favor from Pigman.");
                 updatePlayerStats('favor', 1);
             }
             break;

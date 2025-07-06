@@ -1,6 +1,8 @@
 // Combat modal UI logic for Tin Helm Web
 // Pops up during enemy encounters and handles dice rolls and combat feedback
 
+import { animateDiceRoll } from './ui.dice.js';
+
 export function showCombatModal({ classCard, enemyCard, onRoll, onClose }) {
     // If React is available, use a React modal (CDN version)
     if (window.ReactAvailable && window.React && window.ReactDOM) {
@@ -14,34 +16,62 @@ export function showCombatModal({ classCard, enemyCard, onRoll, onClose }) {
         if (!reactRoot._reactRootContainer) {
             reactRoot._reactRootContainer = window.ReactDOM.createRoot(reactRoot);
         }
+        reactRoot._isUnmounted = false;
+        // Patch: always check for unmount before rendering
+        function safeRender(component) {
+            if (!reactRoot._isUnmounted && reactRoot._reactRootContainer) {
+                try {
+                    reactRoot._reactRootContainer.render(component);
+                } catch (e) {
+                    // Ignore render on unmounted root
+                }
+            }
+        }
         const CombatModal = (props) => {
             const [rolls, setRolls] = window.React.useState([]);
             const [message, setMessage] = window.React.useState("");
             const [showRollBtn, setShowRollBtn] = window.React.useState(true);
             const [isCombatOver, setIsCombatOver] = window.React.useState(false);
+            const isMountedRef = window.React.useRef(true);
+            window.React.useEffect(() => {
+                isMountedRef.current = true;
+                return () => { isMountedRef.current = false; };
+            }, []);
             // Animate cards in on mount
             window.React.useEffect(() => {
                 const cards = document.querySelectorAll('.combat-card');
                 if (cards.length && window.anime) {
-                    window.anime.set(cards, { opacity: 0, translateY: 24 });
+                    window.anime.set(cards, { opacity: 0, scale: 0.7, rotate: 0 });
                     window.anime({
                         targets: cards,
                         opacity: [0, 1],
-                        translateY: [24, 0],
+                        scale: [0.7, 1],
+                        rotate: [0, 0],
                         delay: window.anime.stagger(60, { start: 0 }),
-                        duration: 120,
-                        easing: 'easeOutCubic',
+                        duration: 160,
+                        easing: 'easeOutBack',
                     });
                 }
             }, []);
+            // Dice roll animation using shared utility
             const handleRoll = () => {
                 setShowRollBtn(false);
-                props.onRoll(({ roll1, roll2, message, showRollBtn, isCombatOver }) => {
-                    setRolls([roll1, roll2]);
-                    setMessage(message);
-                    setShowRollBtn(showRollBtn);
-                    setIsCombatOver(isCombatOver);
-                });
+                setMessage('Rolling...');
+                setRolls([1, 1]);
+                setTimeout(() => {
+                    if (reactRoot._isUnmounted) return;
+                    props.onRoll(({ roll1, roll2, message, showRollBtn, isCombatOver }) => {
+                        if (reactRoot._isUnmounted) return;
+                        const diceEls = document.querySelectorAll('.combat-die');
+                        animateDiceRoll(diceEls, [roll1, roll2], () => {
+                            if (!isMountedRef.current || reactRoot._isUnmounted) return;
+                            setRolls([roll1, roll2]);
+                            setMessage(message);
+                            setShowRollBtn(showRollBtn);
+                            setIsCombatOver(isCombatOver);
+                        });
+                    });
+                }, 200);
             };
             return window.React.createElement(
                 'div', { className: 'modal-overlay', role: 'dialog', 'aria-modal': 'true' },
@@ -72,6 +102,7 @@ export function showCombatModal({ classCard, enemyCard, onRoll, onClose }) {
                                 id: 'combat-close-btn',
                                 onClick: () => {
                                     if (reactRoot._reactRootContainer) {
+                                        reactRoot._isUnmounted = true;
                                         reactRoot._reactRootContainer.unmount();
                                     }
                                     if (props.onClose) props.onClose();
@@ -81,11 +112,13 @@ export function showCombatModal({ classCard, enemyCard, onRoll, onClose }) {
                 )
             );
         };
-        reactRoot._reactRootContainer.render(
-            window.React.createElement(CombatModal, { classCard, enemyCard, onRoll, onClose })
-        );
+        // Always use safeRender to avoid unmounted root errors
+        safeRender(window.React.createElement(CombatModal, { classCard, enemyCard, onRoll, onClose }));
         // Clean up on close
-        reactRoot._unmount = () => reactRoot._reactRootContainer.unmount();
+        reactRoot._unmount = () => {
+            reactRoot._isUnmounted = true;
+            reactRoot._reactRootContainer.unmount();
+        };
         return;
     }
     // Fallback: Vanilla JS modal
@@ -128,15 +161,19 @@ export function showCombatModal({ classCard, enemyCard, onRoll, onClose }) {
     function updateModalAfterRoll({ roll1, roll2, message, showRollBtn, isCombatOver }) {
         const diceRow = document.getElementById('combat-dice-row');
         diceRow.innerHTML = `<span class="combat-die">${roll1}</span> <span class="combat-die">${roll2}</span>`;
-        document.getElementById('combat-message').textContent = message;
-        rollBtn.style.display = showRollBtn ? 'inline-block' : 'none';
-        rollBtn.disabled = false;
-        if (isCombatOver) {
-            document.getElementById('combat-actions').innerHTML = `<button id="combat-close-btn">Close</button>`;
-            document.getElementById('combat-close-btn').onclick = () => {
-                document.body.removeChild(modal);
-                if (onClose) onClose();
-            };
-        }
+        // Animate dice using shared utility
+        const diceEls = diceRow.querySelectorAll('.combat-die');
+        animateDiceRoll(diceEls, [roll1, roll2], () => {
+            document.getElementById('combat-message').textContent = message;
+            rollBtn.style.display = showRollBtn ? 'inline-block' : 'none';
+            rollBtn.disabled = false;
+            if (isCombatOver) {
+                document.getElementById('combat-actions').innerHTML = `<button id="combat-close-btn">Close</button>`;
+                document.getElementById('combat-close-btn').onclick = () => {
+                    document.body.removeChild(modal);
+                    if (onClose) onClose();
+                };
+            }
+        });
     }
 }

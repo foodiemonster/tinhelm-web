@@ -15,6 +15,7 @@ const gameState = {
     inventory: [],
     turn: 0,
     timestamp: Date.now(),
+    log: [], // Session log for game events
 };
 
 // Check if localStorage is available

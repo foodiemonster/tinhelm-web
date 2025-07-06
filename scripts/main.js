@@ -2,7 +2,7 @@ import {
     loadCardData, getCardById, getAllCardsData, RaceCard, ClassCard
 } from './data/cards.js';
 import {
-    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState
+    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom
 } from './gameLogic.js';
 import { saveGame, loadGame } from './gameState.js';
 
@@ -137,7 +137,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Show dungeon area and hide character creation after loading
             document.getElementById('character-creation').style.display = 'none';
             document.getElementById('dungeon-area').style.display = 'flex';
-            // Optionally, resume game loop if needed
+            // Update session log UI after loading
+            if (typeof window.updateLogUI === 'function') window.updateLogUI();
         });
         if (!localStorage.getItem('tinhelm-save')) {
             loadBtn.disabled = true;
@@ -147,6 +148,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initially hide dungeon area until game starts
     document.getElementById('dungeon-area').style.display = 'none';
 
+    // --- Next Room Button Logic ---
+    const nextRoomBtn = document.getElementById('next-room-btn');
+    if (nextRoomBtn) {
+        nextRoomBtn.addEventListener('click', () => {
+            nextRoomBtn.disabled = true;
+            nextRoomBtn.style.display = 'none';
+            advanceToNextRoom();
+        });
+    }
 });
 
 export { displayDrawnCards };

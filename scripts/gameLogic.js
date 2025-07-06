@@ -4,6 +4,33 @@ import { gameState, saveGame } from './gameState.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
+// --- Session Log ---
+function logEvent(message) {
+    if (!gameState.log) gameState.log = [];
+    const timestamp = new Date().toLocaleTimeString();
+    gameState.log.push(`[${timestamp}] ${message}`);
+    updateLogUI();
+}
+
+function updateLogUI() {
+    const logPanel = document.getElementById('session-log');
+    if (!logPanel) return;
+    logPanel.innerHTML = gameState.log.slice(-100).map(msg => `<div>${msg}</div>`).join('');
+    logPanel.scrollTop = logPanel.scrollHeight;
+}
+
+// --- Discard Pile Management ---
+// Ensure discard piles exist in gameState
+if (!gameState.discardPile) {
+    gameState.discardPile = { room: [], result: [] };
+}
+
+function discardPreviousRoomAndResult() {
+    const { roomCardId, resultCardId } = gameState.visibleCards || {};
+    if (roomCardId) gameState.discardPile.room.push(roomCardId);
+    if (resultCardId) gameState.discardPile.result.push(resultCardId);
+}
+
 // Function to initialize player stats based on selected race and class
 // Sets up all player stats, inventory, and level in gameState, then updates the UI and saves the game.
 function initializePlayer(raceId, classId) {
@@ -53,6 +80,7 @@ function initializePlayer(raceId, classId) {
     displayRaceCard(raceCard);
     displayClassCard(classCard);
     displayInventory(gameState.inventory);
+    logEvent(`Player created: Race = ${raceCard.name}, Class = ${classCard.name}`);
     saveGame();
 }
 
@@ -79,6 +107,15 @@ function shuffleDeck(deck) {
 // Function to handle a single room in the dungeon
 // Advances room counter, draws cards, prompts player for resolve/skip, and processes result.
 async function handleRoom() {
+    // Move previous cards to discard pile before starting new room
+    discardPreviousRoomAndResult();
+    // Clear visible cards for new room
+    gameState.visibleCards = {
+        ...gameState.visibleCards,
+        roomCardId: null,
+        resultCardId: null,
+        enemyCardId: null
+    };
     gameState.currentRoom = (gameState.currentRoom || 0) + 1;
     if (gameState.currentRoom > 6) {
         endDungeonLevel();
@@ -134,6 +171,8 @@ async function handleRoom() {
     if (roomCard && resultCard) {
         displayRoomCard(roomCard);
         displayResultCard(resultCard);
+        logEvent(`Entering Room ${gameState.currentRoom}`);
+        logEvent(`Room Card: ${roomCard.name}, Result Card: ${resultCard.name}`);
 
          // Resolve icons on the designated result card
         resolveIcons(resultCard);
@@ -143,8 +182,8 @@ async function handleRoom() {
             endDungeonLevel();
         } else {
             // If level is not over, prompt for next room or wait for player action
-            console.log("Room complete. Preparing for next room...");
-             // TODO: Implement logic to proceed to the next room (likely waiting for player input or a delay)
+            logEvent("Room complete. Click 'Next Room' to continue.");
+            enableNextRoomButton();
         }
 
     } else {
@@ -221,6 +260,7 @@ function checkWinLossConditions() {
 function resolveIcons(resultCard) {
     console.log("Inspecting resultCard in resolveIcons:", JSON.stringify(resultCard, null, 2)); // Added log
     console.log("Resolving icons for result card:", resultCard.name);
+    logEvent(`Resolving icons for result card: ${resultCard.name}`);
     // Assuming icons are stored as a comma-separated string in resultCard.icons
     if (!resultCard.icons || typeof resultCard.icons !== 'string') {
         console.warn("Result card has no icons or invalid format:", resultCard);
@@ -247,6 +287,7 @@ function resolveIcons(resultCard) {
                     if (enemyCard) {
                         console.log("Found enemy card:", enemyCard);
                         initiateCombat(enemyCard); // Call a new function to handle combat
+                        logEvent(`Combat started with ${enemyCard.name}`);
                     } else {
                         console.warn(`Enemy card not found for name: ${enemyName}`);
                     }
@@ -618,4 +659,112 @@ function updatePlayerStats(stat, amount) {
     }
 }
 
-export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState };
+// Function to simulate rolling two six-sided dice
+// Returns an array [roll1, roll2].
+function rollDice() {
+    const roll1 = Math.floor(Math.random() * 6) + 1;
+    const roll2 = Math.floor(Math.random() * 6) + 1;
+    console.log(`Dice rolled: ${roll1}, ${roll2}`);
+    return [roll1, roll2];
+}
+
+// Full combat logic for enemy encounters
+async function initiateCombat(enemyCard) {
+    logEvent(`Combat started with ${enemyCard.name}`);
+    displayEnemyCard(enemyCard); // Show enemy card in UI
+    let currentEnemyHealth = enemyCard.health;
+    let isPlayerTurn = true;
+
+    while (currentEnemyHealth > 0 && gameState.player.hp > 0) {
+        if (isPlayerTurn) {
+            logEvent(`Player's turn to attack...`);
+            const [roll1, roll2] = rollDice();
+            if (roll1 === roll2) {
+                logEvent(`Player rolled doubles (${roll1}, ${roll2}) and missed!`);
+            } else {
+                const rawAttackValue = Math.abs(roll1 - roll2);
+                const totalAttackDamage = rawAttackValue; // Add player bonuses here if needed
+                const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
+                currentEnemyHealth -= damageAfterDefense;
+                logEvent(`Player rolled ${roll1}, ${roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`);
+            }
+            if (currentEnemyHealth <= 0) {
+                logEvent(`${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`);
+                updatePlayerStats('favor', enemyCard.favor);
+                break;
+            }
+        } else {
+            logEvent(`${enemyCard.name}'s turn to attack...`);
+            const [roll1, roll2] = rollDice();
+            if (roll1 === roll2) {
+                logEvent(`${enemyCard.name} rolled doubles (${roll1}, ${roll2}) and missed!`);
+            } else {
+                let damageDealt = Math.abs(roll1 - roll2) + enemyCard.attack;
+                updatePlayerStats('hp', -damageDealt);
+                logEvent(`${enemyCard.name} rolled ${roll1}, ${roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`);
+            }
+            if (gameState.player.hp <= 0) {
+                logEvent(`Player defeated by ${enemyCard.name}!`);
+                break;
+            }
+        }
+        isPlayerTurn = !isPlayerTurn;
+        // Optionally add a delay here for UI pacing
+    }
+    setTimeout(() => {
+        hideEnemyCard();
+    }, 2000);
+    logEvent(`Combat with ${enemyCard.name} ended.`);
+}
+
+// --- Next Room Button Logic ---
+function enableNextRoomButton() {
+    const btn = document.getElementById('next-room-btn');
+    if (btn) {
+        btn.disabled = false;
+        btn.style.display = 'inline-block';
+    }
+}
+
+function disableNextRoomButton() {
+    const btn = document.getElementById('next-room-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.display = 'none';
+    }
+}
+
+// Attach event listener for Next Room button (if not already attached)
+(function setupNextRoomButton() {
+    const btn = document.getElementById('next-room-btn');
+    if (btn && !btn.dataset.bound) {
+        btn.addEventListener('click', async () => {
+            disableNextRoomButton();
+            await handleRoom();
+        });
+        btn.dataset.bound = 'true';
+        disableNextRoomButton(); // Hide by default
+    }
+})();
+
+// Function to advance to the next room (round)
+function advanceToNextRoom() {
+    // Move previous room and result cards to the discard pile
+    if (!gameState.discardPile) gameState.discardPile = { room: [], result: [] };
+    const { roomCardId, resultCardId } = gameState.visibleCards || {};
+    if (roomCardId) gameState.discardPile.room.push(roomCardId);
+    if (resultCardId) gameState.discardPile.result.push(resultCardId);
+
+    // Clear visible cards for the next round
+    gameState.visibleCards = {
+        ...gameState.visibleCards,
+        roomCardId: null,
+        resultCardId: null,
+        enemyCardId: null
+    };
+    saveGame();
+    // Start the next room
+    handleRoom();
+}
+
+export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom };

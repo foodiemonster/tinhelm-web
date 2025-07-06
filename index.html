@@ -67,7 +67,12 @@
                 <button id="resolve-button">Resolve</button>
                 <button id="skip-button">Skip</button>
             </div>
+            <button id="next-room-btn" style="display:none; margin-top:1em;">Next Room</button>
         </main>
+
+        <div id="session-log" style="height: 120px; overflow-y: auto; background: #222; color: #fff; font-size: 0.95em; padding: 0.5em; margin-top: 1em; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <!-- Session log will appear here -->
+        </div>
 
         <div id="endgame-message" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:2rem; z-index:100; text-align:center; font-size:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
             <span id="endgame-text"></span>

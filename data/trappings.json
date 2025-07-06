@@ -2,57 +2,83 @@
   {
     "id": "TRA01",
     "name": "Axe",
-    "abilities": [],
+    "abilities": [
+      { "trigger": "on_attack", "action": "reroll", "target": "dice", "condition": "on_doubles", "limit": "once_per_dungeon_level", "details": "May reroll dice if doubles are rolled in combat." },
+      { "trigger": "on_discard", "action": "damage", "target": "enemy", "amount": "2d6", "cost": "discard", "details": "Discard to deal 2d6 damage to an enemy." }
+    ],
     "effects": [],
+    "blocks": ["Books"],
     "image": "assets/cards/trappings/TRA01.png"
   },
   {
     "id": "TRA02",
     "name": "Bedroll",
     "abilities": [],
-    "effects": [],
+    "effects": [
+      { "trigger": "on_campsite", "action": "heal", "target": "player", "amount": 1, "details": "Recover 1 extra HP when resting at a campsite." }
+    ],
+    "blocks": ["Potion"],
     "image": "assets/cards/trappings/TRA02.png"
   },
   {
     "id": "TRA03",
     "name": "Dagger",
     "abilities": [],
-    "effects": [],
+    "effects": [
+      { "trigger": "on_attack", "action": "damage", "target": "enemy", "amount": 1, "condition": "first_room_card", "details": "Add 1 damage in combat when resolving the first room card of the round." }
+    ],
+    "blocks": ["Mace"],
     "image": "assets/cards/trappings/TRA03.png"
   },
   {
     "id": "TRA04",
     "name": "Scroll",
-    "abilities": [],
+    "abilities": [
+      { "trigger": "on_discard", "action": "defeat", "target": "enemy", "condition": "enemy_type_undead", "cost": "discard", "details": "Discard to auto-defeat an engaged Undead enemy. If defeated, gain no favor." }
+    ],
     "effects": [],
+    "blocks": ["Toolkit"],
     "image": "assets/cards/trappings/TRA04.png"
   },
   {
     "id": "TRA05",
     "name": "Books",
     "abilities": [],
-    "effects": [],
+    "effects": [
+      { "trigger": "on_campsite", "action": "recover", "target": "energy", "amount": 1, "details": "Recover 1 extra energy when resting at a campsite." }
+    ],
+    "blocks": ["Axe"],
     "image": "assets/cards/trappings/TRA05.png"
   },
   {
     "id": "TRA06",
     "name": "Potion",
-    "abilities": [],
+    "abilities": [
+      { "trigger": "on_discard", "action": "heal", "target": "player", "amount": 2, "cost": "discard", "details": "Discard to gain 2 HP and 2 EN." },
+      { "trigger": "on_discard", "action": "recover", "target": "energy", "amount": 2, "cost": "discard", "details": "Discard to gain 2 HP and 2 EN." }
+    ],
     "effects": [],
+    "blocks": ["Bedroll"],
     "image": "assets/cards/trappings/TRA06.png"
   },
   {
     "id": "TRA07",
     "name": "Mace",
     "abilities": [],
-    "effects": [],
+    "effects": [
+      { "trigger": "on_attack", "action": "damage", "target": "enemy", "amount": 1, "condition": "enemy_type_undead", "details": "Add 1 damage in combat against Undead enemies." }
+    ],
+    "blocks": ["Dagger"],
     "image": "assets/cards/trappings/TRA07.png"
   },
   {
     "id": "TRA08",
     "name": "Toolkit",
-    "abilities": [],
+    "abilities": [
+      { "trigger": "on_trap", "action": "bypass", "target": "trap", "details": "May optionally disarm a trap when encountered." }
+    ],
     "effects": [],
+    "blocks": ["Scroll"],
     "image": "assets/cards/trappings/TRA08.png"
   }
 ]

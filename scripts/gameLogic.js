@@ -1,8 +1,9 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
 import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard } from './ui.js';
 import { gameState, saveGame } from './gameState.js';
-import { showCombatModal } from './ui.combatModal.js';
+import { showCombatBoard, hideCombatBoard } from './ui.combatBoard.js';
 import { showChoiceModal } from './ui.choiceModal.js';
+import { applyPassiveEffects, promptForActiveAbilities } from './gameLogic.trappings.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
@@ -728,58 +729,119 @@ async function initiateCombat(enemyCard) {
         alert('Error: Player race card not found. Please restart the game.');
         return;
     }
+    // Collect available abilities for this combat round
+    const availableAbilities = [];
+    for (const item of gameState.inventory) {
+        if (item.abilities && item.abilities.length > 0) {
+            for (const ability of item.abilities) {
+                if (ability.trigger === 'on_attack') {
+                    availableAbilities.push({
+                        label: `${item.name}: ${ability.details || ability.action}`,
+                        itemId: item.id,
+                        ability
+                    });
+                }
+            }
+        }
+    }
     let currentEnemyHealth = enemyCard.health;
     let isPlayerTurn = true;
     let combatOver = false;
+    let axeRerollUsed = false;
+    function canUseAxeReroll() {
+        // Only allow once per dungeon level
+        return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
+    }
+    function useAxeReroll() { axeRerollUsed = true; }
+    function canDiscardAxe() {
+        return gameState.inventory.some(item => item.id === 'TRA01');
+    }
+    function discardAxe() {
+        const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
+        if (idx !== -1) gameState.inventory.splice(idx, 1);
+        displayInventory(gameState.inventory);
+    }
 
     await new Promise((resolve) => {
-        function handleRoll(updateModal) {
-            // Simulate dice roll
-            const [roll1, roll2] = rollDice();
+        async function handleRoll(updateModal, usedAbility, forcedRolls) {
+            let roll1, roll2;
+            if (forcedRolls) {
+                [roll1, roll2] = forcedRolls;
+            } else {
+                [roll1, roll2] = rollDice();
+            }
+            let context = { inventory: gameState.inventory, roll1, roll2, attackBonus: 0 };
+            context = applyPassiveEffects('on_attack', context);
             let message = '';
             let showRollBtn = true;
             let isCombatOver = false;
-            if (isPlayerTurn) {
-                if (roll1 === roll2) {
-                    message = `You rolled doubles (${roll1}, ${roll2}) and missed!`;
+            let specialAttack = false;
+            if (usedAbility && usedAbility.type === 'axe-discard') {
+                // Axe discard special attack
+                discardAxe();
+                const d6_1 = Math.floor(Math.random() * 6) + 1;
+                const d6_2 = Math.floor(Math.random() * 6) + 1;
+                const total = d6_1 + d6_2;
+                const damageAfterDefense = Math.max(0, total - enemyCard.defense);
+                currentEnemyHealth -= damageAfterDefense;
+                message = `Axe Special Attack! Rolled ${d6_1} + ${d6_2} = ${total}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                specialAttack = true;
+            } else if (usedAbility && usedAbility.type === 'axe-reroll') {
+                useAxeReroll();
+                // Reroll dice
+                [roll1, roll2] = rollDice();
+                context.roll1 = roll1;
+                context.roll2 = roll2;
+                message = `Axe Reroll! New roll: ${roll1}, ${roll2}`;
+            }
+            if (!specialAttack) {
+                if (isPlayerTurn) {
+                    if (context.roll1 === context.roll2) {
+                        message = message || `You rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+                    } else {
+                        const rawAttackValue = Math.abs(context.roll1 - context.roll2);
+                        const totalAttackDamage = rawAttackValue + (context.attackBonus || 0);
+                        const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
+                        currentEnemyHealth -= damageAfterDefense;
+                        message = message || `You rolled ${context.roll1}, ${context.roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                    }
+                    if (currentEnemyHealth <= 0) {
+                        message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
+                        updatePlayerStats('favor', enemyCard.favor);
+                        showRollBtn = false;
+                        isCombatOver = true;
+                        combatOver = true;
+                    }
                 } else {
-                    const rawAttackValue = Math.abs(roll1 - roll2);
-                    const totalAttackDamage = rawAttackValue; // Add player bonuses here if needed
-                    const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
-                    currentEnemyHealth -= damageAfterDefense;
-                    message = `You rolled ${roll1}, ${roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
-                }
-                if (currentEnemyHealth <= 0) {
-                    message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
-                    updatePlayerStats('favor', enemyCard.favor);
-                    showRollBtn = false;
-                    isCombatOver = true;
-                    combatOver = true;
-                }
-            } else {
-                if (roll1 === roll2) {
-                    message = `${enemyCard.name} rolled doubles (${roll1}, ${roll2}) and missed!`;
-                } else {
-                    let damageDealt = Math.abs(roll1 - roll2) + enemyCard.attack;
-                    updatePlayerStats('hp', -damageDealt);
-                    message = `${enemyCard.name} rolled ${roll1}, ${roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
-                }
-                if (gameState.player.hp <= 0) {
-                    message += `\nYou were defeated by ${enemyCard.name}!`;
-                    showRollBtn = false;
-                    isCombatOver = true;
-                    combatOver = true;
+                    if (context.roll1 === context.roll2) {
+                        message = `${enemyCard.name} rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+                    } else {
+                        let damageDealt = Math.abs(context.roll1 - context.roll2) + enemyCard.attack;
+                        updatePlayerStats('hp', -damageDealt);
+                        message = `${enemyCard.name} rolled ${context.roll1}, ${context.roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
+                    }
+                    if (gameState.player.hp <= 0) {
+                        message += `\nYou were defeated by ${enemyCard.name}!`;
+                        showRollBtn = false;
+                        isCombatOver = true;
+                        combatOver = true;
+                    }
                 }
             }
             isPlayerTurn = !isPlayerTurn;
-            updateModal({ roll1, roll2, message, showRollBtn, isCombatOver });
+            updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
             if (isCombatOver) setTimeout(resolve, 500);
         }
-        showCombatModal({
-            classCard: raceCard, // Pass as classCard for compatibility with the modal
+        showCombatBoard({
+            classCard: raceCard,
             enemyCard,
-            onRoll: handleRoll,
-            onClose: resolve
+            abilities: availableAbilities,
+            canUseAxeReroll,
+            canDiscardAxe,
+            onAxeReroll: () => handleRoll(() => {}, { type: 'axe-reroll' }),
+            onAxeDiscard: () => handleRoll(() => {}, { type: 'axe-discard' }),
+            onRoll: (cb, ab, forcedRolls) => handleRoll(cb, ab, forcedRolls),
+            onClose: () => { hideCombatBoard(); resolve(); }
         });
     });
 }

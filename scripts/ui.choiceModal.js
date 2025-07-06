@@ -77,13 +77,13 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
                     dieRoll ?
                         window.React.createElement('div', { className: 'choice-dice-row', style: { margin: '1em 0' } },
                             window.React.createElement('span', { className: 'choice-die', style: { fontSize: '2em', display: 'inline-block', minWidth: '1.5em', textAlign: 'center' } }, rollValue || '?'),
-                            window.React.createElement('div', null,
+                            window.React.createElement('div',
                                 window.React.createElement('button', { onClick: handleRoll, disabled: rolling || rolled }, rolling ? 'Rolling...' : (rolled ? 'Done' : 'Roll Die'))
                             )
                         ) : null,
                     choices && choices.length ?
                         window.React.createElement('div', { className: 'choice-modal-actions' },
-                            choices.map(opt => window.React.createElement('button', { key: opt.value, onClick: () => handleChoice(opt.value) }, opt.label))
+                            choices.map((opt, idx) => window.React.createElement('button', { key: opt.label + '-' + idx, onClick: () => handleChoice(opt.value) }, opt.label))
                         ) : null
                 )
             );

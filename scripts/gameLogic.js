@@ -1,5 +1,5 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
-import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision } from './ui.js'; // Import UI functions
+import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory } from './ui.js';
 
 // Player stats
 let playerStats = {
@@ -43,7 +43,11 @@ function initializePlayer(raceId, classId) {
 
     console.log("Player initialized:", playerStats);
     // Update UI with initial stats and player cards
-    // TODO: Update UI with initial stats (HP, energy, food, favor, level)
+    updateStatDisplay('hp', playerStats.health);
+    updateStatDisplay('energy', playerStats.energy);
+    updateStatDisplay('rations', playerStats.rations);
+    updateStatDisplay('favor', playerStats.favor);
+    updateStatDisplay('level', currentDungeonLevel);
     displayRaceCard(raceCard);
     displayClassCard(classCard);
 }
@@ -106,14 +110,19 @@ async function handleRoom() {
     if (playerDecision === 'RESOLVE') {
         console.log("Resolving the first card.");
         roomCard = firstCard;
-        // Draw the second card as the result card from the result deck
-        resultCard = drawCard(dungeonResultDeck); // Corrected: Draw from dungeonResultDeck
-        if (!resultCard) {
-            console.error("Could not draw the result card after resolving.");
-             // TODO: Handle error or end game?
+
+        // Get the linked result card based on the room card's linkedResultId
+        if (!roomCard.linkedResultId) {
+            console.error("Room card has no linkedResultId.");
             return;
         }
-        console.log("Second card drawn as Result Card:", resultCard.name);
+
+        resultCard = getCardById(roomCard.linkedResultId);
+        if (!resultCard) {
+            console.error("Could not find linked result card with ID:", roomCard.linkedResultId);
+            return;
+        }
+        console.log("Using linked Result Card:", resultCard.name);
 
     } else { // playerDecision === 'SKIP'
         console.log("Skipping the first card.");
@@ -137,7 +146,7 @@ async function handleRoom() {
         displayRoomCard(roomCard);
         displayResultCard(resultCard);
 
-        // Resolve icons on the designated result card
+         // Resolve icons on the designated result card
         resolveIcons(resultCard);
 
         // After resolving icons, check if the level is over
@@ -381,10 +390,10 @@ function resolveIcons(resultCard) {
                              // Attempt to find the loot card by name
                              const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
-                                console.log("Gained loot item from treasure:", lootCard.name);
+        console.log("Gained loot item from treasure:", lootCard.name);
                                 playerStats.inventory.push(lootCard);
                                 console.log("Player Inventory:", playerStats.inventory);
-                                // TODO: Update UI to show new inventory item
+                                displayInventory(playerStats.inventory);
                             } else {
                                 console.warn(`Loot card not found for name in treasure: ${lootName}`);
                             }
@@ -555,9 +564,8 @@ function handleReferenceCard(refCard) {
         default:
             console.warn("Unknown Reference Card encountered:", refCard.name);
         }
-        // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
+       // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
     }
-
 
 
 // Function to update player stats (can be used by icon handlers)
@@ -568,10 +576,11 @@ function updatePlayerStats(stat, amount) {
         if (stat === 'health') {
             playerStats.health = Math.max(0, Math.min(playerStats.health, playerStats.maxHealth));
         } else if (stat === 'energy') {
-             playerStats.energy = Math.max(0, Math.min(playerStats.energy, playerStats.maxEnergy));
+            playerStats.energy = Math.max(0, Math.min(playerStats.energy, playerStats.maxEnergy));
         }
         console.log(`${stat} updated by ${amount}. New value: ${playerStats[stat]}`);
-        // TODO: Update UI display for the specific stat
+        updateStatDisplay(stat, playerStats[stat]);
+        displayInventory(playerStats.inventory);
 
         // Check for player defeat after health changes
         if (stat === 'health' && playerStats.health <= 0) {

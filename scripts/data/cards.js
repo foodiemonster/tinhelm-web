@@ -160,7 +160,7 @@ function drawCard(deck) {
 // Function to get a card by its ID
 function getCardById(cardId) {
     return allCards[cardId] || null;
-}
+    }
 
 // Function to expose all loaded cards
 function getAllCardsData() {

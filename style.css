@@ -76,3 +76,39 @@ body {
     object-fit: cover;
     display: block;
 }
+
+#dungeon-slots {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 440px;
+    margin: 1.5em auto 0 auto;
+    gap: 0.5em;
+}
+.dungeon-slot {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+}
+#slot-deck, #slot-room, #slot-result, #slot-discard {
+    min-width: 100px;
+}
+#discard-pile-display {
+    position: relative;
+}
+#discard-pile-display img {
+    width: 48px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #888;
+    margin: 2px;
+    background: #ccc;
+}
+#deck-placeholder {
+    margin-bottom: 0;
+}

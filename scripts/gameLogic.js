@@ -1,5 +1,5 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
-import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory } from './ui.js';
+import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard } from './ui.js';
 import { gameState, saveGame } from './gameState.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
@@ -29,6 +29,10 @@ function discardPreviousRoomAndResult() {
     const { roomCardId, resultCardId } = gameState.visibleCards || {};
     if (roomCardId) gameState.discardPile.room.push(roomCardId);
     if (resultCardId) gameState.discardPile.result.push(resultCardId);
+    // Show last discarded cards in the discard pile slot
+    const lastRoom = roomCardId ? getCardById(roomCardId) : null;
+    const lastResult = resultCardId ? getCardById(resultCardId) : null;
+    displayDiscardPile(lastRoom, lastResult);
 }
 
 // Function to initialize player stats based on selected race and class
@@ -77,6 +81,7 @@ function initializePlayer(raceId, classId) {
     updateStatDisplay('food', gameState.player.food);
     updateStatDisplay('favor', gameState.player.favor);
     updateStatDisplay('level', gameState.level);
+    updateStatDisplay('shards', gameState.player.shards);
     displayRaceCard(raceCard);
     displayClassCard(classCard);
     displayInventory(gameState.inventory);
@@ -123,12 +128,12 @@ async function handleRoom() {
     }
     // Draw the first card (the potential room card)
     const firstCard = drawCard(dungeonDeck);
-
     if (!firstCard) {
         console.error("Could not draw the first card for the room.");
         return;
     }
-
+    // Show the first card in the deck slot for the player to decide
+    displayDeckRoomCard(firstCard);
     let playerDecision;
     try {
         playerDecision = await awaitPlayerRoomDecision(); // Wait for the player's decision
@@ -136,30 +141,30 @@ async function handleRoom() {
         console.error("Error getting player decision:", error);
         return;
     }
-
-    let roomCard, resultCard;
-
-    if (playerDecision === 'RESOLVE') {
-        roomCard = firstCard;
-
-        // Get the linked result card based on the room card's linkedResultId
-        if (!roomCard.linkedResultId) {
-            console.error("Room card has no linkedResultId.");
-            return;
-        }
-
-        resultCard = getCardById(roomCard.linkedResultId);
-    } else { // playerDecision === 'SKIP'
-        resultCard = firstCard;
-        // Draw the second card as the room card from the dungeon deck
-        roomCard = drawCard(dungeonDeck); // Corrected: Draw from dungeonDeck
-         if (!roomCard) {
-            console.error("Could not draw the room card after skipping.");
-             // TODO: Handle error or end game?
-            return;
-        }
+    // Draw the second card (needed for both resolve/skip)
+    const secondCard = drawCard(dungeonDeck);
+    if (!secondCard) {
+        console.error("Could not draw the second card for the room.");
+        return;
     }
-
+    let roomCard, resultCard;
+    if (playerDecision === 'RESOLVE') {
+        // Move first card to Room (Slot 2)
+        roomCard = firstCard;
+        // Draw the next dungeonRoom card, but show its linkedResultId as the result
+        const resultCardObj = getCardById(secondCard.linkedResultId);
+        resultCard = resultCardObj || secondCard; // Fallback to the card itself if no linkedResultId
+        displayRoomCard(roomCard);
+        displayResultCard(resultCard);
+    } else { // SKIP
+        // First card becomes Result (Slot 3), second card becomes Room (Slot 2, must resolve)
+        resultCard = firstCard;
+        roomCard = secondCard;
+        displayRoomCard(roomCard);
+        displayResultCard(resultCard);
+    }
+    // Hide the deck slot after decision
+    displayDeckRoomCard(null);
     // Track visible cards for restoration
     gameState.visibleCards = {
         ...gameState.visibleCards,
@@ -167,16 +172,11 @@ async function handleRoom() {
         resultCardId: resultCard ? resultCard.id : null,
         enemyCardId: null // Will be set during combat if needed
     };
-
     if (roomCard && resultCard) {
-        displayRoomCard(roomCard);
-        displayResultCard(resultCard);
         logEvent(`Entering Room ${gameState.currentRoom}`);
         logEvent(`Room Card: ${roomCard.name}, Result Card: ${resultCard.name}`);
-
-         // Resolve icons on the designated result card
-        resolveIcons(resultCard);
-
+        // Resolve icons from the chosen room card, using legend fields from the result card
+        resolveIcons(roomCard, resultCard);
         // After resolving icons, check if the level is over
         if (gameState.currentRoom === 6) {
             endDungeonLevel();
@@ -185,12 +185,10 @@ async function handleRoom() {
             logEvent("Room complete. Click 'Next Room' to continue.");
             enableNextRoomButton();
         }
-
     } else {
         console.error("Could not form the room with two cards.", { roomCard, resultCard });
         // TODO: Handle error or end game?
     }
-
     // Note: The game flow after a room (proceeding to the next room or ending the level) needs to be carefully managed,
     // potentially with async/await and UI interactions to pause the game for player input.
 }
@@ -255,96 +253,95 @@ function checkWinLossConditions() {
     return false; // Indicate game is not over
 }
 
+// --- Endgame Modal ---
+function showEndgameMessage(message) {
+    const modal = document.getElementById('endgame-message');
+    const text = document.getElementById('endgame-text');
+    if (modal && text) {
+        text.textContent = message;
+        modal.style.display = 'block';
+    } else {
+        alert(message); // Fallback if modal not found
+    }
+}
+
 // Function to resolve icons on a result card
 // Handles all icon types (Enemy, Loot, Trap, etc.) and applies their effects to gameState.
-function resolveIcons(resultCard) {
-    console.log("Inspecting resultCard in resolveIcons:", JSON.stringify(resultCard, null, 2)); // Added log
-    console.log("Resolving icons for result card:", resultCard.name);
-    logEvent(`Resolving icons for result card: ${resultCard.name}`);
-    // Assuming icons are stored as a comma-separated string in resultCard.icons
-    if (!resultCard.icons || typeof resultCard.icons !== 'string') {
-        console.warn("Result card has no icons or invalid format:", resultCard);
+function resolveIcons(iconCard, legendCard) {
+    // iconCard: the card whose icons are to be resolved (chosen room card)
+    // legendCard: the card whose fields (enemy, loot, trap, etc.) are used for icon resolution
+    console.log("Inspecting iconCard in resolveIcons:", JSON.stringify(iconCard, null, 2));
+    console.log("Using legendCard in resolveIcons:", JSON.stringify(legendCard, null, 2));
+    logEvent(`Resolving icons for card: ${iconCard.name} (legend: ${legendCard.name})`);
+    if (!iconCard.icons || typeof iconCard.icons !== 'string') {
+        console.warn("Icon card has no icons or invalid format:", iconCard);
         return;
     }
-
-    const icons = resultCard.icons.split(',').map(icon => icon.trim());
-
+    const icons = iconCard.icons.split(',').map(icon => icon.trim());
     icons.forEach(icon => {
         console.log("Resolving icon:", icon);
         switch (icon) {
             case 'Enemy':
-                console.log("Enemy encounter:", resultCard.enemy);
-                // The format is typically "Enemy=EnemyName"
-                if (resultCard.enemy && typeof resultCard.enemy === 'string') { // Added check
-                    const enemyMatch = resultCard.enemy.match(/^Enemy=(.+)$/);
+                console.log("Enemy encounter:", legendCard.enemy);
+                if (legendCard.enemy && typeof legendCard.enemy === 'string') {
+                    const enemyMatch = legendCard.enemy.match(/^Enemy=(.+)$/);
                     if (enemyMatch && enemyMatch[1]) {
                         const enemyName = enemyMatch[1];
-                        // Find the enemy card by name (assuming names are unique for now)
-                        // A more robust approach might involve mapping names to IDs during data loading
-                         // For now, let's search through all cards to find the enemy by name
-                         const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
-
-                    if (enemyCard) {
-                        console.log("Found enemy card:", enemyCard);
-                        initiateCombat(enemyCard); // Call a new function to handle combat
-                        logEvent(`Combat started with ${enemyCard.name}`);
+                        const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
+                        if (enemyCard) {
+                            console.log("Found enemy card:", enemyCard);
+                            initiateCombat(enemyCard);
+                            logEvent(`Combat started with ${enemyCard.name}`);
+                        } else {
+                            console.warn(`Enemy card not found for name: ${enemyName}`);
+                        }
                     } else {
-                        console.warn(`Enemy card not found for name: ${enemyName}`);
-                    }
-
-                } else {
-                    console.warn("Could not parse enemy information from result card:", resultCard.enemy);
+                        console.warn("Could not parse enemy information from legend card:", legendCard.enemy);
                     }
                 } else {
-                    console.warn("Enemy icon encountered, but no valid enemy data found on the card.", { enemy: resultCard.enemy });
+                    console.warn("Enemy icon encountered, but no valid enemy data found on the legend card.", { enemy: legendCard.enemy });
                 }
                 break;
             case 'Loot':
-                console.log("Loot found:", resultCard.loot);
-                const lootOutcome = resultCard.loot; // Renamed for clarity
-
-                if (lootOutcome && typeof lootOutcome === 'string') { // Added check for existence and type
+                console.log("Loot found:", legendCard.loot);
+                const lootOutcome = legendCard.loot;
+                if (lootOutcome && typeof lootOutcome === 'string') {
                     if (lootOutcome === 'Empty') {
-                         console.log("The loot chest is empty.");
+                        console.log("The loot chest is empty.");
                     } else if (lootOutcome === 'GainShard') {
                         console.log("Found a Shard of Brahm!");
                         updatePlayerStats('shards', 1);
-                        // TODO: Check for win condition after gaining a shard
-                    } else if (lootOutcome.startsWith('Loot=')) { // Check format for specific loot items
+                    } else if (lootOutcome.startsWith('Loot=')) {
                         const lootMatch = lootOutcome.match(/^Loot=(.+)$/);
                         if (lootMatch && lootMatch[1]) {
                             const lootName = lootMatch[1];
-                            // Attempt to find the loot card by name
                             const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
                                 console.log("Gained loot item from treasure:", lootCard.name);
                                 gameState.inventory.push(lootCard);
                                 displayInventory(gameState.inventory);
-                                // TODO: Update UI to show new inventory item
                             } else {
                                 console.warn(`Loot card not found for name: ${lootName}`);
                             }
                         } else {
-                            console.warn("Could not parse loot information from result card:", lootOutcome);
+                            console.warn("Could not parse loot information from legend card:", lootOutcome);
                         }
                     } else {
                         console.warn("Unknown loot outcome format:", lootOutcome);
                     }
                 } else {
-                    console.warn("Loot icon encountered, but no valid loot data found on the card.", { lootOutcome });
+                    console.warn("Loot icon encountered, but no valid loot data found on the legend card.", { lootOutcome });
                 }
                 break;
             case 'Trap':
-                console.log("Trap encountered:", resultCard.trap);
-                const trapEffect = resultCard.trap;
-
-                if (trapEffect && typeof trapEffect === 'string') { // Added check for existence and type
+                console.log("Trap encountered:", legendCard.trap);
+                const trapEffect = legendCard.trap;
+                if (trapEffect && typeof trapEffect === 'string') {
                     if (trapEffect === 'None') {
                         console.log("No trap triggered.");
                     } else {
                         const hpMatch = trapEffect.match(/^HP -(\d+)$/);
-                        const enMatch = trapEffect.match(/^EN -(\\d+)$/);
-
+                        const enMatch = trapEffect.match(/^EN -(\d+)$/);
                         if (hpMatch && hpMatch[1]) {
                             const damage = parseInt(hpMatch[1], 10);
                             console.log(`Taking ${damage} damage from a trap.`);
@@ -358,29 +355,24 @@ function resolveIcons(resultCard) {
                         }
                     }
                 } else {
-                     console.warn("Trap icon encountered, but no valid trap effect data found on the card.", { trapEffect });
+                    console.warn("Trap icon encountered, but no valid trap effect data found on the legend card.", { trapEffect });
                 }
                 break;
-                case 'Campsite':
-                    console.log("Campsite found.");
-                    console.log("Campsite Options: 1. Gain +2 HP and +1 Energy, or 2. Gain +1 Food.");
-                    // TODO: Implement player choice for Campsite benefit
-                    // For now, no effect is applied automatically
-                    break;
+            case 'Campsite':
+                console.log("Campsite found.");
+                console.log("Campsite Options: 1. Gain +2 HP and +1 Energy, or 2. Gain +1 Food.");
+                // TODO: Implement player choice for Campsite benefit
+                break;
             case 'Water':
                 console.log("Water encountered.");
-                // Check if the player has the Gill Net trapping (LT01)
-                const gillNetCard = gameState.inventory.find(item => item.id === 'LT01'); // Using ID based on loot.json
-
+                const gillNetCard = gameState.inventory.find(item => item.id === 'LT01');
                 if (gillNetCard) {
                     console.log("Using Gill Net.");
                     let successes = 0;
                     const rolls = [];
-                    // Roll 3 dice for Gill Net
                     for (let i = 0; i < 3; i++) {
-                        const [roll1] = rollDice(); // rollDice returns [roll1, roll2], we only need one for a d6
+                        const [roll1] = rollDice();
                         rolls.push(roll1);
-                        // Assuming a success is rolling a 4, 5, or 6 on a d6
                         if (roll1 >= 4) {
                             successes++;
                         }
@@ -394,73 +386,61 @@ function resolveIcons(resultCard) {
                     }
                 } else {
                     console.log("No Gill Net to use.");
-                    // TODO: Implement default Water icon resolution if any
                 }
-                break; // Added break statement
+                break;
             case 'Treasure':
                 console.log("Treasure found.");
-                // Treasure icon resolution often involves gaining loot or a shard
-                const treasureOutcome = resultCard.loot; // Assuming treasure outcome is in the loot field for now
-
+                const treasureOutcome = legendCard.loot;
                 if (treasureOutcome === 'GainShard') {
                     console.log("Found a Shard of Brahm!");
                     updatePlayerStats('shards', 1);
-                    // TODO: Check for win condition after gaining a shard
                 } else if (treasureOutcome && typeof treasureOutcome === 'string' && treasureOutcome.startsWith('Loot=')) {
-                    // If it starts with 'Loot=', use the loot handling logic
                     console.log("Treasure contains loot.");
                     const lootMatch = treasureOutcome.match(/^Loot=(.+)$/);
                     if (lootMatch && lootMatch[1]) {
                         const lootName = lootMatch[1];
-                         if (lootName === 'Empty') {
+                        if (lootName === 'Empty') {
                             console.log("The treasure chest is empty.");
-                         } else {
-                             // Attempt to find the loot card by name
-                             const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
+                        } else {
+                            const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
-        console.log("Gained loot item from treasure:", lootCard.name);
+                                console.log("Gained loot item from treasure:", lootCard.name);
                                 gameState.inventory.push(lootCard);
                                 displayInventory(gameState.inventory);
                             } else {
                                 console.warn(`Loot card not found for name in treasure: ${lootName}`);
                             }
-                         }
+                        }
                     } else {
-                         console.warn("Could not parse treasure outcome as loot:", treasureOutcome);
+                        console.warn("Could not parse treasure outcome as loot:", treasureOutcome);
                     }
                 } else {
                     console.warn("Unknown treasure outcome format:", treasureOutcome);
                 }
                 break;
             case 'Random':
-                console.log("Random event:", resultCard.random);
-                const randomEvent = resultCard.random;
-
-                if (randomEvent && typeof randomEvent === 'string') { // Added check for existence and type
+                console.log("Random event:", legendCard.random);
+                const randomEvent = legendCard.random;
+                if (randomEvent && typeof randomEvent === 'string') {
                     const refMatch = randomEvent.match(/^Ref=(.+)$/);
-
                     if (refMatch && refMatch[1]) {
                         const refName = refMatch[1];
-                        // Find the reference card by name
-                         const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
-
+                        const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
                         if (refCard) {
                             console.log("Encountered Reference Card:", refCard.name);
-                            // TODO: Implement specific logic for each Reference Card type based on GAMERULES.md section 8.0 Errata
-                            handleReferenceCard(refCard); // Call a new function to handle reference card effects
+                            handleReferenceCard(refCard);
                         } else {
                             console.warn(`Reference card not found for name: ${refName}`);
                         }
                     } else if (randomEvent.startsWith('Enemy=')) {
-                         // Some random events are directly enemy encounters
                         console.log("Random event is an enemy encounter.");
-                         const enemyMatch = randomEvent.match(/^Enemy=(.+)$/);
+                        const enemyMatch = randomEvent.match(/^Enemy=(.+)$/);
                         if (enemyMatch && enemyMatch[1]) {
                             const enemyName = enemyMatch[1];
                             const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
-                             if (enemyCard) {
+                            if (enemyCard) {
                                 console.log("Found enemy card:", enemyCard);
-                                initiateCombat(enemyCard); // Initiate combat with this enemy
+                                initiateCombat(enemyCard);
                             } else {
                                 console.warn(`Enemy card not found for name: ${enemyName}`);
                             }
@@ -469,14 +449,14 @@ function resolveIcons(resultCard) {
                         console.warn("Could not parse random event format:", randomEvent);
                     }
                 } else {
-                    console.warn("Random icon encountered, but no valid random event data found on the card.", { randomEvent });
+                    console.warn("Random icon encountered, but no valid random event data found on the legend card.", { randomEvent });
                 }
                 break;
             default:
                 console.warn("Unknown icon encountered:", icon);
         }
     });
-     // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
+    // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
 }
 
 // Function to handle Reference Card effects
@@ -631,6 +611,13 @@ function restoreGameUIFromState() {
     updateStatDisplay('food', gameState.player.food);
     updateStatDisplay('favor', gameState.player.favor);
     updateStatDisplay('level', gameState.level);
+    updateStatDisplay('shards', gameState.player.shards);
+    // Restore discard pile
+    const lastRoomId = (gameState.discardPile && gameState.discardPile.room.length > 0) ? gameState.discardPile.room[gameState.discardPile.room.length-1] : null;
+    const lastResultId = (gameState.discardPile && gameState.discardPile.result.length > 0) ? gameState.discardPile.result[gameState.discardPile.result.length-1] : null;
+    const lastRoom = lastRoomId ? getCardById(lastRoomId) : null;
+    const lastResult = lastResultId ? getCardById(lastResultId) : null;
+    displayDiscardPile(lastRoom, lastResult);
 }
 
 // Function to update player stats (can be used by icon handlers)
@@ -644,8 +631,10 @@ function updatePlayerStats(stat, amount) {
         } else if (stat === 'energy') {
             gameState.player.energy = Math.max(0, Math.min(gameState.player.energy, gameState.player.maxEnergy));
         }
-        console.log(`${stat} updated by ${amount}. New value: ${gameState.player[stat]}`);
         updateStatDisplay(stat, gameState.player[stat]);
+        if (stat === 'shards') {
+            updateStatDisplay('shards', gameState.player.shards);
+        }
         displayInventory(gameState.inventory);
 
         // Check for player defeat after health changes

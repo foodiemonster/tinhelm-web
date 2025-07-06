@@ -14,6 +14,7 @@
             <div class="stat" id="stat-food">Food: <span class="value" id="food-value">2</span></div>
             <div class="stat" id="stat-favor">Favor: <span class="value" id="favor-value">0</span></div>
             <div class="stat" id="stat-level">Level: <span class="value" id="level-value">1</span></div>
+            <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
         </header>
 
         <div id="save-load-buttons">
@@ -53,12 +54,30 @@
         </div>
 
         <main id="dungeon-area">
-            <div id="deck-placeholder">Dungeon Deck</div>
-            <div id="room-card-display" class="card">
-                <img id="room-card-image" alt="Dungeon Room Card">
-            </div>
-            <div id="result-card-display" class="card">
-                <img id="result-card-image" alt="Dungeon Result Card">
+            <div id="dungeon-slots">
+                <!-- Slot 1: Deck (draw pile) -->
+                <div class="dungeon-slot" id="slot-deck">
+                    <div id="deck-placeholder">Dungeon Deck</div>
+                </div>
+                <!-- Slot 2: Room Card (if RESOLVE) -->
+                <div class="dungeon-slot" id="slot-room">
+                    <div id="room-card-display" class="card">
+                        <img id="room-card-image" alt="Dungeon Room Card">
+                    </div>
+                </div>
+                <!-- Slot 3: Result Card (or dungeonRoom flipped if SKIP) -->
+                <div class="dungeon-slot" id="slot-result">
+                    <div id="result-card-display" class="card">
+                        <img id="result-card-image" alt="Dungeon Result Card">
+                    </div>
+                </div>
+                <!-- Slot 4: Discard Pile -->
+                <div class="dungeon-slot" id="slot-discard">
+                    <div id="discard-pile-display" class="card">
+                        <img id="discard-room-image" alt="Discarded Room Card" style="display:none;">
+                        <img id="discard-result-image" alt="Discarded Result Card" style="display:none;">
+                    </div>
+                </div>
             </div>
             <div id="enemy-card-display" class="card" style="display: none;">
                 <img id="enemy-card-image" alt="Enemy Card">

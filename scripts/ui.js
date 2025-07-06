@@ -135,3 +135,35 @@ export function displayInventory(inventory) {
         });
     }
 }
+
+// Function to display the discard pile (last discarded room and result cards)
+export function displayDiscardPile(roomCard, resultCard) {
+    const discardRoomImg = document.getElementById('discard-room-image');
+    const discardResultImg = document.getElementById('discard-result-image');
+    if (discardRoomImg) {
+        if (roomCard && roomCard.image) {
+            discardRoomImg.src = roomCard.image;
+            discardRoomImg.style.display = 'inline-block';
+        } else {
+            discardRoomImg.style.display = 'none';
+        }
+    }
+    if (discardResultImg) {
+        if (resultCard && resultCard.image) {
+            discardResultImg.src = resultCard.image;
+            discardResultImg.style.display = 'inline-block';
+        } else {
+            discardResultImg.style.display = 'none';
+        }
+    }
+}
+
+// Function to show the current dungeonRoom card in the deck slot (Slot 1)
+export function displayDeckRoomCard(card) {
+    const deckPlaceholder = document.getElementById('deck-placeholder');
+    if (deckPlaceholder && card && card.image) {
+        deckPlaceholder.innerHTML = `<img src="${card.image}" alt="Dungeon Room Card" style="width:100px;height:150px;object-fit:cover;border-radius:12px;">`;
+    } else if (deckPlaceholder) {
+        deckPlaceholder.innerHTML = 'Dungeon Deck';
+    }
+}

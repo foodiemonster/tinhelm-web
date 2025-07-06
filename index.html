@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tin Helm Web</title>
     <link rel="stylesheet" href="style.css">
+    <!-- React and ReactDOM via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script>
+      // If React is available, define a React modal root and fallback logic
+      window.ReactAvailable = typeof React !== 'undefined' && typeof ReactDOM !== 'undefined';
+    </script>
 </head>
 <body>
     <div id="game-container">

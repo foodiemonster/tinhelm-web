@@ -9,6 +9,94 @@ let raceCards = [];
 let classCards = [];
 
 export function showCharacterModal(allRaces, allClasses, onConfirm) {
+    // If React is available, use a React modal (CDN version)
+    if (window.ReactAvailable && window.React && window.ReactDOM) {
+        let reactRoot = document.getElementById('character-modal-react-root');
+        if (!reactRoot) {
+            reactRoot = document.createElement('div');
+            reactRoot.id = 'character-modal-react-root';
+            document.body.appendChild(reactRoot);
+        }
+        // Use a persistent React root for createRoot API
+        if (!reactRoot._reactRootContainer) {
+            reactRoot._reactRootContainer = window.ReactDOM.createRoot(reactRoot);
+        }
+        const CharacterModal = (props) => {
+            const [step, setStep] = window.React.useState('race');
+            const [selectedRace, setSelectedRace] = window.React.useState(null);
+            const [selectedClass, setSelectedClass] = window.React.useState(null);
+            const [allowedClasses, setAllowedClasses] = window.React.useState(props.allClasses);
+            const handleRace = (raceId) => {
+                setSelectedRace(raceId);
+                setStep('class');
+                const race = props.allRaces.find(r => r.id === raceId);
+                let filtered = props.allClasses;
+                if (race && race.classRestriction) {
+                    filtered = props.allClasses.filter(cls => cls.name !== race.classRestriction);
+                }
+                setAllowedClasses(filtered);
+                setSelectedClass(null);
+            };
+            const handleClass = (classId) => {
+                setSelectedClass(classId);
+            };
+            const handleConfirm = () => {
+                if (selectedRace && selectedClass) {
+                    if (reactRoot._reactRootContainer) {
+                        reactRoot._reactRootContainer.unmount();
+                    }
+                    props.onConfirm(selectedRace, selectedClass);
+                }
+            };
+            const handleReselect = () => {
+                setStep('race');
+                setSelectedRace(null);
+                setSelectedClass(null);
+                setAllowedClasses(props.allClasses);
+            };
+            return window.React.createElement(
+                'div', { className: 'modal-overlay', role: 'dialog', 'aria-modal': 'true' },
+                window.React.createElement('div', { className: 'modal-content responsive-modal', id: 'character-modal-content' },
+                    window.React.createElement('h2', null, step === 'race' ? 'Choose Your Race' : 'Choose Your Class'),
+                    step === 'race' && window.React.createElement('div', { className: 'card-row', id: 'race-card-row' },
+                        props.allRaces.map(race =>
+                            window.React.createElement('div', {
+                                className: 'modal-card race-card' + (selectedRace === race.id ? ' selected' : ''),
+                                key: race.id,
+                                'data-id': race.id,
+                                onClick: () => handleRace(race.id)
+                            },
+                                window.React.createElement('img', { src: race.image, alt: race.name })
+                            )
+                        )
+                    ),
+                    step === 'class' && window.React.createElement('div', { className: 'card-row', id: 'class-card-row' },
+                        allowedClasses.map(cls =>
+                            window.React.createElement('div', {
+                                className: 'modal-card class-card' + (selectedClass === cls.id ? ' selected' : ''),
+                                key: cls.id,
+                                'data-id': cls.id,
+                                onClick: () => handleClass(cls.id)
+                            },
+                                window.React.createElement('img', { src: cls.image, alt: cls.name })
+                            )
+                        )
+                    ),
+                    step === 'class' && window.React.createElement('div', { className: 'modal-actions', id: 'modal-actions', style: { display: 'flex' } },
+                        window.React.createElement('button', { id: 'confirm-selection-btn', onClick: handleConfirm, disabled: !selectedClass }, 'Confirm'),
+                        window.React.createElement('button', { id: 'reselect-btn', onClick: handleReselect }, 'Reselect Race')
+                    )
+                )
+            );
+        };
+        reactRoot._reactRootContainer.render(
+            window.React.createElement(CharacterModal, { allRaces, allClasses, onConfirm })
+        );
+        // Clean up on close
+        reactRoot._unmount = () => reactRoot._reactRootContainer.unmount();
+        return;
+    }
+    // Fallback: Vanilla JS modal
     // Create modal overlay
     let modal = document.createElement('div');
     modal.id = 'character-modal';
@@ -33,7 +121,7 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
         const cardDiv = document.createElement('div');
         cardDiv.className = 'modal-card race-card';
         cardDiv.setAttribute('data-id', race.id);
-        cardDiv.innerHTML = `<img src="${race.image}" alt="${race.name}"><div class="card-label">${race.name}</div>`;
+        cardDiv.innerHTML = `<img src="${race.image}" alt="${race.name}">`;
         cardDiv.onclick = () => selectRace(race.id);
         raceRow.appendChild(cardDiv);
     });
@@ -61,7 +149,7 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
             const cardDiv = document.createElement('div');
             cardDiv.className = 'modal-card class-card';
             cardDiv.setAttribute('data-id', cls.id); // Store the id string from class.json
-            cardDiv.innerHTML = `<img src="${cls.image}" alt="${cls.name}"><div class="card-label">${cls.name}</div>`;
+            cardDiv.innerHTML = `<img src="${cls.image}" alt="${cls.name}">`;
             cardDiv.onclick = () => selectClass(cls.id);
             classRow.appendChild(cardDiv);
         });

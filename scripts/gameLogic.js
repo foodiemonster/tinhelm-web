@@ -1,6 +1,7 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
 import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard } from './ui.js';
 import { gameState, saveGame } from './gameState.js';
+import { showCombatModal } from './ui.combatModal.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
@@ -654,53 +655,70 @@ function rollDice() {
 
 // Full combat logic for enemy encounters
 async function initiateCombat(enemyCard) {
-    logEvent(`Combat started with ${enemyCard.name}`);
-    displayEnemyCard(enemyCard); // Show enemy card in UI
+    console.log('initiateCombat: gameState.raceId =', gameState.raceId);
+    const raceCard = getCardById(gameState.raceId); // Use race card instead of class card
+    console.log('initiateCombat: raceCard =', raceCard);
+    if (!raceCard) {
+        console.error('initiateCombat: raceCard is undefined for raceId:', gameState.raceId);
+        const allCardIds = Object.keys(getAllCardsData());
+        console.error('Available card IDs:', allCardIds);
+        alert('Error: Player race card not found. Please restart the game.');
+        return;
+    }
     let currentEnemyHealth = enemyCard.health;
     let isPlayerTurn = true;
-    let enemyDefeated = false;
+    let combatOver = false;
 
-    while (currentEnemyHealth > 0 && gameState.player.hp > 0) {
-        if (isPlayerTurn) {
-            logEvent(`Player's turn to attack...`);
+    await new Promise((resolve) => {
+        function handleRoll(updateModal) {
+            // Simulate dice roll
             const [roll1, roll2] = rollDice();
-            if (roll1 === roll2) {
-                logEvent(`Player rolled doubles (${roll1}, ${roll2}) and missed!`);
+            let message = '';
+            let showRollBtn = true;
+            let isCombatOver = false;
+            if (isPlayerTurn) {
+                if (roll1 === roll2) {
+                    message = `You rolled doubles (${roll1}, ${roll2}) and missed!`;
+                } else {
+                    const rawAttackValue = Math.abs(roll1 - roll2);
+                    const totalAttackDamage = rawAttackValue; // Add player bonuses here if needed
+                    const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
+                    currentEnemyHealth -= damageAfterDefense;
+                    message = `You rolled ${roll1}, ${roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                }
+                if (currentEnemyHealth <= 0) {
+                    message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
+                    updatePlayerStats('favor', enemyCard.favor);
+                    showRollBtn = false;
+                    isCombatOver = true;
+                    combatOver = true;
+                }
             } else {
-                const rawAttackValue = Math.abs(roll1 - roll2);
-                const totalAttackDamage = rawAttackValue; // Add player bonuses here if needed
-                const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
-                currentEnemyHealth -= damageAfterDefense;
-                logEvent(`Player rolled ${roll1}, ${roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`);
+                if (roll1 === roll2) {
+                    message = `${enemyCard.name} rolled doubles (${roll1}, ${roll2}) and missed!`;
+                } else {
+                    let damageDealt = Math.abs(roll1 - roll2) + enemyCard.attack;
+                    updatePlayerStats('hp', -damageDealt);
+                    message = `${enemyCard.name} rolled ${roll1}, ${roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
+                }
+                if (gameState.player.hp <= 0) {
+                    message += `\nYou were defeated by ${enemyCard.name}!`;
+                    showRollBtn = false;
+                    isCombatOver = true;
+                    combatOver = true;
+                }
             }
-            if (currentEnemyHealth <= 0) {
-                logEvent(`${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`);
-                updatePlayerStats('favor', enemyCard.favor);
-                enemyDefeated = true;
-                // Tint the enemy card to indicate defeat
-                displayEnemyCard(enemyCard, true);
-                break;
-            }
-        } else {
-            logEvent(`${enemyCard.name}'s turn to attack...`);
-            const [roll1, roll2] = rollDice();
-            if (roll1 === roll2) {
-                logEvent(`${enemyCard.name} rolled doubles (${roll1}, ${roll2}) and missed!`);
-            } else {
-                let damageDealt = Math.abs(roll1 - roll2) + enemyCard.attack;
-                updatePlayerStats('hp', -damageDealt);
-                logEvent(`${enemyCard.name} rolled ${roll1}, ${roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`);
-            }
-            if (gameState.player.hp <= 0) {
-                logEvent(`Player defeated by ${enemyCard.name}!`);
-                break;
-            }
+            isPlayerTurn = !isPlayerTurn;
+            updateModal({ roll1, roll2, message, showRollBtn, isCombatOver });
+            if (isCombatOver) setTimeout(resolve, 500);
         }
-        isPlayerTurn = !isPlayerTurn;
-        // Optionally add a delay here for UI pacing
-    }
-    // Do not hide the enemy card automatically; it will be hidden on next round
-    logEvent(`Combat with ${enemyCard.name} ended.`);
+        showCombatModal({
+            classCard: raceCard, // Pass as classCard for compatibility with the modal
+            enemyCard,
+            onRoll: handleRoll,
+            onClose: resolve
+        });
+    });
 }
 
 // --- Next Room Button Logic ---

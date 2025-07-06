@@ -1,23 +1,11 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
 import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory } from './ui.js';
+import { gameState, saveGame } from './gameState.js';
 
-// Player stats
-let playerStats = {
-    health: 0,
-    maxHealth: 0,
-    energy: 0,
-    maxEnergy: 0,
-    rations: 0,
-    favor: 0,
-    shards: 0,
-    inventory: []
-};
-
-// Game state variables
-let currentDungeonLevel = 1;
-let currentRoom = 0;
+// Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
 // Function to initialize player stats based on selected race and class
+// Sets up all player stats, inventory, and level in gameState, then updates the UI and saves the game.
 function initializePlayer(raceId, classId) {
     const raceCard = getCardById(raceId);
     const classCard = getCardById(classId);
@@ -27,44 +15,60 @@ function initializePlayer(raceId, classId) {
         return;
     }
 
-    playerStats.maxHealth = raceCard.health + classCard.healthModifier;
-    playerStats.health = playerStats.maxHealth; // Start with full health
-    playerStats.maxEnergy = raceCard.energy + classCard.energyModifier;
-    playerStats.energy = playerStats.maxEnergy; // Start with full energy
-    playerStats.rations = raceCard.rations;
-    playerStats.favor = 0; // Start with 0 favor
-    playerStats.shards = 0; // Start with 0 shards
-    playerStats.inventory = []; // Start with empty inventory
+    // Track selected race and class IDs in gameState
+    gameState.raceId = raceId;
+    gameState.classId = classId;
+
+    gameState.player.maxHealth = raceCard.health + classCard.healthModifier;
+    gameState.player.hp = gameState.player.maxHealth;
+    gameState.player.maxEnergy = raceCard.energy + classCard.energyModifier;
+    gameState.player.energy = gameState.player.maxEnergy;
+    gameState.player.food = raceCard.rations;
+    gameState.player.favor = 0;
+    gameState.player.shards = 0;
+    gameState.inventory = [];
+    gameState.level = 1;
 
     // Add starting trapping from class
     if (classCard.startingTrapping) {
-        playerStats.inventory.push(getCardById(classCard.startingTrapping));
+        gameState.inventory.push(getCardById(classCard.startingTrapping));
     }
 
-    console.log("Player initialized:", playerStats);
-    // Update UI with initial stats and player cards
-    updateStatDisplay('hp', playerStats.health);
-    updateStatDisplay('energy', playerStats.energy);
-    updateStatDisplay('rations', playerStats.rations);
-    updateStatDisplay('favor', playerStats.favor);
-    updateStatDisplay('level', currentDungeonLevel);
+    // Track visible cards for restoration
+    gameState.visibleCards = {
+        raceId,
+        classId,
+        inventory: gameState.inventory.map(card => card.id),
+        roomCardId: null,
+        resultCardId: null,
+        enemyCardId: null
+    };
+
+    console.log("Player initialized:", gameState.player);
+    updateStatDisplay('hp', gameState.player.hp);
+    updateStatDisplay('energy', gameState.player.energy);
+    updateStatDisplay('food', gameState.player.food);
+    updateStatDisplay('favor', gameState.player.favor);
+    updateStatDisplay('level', gameState.level);
     displayRaceCard(raceCard);
     displayClassCard(classCard);
+    displayInventory(gameState.inventory);
+    saveGame();
 }
 
 // Function to start a new dungeon level
+// Increments dungeon level, resets room counter, shuffles decks, updates UI, and saves state.
 function startDungeonLevel() {
-    currentDungeonLevel++;
-    currentRoom = 0;
-    console.log(`Starting Dungeon Level ${currentDungeonLevel}`);
-    // Shuffle dungeon and result decks for the new level
-    shuffleDeck(dungeonDeck); // Added shuffling
-    shuffleDeck(dungeonResultDeck); // Added shuffling
-    console.log("Dungeon and Result decks shuffled.");
-    // TODO: Start the first room
+    gameState.level++;
+    gameState.currentRoom = 0;
+    shuffleDeck(dungeonDeck);
+    shuffleDeck(dungeonResultDeck);
+    updateStatDisplay('level', gameState.level);
+    saveGame();
 }
 
 // Function to shuffle a deck (Fisher-Yates algorithm)
+// Used for dungeon and result decks at the start of each level.
 function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -73,42 +77,32 @@ function shuffleDeck(deck) {
 }
 
 // Function to handle a single room in the dungeon
+// Advances room counter, draws cards, prompts player for resolve/skip, and processes result.
 async function handleRoom() {
-    currentRoom++;
-    console.log(`Entering Room ${currentRoom}`);
-
-    if (currentRoom > 6) {
-        console.log("End of dungeon level.");
-        // TODO: Check for win/loss conditions and potentially start next level or end game
+    gameState.currentRoom = (gameState.currentRoom || 0) + 1;
+    if (gameState.currentRoom > 6) {
+        endDungeonLevel();
         return;
     }
-
     // Draw the first card (the potential room card)
     const firstCard = drawCard(dungeonDeck);
 
     if (!firstCard) {
         console.error("Could not draw the first card for the room.");
-        // TODO: Handle error or end game?
         return;
     }
-
-    console.log("First card drawn:", firstCard.name);
-    // Display the first card to the player and ask for RESOLVE or SKIP decision
-    // This will require UI interaction.
 
     let playerDecision;
     try {
         playerDecision = await awaitPlayerRoomDecision(); // Wait for the player's decision
-        console.log(`Player decides to ${playerDecision}.`);
     } catch (error) {
         console.error("Error getting player decision:", error);
-        return; // Handle error (e.g., end game or retry)
+        return;
     }
 
     let roomCard, resultCard;
 
     if (playerDecision === 'RESOLVE') {
-        console.log("Resolving the first card.");
         roomCard = firstCard;
 
         // Get the linked result card based on the room card's linkedResultId
@@ -118,15 +112,7 @@ async function handleRoom() {
         }
 
         resultCard = getCardById(roomCard.linkedResultId);
-        if (!resultCard) {
-            console.error("Could not find linked result card with ID:", roomCard.linkedResultId);
-            return;
-        }
-        console.log("Using linked Result Card:", resultCard.name);
-
     } else { // playerDecision === 'SKIP'
-        console.log("Skipping the first card.");
-        // The first card becomes the result card (flipped)
         resultCard = firstCard;
         // Draw the second card as the room card from the dungeon deck
         roomCard = drawCard(dungeonDeck); // Corrected: Draw from dungeonDeck
@@ -135,14 +121,17 @@ async function handleRoom() {
              // TODO: Handle error or end game?
             return;
         }
-        console.log("Second card drawn as Room Card:", roomCard.name);
-         // When skipping, the result card's linked result is not used directly, but its icons are resolved.
-         // The icons to resolve are from the *first* card drawn (now the resultCard).
     }
 
+    // Track visible cards for restoration
+    gameState.visibleCards = {
+        ...gameState.visibleCards,
+        roomCardId: roomCard ? roomCard.id : null,
+        resultCardId: resultCard ? resultCard.id : null,
+        enemyCardId: null // Will be set during combat if needed
+    };
+
     if (roomCard && resultCard) {
-        console.log("Room formed:", roomCard.name, "(Room) and", resultCard.name, "(Result).");
-        // Display the paired cards
         displayRoomCard(roomCard);
         displayResultCard(resultCard);
 
@@ -150,8 +139,7 @@ async function handleRoom() {
         resolveIcons(resultCard);
 
         // After resolving icons, check if the level is over
-        if (currentRoom === 6) {
-            console.log("End of level detected.");
+        if (gameState.currentRoom === 6) {
             endDungeonLevel();
         } else {
             // If level is not over, prompt for next room or wait for player action
@@ -169,21 +157,21 @@ async function handleRoom() {
 }
 
 // Function to handle the end of a dungeon level
+// Advances level, consumes food or applies starvation damage, shuffles decks, checks win/loss.
 function endDungeonLevel() {
-    console.log(`Ending Dungeon Level ${currentDungeonLevel}.`);
+    console.log(`Ending Dungeon Level ${gameState.level}.`);
 
     // 1. Move to the next level
-    currentDungeonLevel++;
-    console.log(`Proceeding to Dungeon Level ${currentDungeonLevel}.`);
+    gameState.level++;
+    console.log(`Proceeding to Dungeon Level ${gameState.level}.`);
      // TODO: Update UI to show new dungeon level
 
     // 2. Consume 1 food
     console.log("Consuming 1 food.");
-    if (playerStats.rations > 0) {
-        updatePlayerStats('rations', -1);
+    if (gameState.player.food > 0) {
+        updatePlayerStats('food', -1);
     } else {
-        console.log("No food to consume. Taking 3 damage.");
-        updatePlayerStats('health', -3);
+        updatePlayerStats('hp', -3);
          // TODO: Check for player defeat after taking damage
     }
 
@@ -202,27 +190,25 @@ function endDungeonLevel() {
 }
 
 // Function to check for win or loss conditions
+// Shows endgame message and returns true if game is over, otherwise false.
 function checkWinLossConditions() {
     console.log("Checking win/loss conditions...");
 
     // Win condition: Gain 3 Shards
-    if (playerStats.shards >= 3) {
-        console.log("Win condition met: Player has 3 or more Shards!");
-        // TODO: Implement win game logic (show win screen, calculate score)
+    if (gameState.player.shards >= 3) {
+        showEndgameMessage('Victory! You collected 3 Shards of Brahm and escaped the dungeon!');
         return true; // Indicate game is over
     }
 
     // Loss condition 1: Health drops to 0 or less (already handled in updatePlayerStats, but good to check here too)
-    if (playerStats.health <= 0) {
-        console.log("Loss condition met: Player health is 0 or less.");
-        // TODO: Implement lose game logic (show lose screen, calculate score)
+    if (gameState.player.hp <= 0) {
+        showEndgameMessage('Defeat! You have perished in the dungeon.');
         return true; // Indicate game is over
     }
 
     // Loss condition 2: Complete the 5th level without 3 Shards
-    if (currentDungeonLevel > 5 && playerStats.shards < 3) {
-        console.log(`Loss condition met: Completed level ${currentDungeonLevel} without 3 Shards.`);
-        // TODO: Implement lose game logic (show lose screen, calculate score)
+    if (gameState.level > 5 && gameState.player.shards < 3) {
+        showEndgameMessage('Defeat! You reached the end without enough Shards.');
         return true; // Indicate game is over
     }
 
@@ -231,6 +217,7 @@ function checkWinLossConditions() {
 }
 
 // Function to resolve icons on a result card
+// Handles all icon types (Enemy, Loot, Trap, etc.) and applies their effects to gameState.
 function resolveIcons(resultCard) {
     console.log("Inspecting resultCard in resolveIcons:", JSON.stringify(resultCard, null, 2)); // Added log
     console.log("Resolving icons for result card:", resultCard.name);
@@ -290,8 +277,8 @@ function resolveIcons(resultCard) {
                             const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
                                 console.log("Gained loot item from treasure:", lootCard.name);
-                                playerStats.inventory.push(lootCard);
-                                console.log("Player Inventory:", playerStats.inventory);
+                                gameState.inventory.push(lootCard);
+                                displayInventory(gameState.inventory);
                                 // TODO: Update UI to show new inventory item
                             } else {
                                 console.warn(`Loot card not found for name: ${lootName}`);
@@ -320,7 +307,7 @@ function resolveIcons(resultCard) {
                         if (hpMatch && hpMatch[1]) {
                             const damage = parseInt(hpMatch[1], 10);
                             console.log(`Taking ${damage} damage from a trap.`);
-                            updatePlayerStats('health', -damage);
+                            updatePlayerStats('hp', -damage);
                         } else if (enMatch && enMatch[1]) {
                             const energyLoss = parseInt(enMatch[1], 10);
                             console.log(`Losing ${energyLoss} energy from a trap.`);
@@ -342,7 +329,7 @@ function resolveIcons(resultCard) {
             case 'Water':
                 console.log("Water encountered.");
                 // Check if the player has the Gill Net trapping (LT01)
-                const gillNetCard = playerStats.inventory.find(item => item.id === 'LT01'); // Using ID based on loot.json
+                const gillNetCard = gameState.inventory.find(item => item.id === 'LT01'); // Using ID based on loot.json
 
                 if (gillNetCard) {
                     console.log("Using Gill Net.");
@@ -360,7 +347,7 @@ function resolveIcons(resultCard) {
                     console.log(`Gill Net rolls: ${rolls.join(', ')}. Successes: ${successes}`);
                     if (successes > 0) {
                         console.log(`Gaining ${successes} food from Gill Net.`);
-                        updatePlayerStats('rations', successes);
+                        updatePlayerStats('food', successes);
                     } else {
                         console.log("No food gained from Gill Net.");
                     }
@@ -391,9 +378,8 @@ function resolveIcons(resultCard) {
                              const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
         console.log("Gained loot item from treasure:", lootCard.name);
-                                playerStats.inventory.push(lootCard);
-                                console.log("Player Inventory:", playerStats.inventory);
-                                displayInventory(playerStats.inventory);
+                                gameState.inventory.push(lootCard);
+                                displayInventory(gameState.inventory);
                             } else {
                                 console.warn(`Loot card not found for name in treasure: ${lootName}`);
                             }
@@ -453,13 +439,14 @@ function resolveIcons(resultCard) {
 }
 
 // Function to handle Reference Card effects
+// Applies special effects based on reference card name (Altar, Grove, etc.).
 function handleReferenceCard(refCard) {
     console.log("Handling Reference Card effect for:", refCard.name);
     // Implement logic based on refCard.name and GAMERULES.md
     switch (refCard.name) {
         case 'Altar':
             console.log("Resolving Altar effect. Checking player Favor...");
-            const currentFavor = playerStats.favor;
+            const currentFavor = gameState.player.favor;
             console.log(`Current Favor: ${currentFavor}`);
 
             if (currentFavor >= 10) {
@@ -471,19 +458,19 @@ function handleReferenceCard(refCard) {
                  // TODO: Check for win condition
             } else if (currentFavor >= 8) {
                 console.log("Favor is 8-9. Gain +4 HP and +3 Energy.");
-                updatePlayerStats('health', 4);
+                updatePlayerStats('hp', 4);
                 updatePlayerStats('energy', 3);
             } else if (currentFavor >= 6) {
                 console.log("Favor is 6-7. Gain +3 HP and +2 Energy.");
-                updatePlayerStats('health', 3);
+                updatePlayerStats('hp', 3);
                 updatePlayerStats('energy', 2);
             } else if (currentFavor >= 4) {
                 console.log("Favor is 4-5. Gain +2 HP and +1 Energy.");
-                updatePlayerStats('health', 2);
+                updatePlayerStats('hp', 2);
                 updatePlayerStats('energy', 1);
             } else if (currentFavor >= 0) {
                  console.log("Favor is 0-3. Gain +1 HP.");
-                 updatePlayerStats('health', 1);
+                 updatePlayerStats('hp', 1);
             }
             break;
         case 'Campsite': // Note: Campsite is also a direct icon, but can appear via Random
@@ -500,15 +487,15 @@ function handleReferenceCard(refCard) {
 
             if (groveRoll === 1) {
                 console.log("Grove effect: Lose 1 HP.");
-                updatePlayerStats('health', -1);
+                updatePlayerStats('hp', -1);
             } else if (groveRoll === 2) {
                 console.log("Grove effect: No effect.");
             } else if (groveRoll >= 3 && groveRoll <= 4) {
                 console.log("Grove effect: Gain 1 Ration.");
-                updatePlayerStats('rations', 1);
+                updatePlayerStats('food', 1);
             } else if (groveRoll >= 5 && groveRoll <= 6) {
                 console.log("Grove effect: Gain 2 Rations.");
-                updatePlayerStats('rations', 2);
+                updatePlayerStats('food', 2);
             }
             break;
         case 'Labyrinth':
@@ -517,16 +504,16 @@ function handleReferenceCard(refCard) {
             console.log("Resolving Labyrinth effect. Must lose a resource.");
             // Priority: 1 Ration, then 2 Energy, then 3 Health
 
-            if (playerStats.rations >= 1) {
+            if (gameState.player.food >= 1) {
                 console.log("Labyrinth effect: Losing 1 Ration.");
-                updatePlayerStats('rations', -1);
-            } else if (playerStats.energy >= 2) {
+                updatePlayerStats('food', -1);
+            } else if (gameState.player.energy >= 2) {
                  console.log("Labyrinth effect: Losing 2 Energy.");
                  updatePlayerStats('energy', -2);
-            } else if (playerStats.health > 0) { // Corrected: Apply damage as long as health is above 0
-                 const damageToTake = Math.min(playerStats.health, 3); // Take max 3 damage, not more than current health
+            } else if (gameState.player.hp > 0) { // Corrected: Apply damage as long as health is above 0
+                 const damageToTake = Math.min(gameState.player.hp, 3); // Take max 3 damage, not more than current health
                  console.log(`Labyrinth effect: Losing ${damageToTake} HP.`);
-                 updatePlayerStats('health', -damageToTake);
+                 updatePlayerStats('hp', -damageToTake);
                  // TODO: Check for player defeat after losing health (handled by updatePlayerStats)
             } else {
                  // Player health is already 0 or less, no further health loss
@@ -536,7 +523,7 @@ function handleReferenceCard(refCard) {
         case 'Pigman':
             console.log("Resolving Pigman effect.");
             // Pigman effect: gain 1 favor or discard Turnip to gain shard
-            const turnipIndex = playerStats.inventory.findIndex(item => item.id === 'LT06'); // Find Turnip by ID
+            const turnipIndex = gameState.inventory.findIndex(item => item.id === 'LT06'); // Find Turnip by ID
 
             if (turnipIndex !== -1) {
                 console.log("You have a Turnip. Pigman offers: 1. Gain 1 Favor, or 2. Discard Turnip to gain 1 Shard.");
@@ -567,142 +554,68 @@ function handleReferenceCard(refCard) {
        // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
     }
 
+// Function to restore the UI from gameState after loading
+function restoreGameUIFromState() {
+    if (!gameState.visibleCards) return;
+    const { raceId, classId, inventory, roomCardId, resultCardId, enemyCardId } = gameState.visibleCards;
+    if (raceId) {
+        const raceCard = getCardById(raceId);
+        if (raceCard) displayRaceCard(raceCard);
+    }
+    if (classId) {
+        const classCard = getCardById(classId);
+        if (classCard) displayClassCard(classCard);
+    }
+    if (Array.isArray(inventory)) {
+        const invCards = inventory.map(id => getCardById(id)).filter(Boolean);
+        displayInventory(invCards);
+    }
+    if (roomCardId) {
+        const roomCard = getCardById(roomCardId);
+        if (roomCard) displayRoomCard(roomCard);
+    }
+    if (resultCardId) {
+        const resultCard = getCardById(resultCardId);
+        if (resultCard) displayResultCard(resultCard);
+    }
+    if (enemyCardId) {
+        const enemyCard = getCardById(enemyCardId);
+        if (enemyCard) displayEnemyCard(enemyCard);
+    } else {
+        hideEnemyCard();
+    }
+    // Restore stat bars
+    updateStatDisplay('hp', gameState.player.hp);
+    updateStatDisplay('energy', gameState.player.energy);
+    updateStatDisplay('food', gameState.player.food);
+    updateStatDisplay('favor', gameState.player.favor);
+    updateStatDisplay('level', gameState.level);
+}
 
 // Function to update player stats (can be used by icon handlers)
+// Updates a stat, clamps values, updates UI, checks for defeat, and saves state.
 function updatePlayerStats(stat, amount) {
-    if (playerStats.hasOwnProperty(stat)) {
-        playerStats[stat] += amount;
+    if (gameState.player.hasOwnProperty(stat)) {
+        gameState.player[stat] += amount;
         // Ensure stats don't go below zero or above max (for health and energy)
-        if (stat === 'health') {
-            playerStats.health = Math.max(0, Math.min(playerStats.health, playerStats.maxHealth));
+        if (stat === 'hp') {
+            gameState.player.hp = Math.max(0, Math.min(gameState.player.hp, gameState.player.maxHealth));
         } else if (stat === 'energy') {
-            playerStats.energy = Math.max(0, Math.min(playerStats.energy, playerStats.maxEnergy));
+            gameState.player.energy = Math.max(0, Math.min(gameState.player.energy, gameState.player.maxEnergy));
         }
-        console.log(`${stat} updated by ${amount}. New value: ${playerStats[stat]}`);
-        updateStatDisplay(stat, playerStats[stat]);
-        displayInventory(playerStats.inventory);
+        console.log(`${stat} updated by ${amount}. New value: ${gameState.player[stat]}`);
+        updateStatDisplay(stat, gameState.player[stat]);
+        displayInventory(gameState.inventory);
 
         // Check for player defeat after health changes
-        if (stat === 'health' && playerStats.health <= 0) {
+        if (stat === 'hp' && gameState.player.hp <= 0) {
             checkWinLossConditions(); // Check for loss due to health depletion
         }
 
+        saveGame();
     } else {
         console.warn(`Attempted to update unknown stat: ${stat}`);
     }
 }
 
-
-// Function to simulate rolling two six-sided dice
-function rollDice() {
-    const roll1 = Math.floor(Math.random() * 6) + 1;
-    const roll2 = Math.floor(Math.random() * 6) + 1;
-    console.log(`Dice rolled: ${roll1}, ${roll2}`);
-    return [roll1, roll2];
-}
-
-
-// Placeholder for combat initiation (will be expanded)
-async function initiateCombat(enemyCard) {
-    console.log("Initiating combat with", enemyCard.name);
-    displayEnemyCard(enemyCard); // Display the enemy card in the UI
-    // We need to track the enemy's current health during combat
-    let currentEnemyHealth = enemyCard.health;
-    let isPlayerTurn = true; // Player always attacks first
-
-    console.log(`Enemy Stats - Initial Health: ${currentEnemyHealth}, Attack: ${enemyCard.attack}, Defense: ${enemyCard.defense}, Favor: ${enemyCard.favor}`);
-
-    // Basic combat loop
-    while (currentEnemyHealth > 0 && playerStats.health > 0) {
-        if (isPlayerTurn) {
-            console.log("Player's turn to attack...");
-            // TODO: Implement player energy expenditure decision (for now, assume 0 energy spent)
-            const energySpent = 0; // Placeholder
-            let playerBonusDamage = 0; // Placeholder based on energySpent and class abilities
-
-            const [roll1, roll2] = rollDice();
-
-            if (roll1 === roll2) {
-                console.log("Doubles rolled! Player attack misses.");
-                // Doubles result in a miss (zero damage)
-                playerBonusDamage = 0; // Ensure no bonus damage is added on a miss
-            }
-             else {
-                const rawAttackValue = Math.abs(roll1 - roll2);
-                console.log(`Raw attack value: ${rawAttackValue}`);
-                // TODO: Apply player abilities that affect raw attack or damage before defense
-
-                const totalAttackDamage = rawAttackValue + playerBonusDamage;
-                console.log(`Total attack damage before defense: ${totalAttackDamage}`);
-
-                const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
-                console.log(`Damage after enemy defense: ${damageAfterDefense}`);
-
-                currentEnemyHealth -= damageAfterDefense;
-                console.log(`Enemy health remaining: ${currentEnemyHealth}`);
-            }
-
-            // Check if enemy is defeated after player attack
-            if (currentEnemyHealth <= 0) {
-                console.log(`${enemyCard.name} defeated!`);
-                // TODO: Handle enemy defeat (gain favor, etc. according to GAMERULES.md section 5.2 and card abilities)
-                // For now, just log favor gain
-                console.log(`Gaining ${enemyCard.favor} favor from defeating ${enemyCard.name}.`);
-                updatePlayerStats('favor', enemyCard.favor);
-                checkWinLossConditions(); // Check for win after gaining favor (potentially from Possessor)
-                break; // Exit combat loop
-            }
-
-        } else {
-            console.log(`${enemyCard.name}'s turn to attack...`);
-
-            const [roll1, roll2] = rollDice();
-
-            if (roll1 === roll2) {
-                console.log("Doubles rolled! Enemy attack misses.");
-                // Doubles result in a miss (zero damage)
-            }
-             else {
-                // Damage dealt is the difference between the two dice results + enemy attack value
-                let damageDealt = Math.abs(roll1 - roll2) + enemyCard.attack;
-                console.log(`Raw enemy damage: ${Math.abs(roll1 - roll2)}, Enemy Attack Bonus: ${enemyCard.attack}`);
-                console.log(`Total enemy damage before defense: ${damageDealt}`);
-
-                // TODO: Apply player defense/abilities that reduce incoming damage (e.g., Shield)
-                // For now, directly apply damage
-                 console.log(`Player health before taking damage: ${playerStats.health}`);
-                updatePlayerStats('health', -damageDealt);
-                console.log(`Player health after taking damage: ${playerStats.health}`);
-            }
-
-            // Check if player is defeated after enemy attack (handled in updatePlayerStats now)
-             if (playerStats.health <= 0) {
-                 break; // Exit combat loop if player is defeated
-             }
-        }
-
-        // Switch turns
-        isPlayerTurn = !isPlayerTurn;
-         // TODO: Add a small delay or wait for player action in a real game loop
-    }
-
-    // Combat ended. Determine outcome and proceed.
-    if (currentEnemyHealth <= 0) {
-        console.log("Combat ended: Enemy defeated.");
-        // Add a delay before hiding the enemy card
-        setTimeout(() => {
-            hideEnemyCard(); // Hide the enemy card after combat
-            // TODO: Continue resolving other icons in the room or proceed to next step
-        }, 3000); // Hide after 3 seconds
-    } else if (playerStats.health <= 0) {
-        console.log("Combat ended: Player defeated.");
-        // Add a delay before hiding the enemy card
-        setTimeout(() => {
-            hideEnemyCard(); // Hide the enemy card after combat
-            // Player defeat is now handled by checkWinLossConditions called from updatePlayerStats
-        }, 3000); // Hide after 3 seconds
-    }
-     // TODO: After combat, the game flow needs to continue (e.g., resolve next icon or proceed to next room)
-}
-
-export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, playerStats };
+export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState };

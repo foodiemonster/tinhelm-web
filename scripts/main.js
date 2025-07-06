@@ -2,8 +2,9 @@ import {
     loadCardData, getCardById, getAllCardsData, RaceCard, ClassCard
 } from './data/cards.js';
 import {
-    initializePlayer, startDungeonLevel, handleRoom, playerStats
+    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState
 } from './gameLogic.js';
+import { saveGame, loadGame } from './gameState.js';
 
 // Store loaded card data globally in main.js for easy access in UI logic
 let allCardsData = {};
@@ -118,40 +119,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- Save/Load Logic (Keeping existing for now) ---
-    // Assuming supportsLocalStorage, saveGame, loadGame, and updateUIFromState functions exist elsewhere or will be added.
-    function supportsLocalStorage() {
-         try {
-            return 'localStorage' in window && window['localStorage'] !== null;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function saveGame() {
-         // TODO: Implement save game logic using playerStats and current game state
-        console.log("Save game not implemented yet.");
-    }
-
-    function loadGame() {
-         // TODO: Implement load game logic
-        console.log("Load game not implemented yet.");
-         return false; // Indicate no game loaded
-    }
-
-     function updateUIFromState() {
-         // TODO: Implement UI update based on game state
-        console.log("UI update not implemented yet.");
-    }
-
+    // --- Save/Load Logic (Now using gameState.js) ---
     const saveBtn = document.getElementById('save-btn');
     const loadBtn = document.getElementById('load-btn');
-
-    if (!supportsLocalStorage()) {
-        if (saveBtn) saveBtn.disabled = true;
-        if (loadBtn) loadBtn.disabled = true;
-        return;
-    }
 
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
@@ -161,10 +131,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (loadBtn) {
-        loadBtn.addEventListener('click', () => {
-            if (!loadGame()) {
-                alert('No saved game found.');
-            }
+        loadBtn.addEventListener('click', async () => {
+            await loadGame();
+            restoreGameUIFromState();
+            // Show dungeon area and hide character creation after loading
+            document.getElementById('character-creation').style.display = 'none';
+            document.getElementById('dungeon-area').style.display = 'flex';
+            // Optionally, resume game loop if needed
         });
         if (!localStorage.getItem('tinhelm-save')) {
             loadBtn.disabled = true;

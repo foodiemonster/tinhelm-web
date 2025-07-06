@@ -68,9 +68,14 @@
                 <button id="skip-button">Skip</button>
             </div>
         </main>
+
+        <div id="endgame-message" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:2rem; z-index:100; text-align:center; font-size:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+            <span id="endgame-text"></span>
+            <br><br>
+            <button onclick="location.reload()">Restart</button>
+        </div>
     </div>
 
-    <script src="scripts/gameState.js"></script>
     <script src="scripts/main.js" type="module"></script>
 </body>
 </html>

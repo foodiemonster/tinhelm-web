@@ -5,6 +5,7 @@ import {
     initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom
 } from './gameLogic.js';
 import { saveGame, loadGame } from './gameState.js';
+import { showCharacterModal } from './ui.characterModal.js';
 
 // Store loaded card data globally in main.js for easy access in UI logic
 let allCardsData = {};
@@ -45,79 +46,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     raceCards = Object.values(allCardsData).filter(card => card instanceof RaceCard);
     classCards = Object.values(allCardsData).filter(card => card instanceof ClassCard);
 
-    function populateCharacterSelect(selectedRaceId) {
-        const raceSelect = document.getElementById('race-select');
-        const classSelect = document.getElementById('class-select');
+    // Hide old character creation UI
+    document.getElementById('character-creation').style.display = 'none';
+    document.getElementById('start-game-btn').style.display = 'none';
 
-        // Clear existing options
-        raceSelect.innerHTML = '<option value=\"\">--Please choose a race--</option>';
-        classSelect.innerHTML = '<option value=\"\">--Please choose a class--</option>';
-
-        // Populate race options
-        raceCards.forEach(raceCard => {
-            const option = document.createElement('option');
-            option.value = raceCard.id; // Use ID as value
-            option.text = raceCard.name;
-            raceSelect.add(option);
-             if (raceCard.id === selectedRaceId) {
-                option.selected = true;
-            }
-        });
-
-        // Populate class options
-        const selectedRaceCard = raceCards.find(card => card.id === selectedRaceId);
-
-        classCards.forEach(classCard => {
-            let restricted = false;
-            if (selectedRaceCard && selectedRaceCard.classRestriction) {
-                 // Find the class card object for the restriction name
-                 const restrictionClassCard = classCards.find(card => card.name === selectedRaceCard.classRestriction);
-                 if (restrictionClassCard && classCard.id === restrictionClassCard.id) {
-                     restricted = true;
-                 }
-            }
-
-            if (!restricted) {
-                const option = document.createElement('option');
-                option.value = classCard.id; // Use ID as value
-                option.text = classCard.name;
-                classSelect.add(option);
-            }
-        });
-    }
-
-    function updateCharacterSelect() {
-        const selectedRaceId = document.getElementById('race-select').value;
-        populateCharacterSelect(selectedRaceId);
-    }
-
-    const raceSelect = document.getElementById('race-select');
-    raceSelect.addEventListener('change', updateCharacterSelect);
-
-    // Initial population with no race selected
-    populateCharacterSelect(null);
-
-    // --- Start Game Button Logic ---
-    const startGameBtn = document.getElementById('start-game-btn');
-    if (startGameBtn) {
-        startGameBtn.addEventListener('click', () => {
-            const selectedRaceId = document.getElementById('race-select').value;
-            const selectedClassId = document.getElementById('class-select').value;
-
-            if (!selectedRaceId || !selectedClassId) {
-                alert('Please select a race and class to start the game.');
-                return;
-            }
-
-            initializePlayer(selectedRaceId, selectedClassId);
-            startDungeonLevel();
-            handleRoom(); // Draw and display the first room
-
-             // TODO: Hide character selection UI and show game UI
-             document.getElementById('character-creation').style.display = 'none';
-             document.getElementById('dungeon-area').style.display = 'flex'; // Assuming flex for layout
-        });
-    }
+    // Show new modal for character selection
+    showCharacterModal(raceCards, classCards, (selectedRaceId, selectedClassId) => {
+        initializePlayer(selectedRaceId, selectedClassId);
+        startDungeonLevel();
+        handleRoom();
+        document.getElementById('dungeon-area').style.display = 'flex';
+    });
 
     // --- Save/Load Logic (Now using gameState.js) ---
     const saveBtn = document.getElementById('save-btn');

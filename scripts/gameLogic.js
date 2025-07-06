@@ -112,28 +112,18 @@ function shuffleDeck(deck) {
 // Function to handle a single room in the dungeon
 // Advances room counter, draws cards, prompts player for resolve/skip, and processes result.
 async function handleRoom() {
-    // Move previous cards to discard pile before starting new room
-    discardPreviousRoomAndResult();
-    // Clear visible cards for new room
-    gameState.visibleCards = {
-        ...gameState.visibleCards,
-        roomCardId: null,
-        resultCardId: null,
-        enemyCardId: null
-    };
-    gameState.currentRoom = (gameState.currentRoom || 0) + 1;
-    if (gameState.currentRoom > 6) {
-        endDungeonLevel();
+    // --- Always clear Room and Result slots at the very start ---
+    displayRoomCard(null);
+    displayResultCard(null);
+    // Force UI update before proceeding
+    await new Promise(r => setTimeout(r, 0));
+    // Step 1: Show Deck slot (peek), Room/Result are empty
+    const topDeckCard = dungeonDeck.length > 0 ? dungeonDeck[0] : null;
+    displayDeckRoomCard(topDeckCard);
+    if (!topDeckCard) {
+        console.error("No cards left in the dungeon deck.");
         return;
     }
-    // Draw the first card (the potential room card)
-    const firstCard = drawCard(dungeonDeck);
-    if (!firstCard) {
-        console.error("Could not draw the first card for the room.");
-        return;
-    }
-    // Show the first card in the deck slot for the player to decide
-    displayDeckRoomCard(firstCard);
     let playerDecision;
     try {
         playerDecision = await awaitPlayerRoomDecision(); // Wait for the player's decision
@@ -141,56 +131,61 @@ async function handleRoom() {
         console.error("Error getting player decision:", error);
         return;
     }
-    // Draw the second card (needed for both resolve/skip)
-    const secondCard = drawCard(dungeonDeck);
-    if (!secondCard) {
-        console.error("Could not draw the second card for the room.");
-        return;
-    }
+    // Step 2: After Choosing Phase
+    // Remove the Deck slot card (hide it)
+    displayDeckRoomCard(null);
+    // Use the peeked card as the first card (remove it from the deck)
+    const firstCard = topDeckCard; // Do NOT call drawCard here
+    dungeonDeck.shift(); // Actually remove the card from the deck
+    let secondCard;
     let roomCard, resultCard;
     if (playerDecision === 'RESOLVE') {
-        // Move first card to Room (Slot 2)
         roomCard = firstCard;
-        // Draw the next dungeonRoom card, but show its linkedResultId as the result
-        const resultCardObj = getCardById(secondCard.linkedResultId);
-        resultCard = resultCardObj || secondCard; // Fallback to the card itself if no linkedResultId
-        displayRoomCard(roomCard);
-        displayResultCard(resultCard);
-    } else { // SKIP
-        // First card becomes Result (Slot 3), second card becomes Room (Slot 2, must resolve)
-        resultCard = firstCard;
+        secondCard = drawCard(dungeonDeck);
+        // Use linkedResultId for result card if available
+        if (secondCard && secondCard.linkedResultId) {
+            resultCard = getCardById(secondCard.linkedResultId) || secondCard;
+        } else {
+            resultCard = secondCard;
+        }
+    } else {
+        secondCard = drawCard(dungeonDeck);
+        if (firstCard && firstCard.linkedResultId) {
+            resultCard = getCardById(firstCard.linkedResultId) || firstCard;
+        } else {
+            resultCard = firstCard;
+        }
         roomCard = secondCard;
-        displayRoomCard(roomCard);
-        displayResultCard(resultCard);
     }
-    // Hide the deck slot after decision
-    displayDeckRoomCard(null);
+    displayRoomCard(roomCard);
+    displayResultCard(resultCard);
+    // Step 3: After Room/Result are set, show the next card in Deck slot (peek, do not draw)
+    const nextDeckCard = dungeonDeck.length > 0 ? dungeonDeck[0] : null;
+    displayDeckRoomCard(nextDeckCard);
+    // Discard slot: unchanged
+
     // Track visible cards for restoration
     gameState.visibleCards = {
         ...gameState.visibleCards,
         roomCardId: roomCard ? roomCard.id : null,
         resultCardId: resultCard ? resultCard.id : null,
-        enemyCardId: null // Will be set during combat if needed
+        enemyCardId: null
     };
     if (roomCard && resultCard) {
         logEvent(`Entering Room ${gameState.currentRoom}`);
         logEvent(`Room Card: ${roomCard.name}, Result Card: ${resultCard.name}`);
-        // Resolve icons from the chosen room card, using legend fields from the result card
-        resolveIcons(roomCard, resultCard);
-        // After resolving icons, check if the level is over
+        await resolveIcons(roomCard, resultCard);
         if (gameState.currentRoom === 6) {
             endDungeonLevel();
         } else {
-            // If level is not over, prompt for next room or wait for player action
             logEvent("Room complete. Click 'Next Room' to continue.");
             enableNextRoomButton();
         }
     } else {
         console.error("Could not form the room with two cards.", { roomCard, resultCard });
-        // TODO: Handle error or end game?
     }
-    // Note: The game flow after a room (proceeding to the next room or ending the level) needs to be carefully managed,
-    // potentially with async/await and UI interactions to pause the game for player input.
+    // Step 4: Clean Up is handled by Next Room button logic
+    // Step 5: Round Restart is handled by calling handleRoom() again
 }
 
 // Function to handle the end of a dungeon level
@@ -728,11 +723,27 @@ function disableNextRoomButton() {
     const btn = document.getElementById('next-room-btn');
     if (btn && !btn.dataset.bound) {
         btn.addEventListener('click', async () => {
-            disableNextRoomButton();
+            if (!gameState.discardPile) gameState.discardPile = { room: [], result: [] };
+            const { roomCardId, resultCardId } = gameState.visibleCards || {};
+            if (roomCardId) gameState.discardPile.room.push(roomCardId);
+            if (resultCardId) gameState.discardPile.result.push(resultCardId);
+            const lastRoomId = gameState.discardPile.room.length > 0 ? gameState.discardPile.room[gameState.discardPile.room.length - 1] : null;
+            const lastRoomCard = lastRoomId ? getCardById(lastRoomId) : null;
+            displayDiscardPile(lastRoomCard);
+            // Only clear visible cards/state, do NOT call displayRoomCard(null) or displayResultCard(null) here
+            gameState.visibleCards = {
+                ...gameState.visibleCards,
+                roomCardId: null,
+                resultCardId: null,
+                enemyCardId: null
+            };
+            gameState.currentRoom = (gameState.currentRoom || 0) + 1;
+            saveGame();
+            // Now start the next round (handleRoom will clear the slots and show the Deck slot only)
             await handleRoom();
         });
         btn.dataset.bound = 'true';
-        disableNextRoomButton(); // Hide by default
+        disableNextRoomButton();
     }
 })();
 

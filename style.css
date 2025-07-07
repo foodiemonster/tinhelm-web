@@ -363,14 +363,14 @@ button:hover, input:hover, select:hover, textarea:hover {
     color: #a00;
     align-self: center;
 }
-.combat-die {
+#combat-area .combat-die {
     display: inline-block;
     font-size: 2em;
     font-weight: bold;
     margin: 0 0.5em;
     padding: 0.2em 0.5em;
-    background: #f5f5f5;
-    color: #222; /* Ensure die number is dark on light background */
+    background: #ffffff; /* Darker background for dice */
+    color: #000 !important; /* Ensure die number is dark on light background */
     border-radius: 8px;
     border: 2px solid #aaa;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);

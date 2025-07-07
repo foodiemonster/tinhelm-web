@@ -27,20 +27,22 @@
     </script>
 </head>
 <body>
-    <header>Tin Helm Web UI</header>
+<header>
+  <span style="font-size:1.2em;font-weight:bold;">Tin Helm Web UI</span>
+  <div id="sandwich-menu">
+    <div class="sandwich-icon" onclick="document.getElementById('sandwich-dropdown').style.display = (document.getElementById('sandwich-dropdown').style.display === 'block' ? 'none' : 'block')">
+      <div class="sandwich-bar"></div>
+      <div class="sandwich-bar"></div>
+      <div class="sandwich-bar"></div>
+    </div>
+    <div id="sandwich-dropdown">
+      <button id="save-btn">Save Game</button>
+      <button id="load-btn">Load Game</button>
+    </div>
+  </div>
+</header>
     <div class="layout">
         <div class="area1">
-            <div id="sandwich-menu">
-                <div class="sandwich-icon" onclick="document.getElementById('sandwich-dropdown').style.display = (document.getElementById('sandwich-dropdown').style.display === 'block' ? 'none' : 'block')">
-                    <div class="sandwich-bar"></div>
-                    <div class="sandwich-bar"></div>
-                    <div class="sandwich-bar"></div>
-                </div>
-                <div id="sandwich-dropdown">
-                    <button id="save-btn">Save Game</button>
-                    <button id="load-btn">Load Game</button>
-                </div>
-            </div>
 
             <header id="player-stats">
                 <div class="stat" id="stat-hp">HP: <span class="value" id="hp-value">10</span></div>

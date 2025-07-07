@@ -13,7 +13,10 @@ header, footer {
     background: #222;
     color: #fff;
     padding: 1em;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
 }
 
 .layout {
@@ -118,6 +121,15 @@ button:hover, input:hover, select:hover, textarea:hover {
 /* Adjust modal backgrounds for dark mode */
 .modal-content, .combat-modal-content, .responsive-modal {
     background: #23272b;
+    max-width: 600px;
+    width: 90%;
+    margin: 5vh auto;
+    padding: 2em 1.5em;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     color: #f1f1f1;
 }
 
@@ -340,7 +352,7 @@ button:hover, input:hover, select:hover, textarea:hover {
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(20,20,20,0.65); /* Subtle dark overlay, not solid grey */
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -488,16 +500,20 @@ button:hover, input:hover, select:hover, textarea:hover {
 /* Responsive modal and card styles for React-friendly, mobile-first design */
 
 .responsive-modal {
-  max-width: 95vw;
-  width: 100%;
-  min-width: 0;
+  max-width: 93%;
+  width: max-content;
+  /* min-width: 0; */
   box-sizing: border-box;
-  padding: 1.5em 1em;
-  border-radius: 12px;
-  background: #222;
-  color: #fff;
-  margin: 2vh auto;
+  padding: 2em 1.5em;
+  border-radius: 16px;
+  background: #23272b;
+  color: #f1f1f1;
+  margin: 5vh auto;
   overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .responsive-cards-row {
@@ -726,10 +742,11 @@ button:hover, input:hover, select:hover, textarea:hover {
 
 /* --- Sandwich menu styles --- */
 #sandwich-menu {
-  position: absolute;
-  top: 1.2rem;
-  right: 2rem;
+  position: static;
+  margin-left: auto;
   z-index: 10;
+  display: flex;
+  align-items: center;
 }
 .sandwich-icon {
   width: 36px;

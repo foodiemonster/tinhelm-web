@@ -27,59 +27,48 @@
     </script>
 </head>
 <body>
-    <div id="game-container">
-        <div id="sandwich-menu">
-            <div class="sandwich-icon" onclick="document.getElementById('sandwich-dropdown').style.display = (document.getElementById('sandwich-dropdown').style.display === 'block' ? 'none' : 'block')">
-                <div class="sandwich-bar"></div>
-                <div class="sandwich-bar"></div>
-                <div class="sandwich-bar"></div>
+    <header>Tin Helm Web UI</header>
+    <div class="layout">
+        <div class="area1">
+            <div id="sandwich-menu">
+                <div class="sandwich-icon" onclick="document.getElementById('sandwich-dropdown').style.display = (document.getElementById('sandwich-dropdown').style.display === 'block' ? 'none' : 'block')">
+                    <div class="sandwich-bar"></div>
+                    <div class="sandwich-bar"></div>
+                    <div class="sandwich-bar"></div>
+                </div>
+                <div id="sandwich-dropdown">
+                    <button id="save-btn">Save Game</button>
+                    <button id="load-btn">Load Game</button>
+                </div>
             </div>
-            <div id="sandwich-dropdown">
-                <button id="save-btn">Save Game</button>
-                <button id="load-btn">Load Game</button>
-            </div>
-        </div>
 
-        <header id="player-stats">
-            <div class="stat" id="stat-hp">HP: <span class="value" id="hp-value">10</span></div>
-            <div class="stat" id="stat-energy">Energy: <span class="value" id="energy-value">5</span></div>
-            <div class="stat" id="stat-food">Food: <span class="value" id="food-value">2</span></div>
-            <div class="stat" id="stat-favor">Favor: <span class="value" id="favor-value">0</span></div>
-            <div class="stat" id="stat-level">Level: <span class="value" id="level-value">1</span></div>
-            <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
-        </header>
+            <header id="player-stats">
+                <div class="stat" id="stat-hp">HP: <span class="value" id="hp-value">10</span></div>
+                <div class="stat" id="stat-energy">Energy: <span class="value" id="energy-value">5</span></div>
+                <div class="stat" id="stat-food">Food: <span class="value" id="food-value">2</span></div>
+                <div class="stat" id="stat-favor">Favor: <span class="value" id="favor-value">0</span></div>
+                <div class="stat" id="stat-level">Level: <span class="value" id="level-value">1</span></div>
+                <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
+            </header>
 
-        <div id="character-creation">
-            <div class="selection-container">
-                <label for="race-select">Choose your Race:</label>
-                <select id="race-select">
-                    <option value="">--Please choose a race--</option>
-                </select>
-            </div>
-            <div class="selection-container">
-                <label for="class-select">Choose your Class:</label>
-                <select id="class-select">
-                    <option value="">--Please choose a class--</option>
-                </select>
-            </div>
-        </div >
+            <div id="character-creation">
+                <div class="selection-container">
+                    <label for="race-select">Choose your Race:</label>
+                    <select id="race-select">
+                        <option value="">--Please choose a race--</option>
+                    </select>
+                </div>
+                <div class="selection-container">
+                    <label for="class-select">Choose your Class:</label>
+                    <select id="class-select">
+                        <option value="">--Please choose a class--</option>
+                    </select>
+                </div>
+            </div >
 
-         <button id="start-game-btn">Start Game</button>
+             <button id="start-game-btn">Start Game</button>
 
-        <div id="player-area-row">
-          <div id="player-cards-col">
-            <div id="player-cards-row">
-              <div id="race-card-display" class="card">
-                <img id="race-card-image" alt="Race Card">
-              </div>
-              <div id="class-card-display" class="card">
-                <img id="class-card-image" alt="Class Card">
-              </div>
-            </div>
-            <div id="inventory-section"></div>
-          </div>
-          <div id="trackers-col">
-            <div id="trackers-row">
+            <div id="trackers-col">
               <div class="tracker-card-wrapper" id="tracker-hp-wrapper">
                 <img class="tracker-card" id="tracker-hp" src="assets/cards/tracker/Tracker_HP.png" alt="Tracker HP">
                 <div class="tracker-cube hp" id="cube-hp"></div>
@@ -99,55 +88,56 @@
                 <div class="tracker-cube enemy" id="cube-enemy"></div>
               </div>
             </div>
-          </div>
+            <div id="player-area-row">
+              <div id="player-cards-col">
+                <div id="player-cards-row">
+                  <div id="race-card-display" class="card">
+                    <img id="race-card-image" alt="Race Card">
+                  </div>
+                  <div id="class-card-display" class="card">
+                    <img id="class-card-image" alt="Class Card">
+                  </div>
+                </div>
+                <div id="inventory-section"></div>
+              </div>
+            </div>
+            <div class="vertical-ruler"></div>
         </div>
-        <div class="vertical-ruler"></div>
-
-        <main id="dungeon-area">
-            <div id="dungeon-slots">
-                <!-- Slot 1: Deck (draw pile) -->
-                <div class="dungeon-slot" id="slot-deck">
-                    <div id="deck-placeholder">Dungeon Deck</div>
-                </div>
-                <!-- Slot 2: Room Card (if RESOLVE) -->
-                <div class="dungeon-slot" id="slot-room">
-                    <div id="room-card-display" class="card">
-                        <img id="room-card-image" alt="Dungeon Room Card">
+        <div class="area2">
+            <div class="dungeon-area">
+                <div class="dungeon-row" style="flex-wrap: nowrap;">
+                    <div class="card-slot" id="slot-deck">
+                        <img id="deck-card-image" alt="Dungeon Deck Card" style="display:none;">
+                        <div id="room-decision-buttons">
+                            <button id="resolve-button">Resolve</button>
+                            <button id="skip-button">Skip</button>
+                            <button id="next-room-btn" style="display:none;">Next Room</button>
+                        </div>
                     </div>
-                </div>
-                <!-- Slot 3: Result Card (or dungeonRoom flipped if SKIP) -->
-                <div class="dungeon-slot" id="slot-result">
-                    <div id="result-card-display" class="card">
-                        <img id="result-card-image" alt="Dungeon Result Card">
+                    <div class="card-slot" id="slot-room">
+                        <img id="room-card-image" alt="Dungeon Room Card" style="display:none;">
                     </div>
-                </div>
-                <!-- Slot 4: Discard Pile -->
-                <div class="dungeon-slot" id="slot-discard">
-                    <div id="discard-pile-display" class="card">
+                    <div class="card-slot" id="slot-result">
+                        <img id="result-card-image" alt="Dungeon Result Card" style="display:none;">
+                    </div>
+                    <div class="card-slot" id="slot-discard">
                         <img id="discard-room-image" alt="Discarded Room Card" style="display:none;">
                         <img id="discard-result-image" alt="Discarded Result Card" style="display:none;">
                     </div>
                 </div>
             </div>
-            <div id="enemy-card-display" class="card" style="display: none;">
-                <img id="enemy-card-image" alt="Enemy Card">
+            <div class="encounter-area">
+              <div id="combat-area"></div>
             </div>
-            <div id="combat-area"></div>
-            <div id="room-decision-buttons" style="display: none;">
-                <button id="resolve-button">Resolve</button>
-                <button id="skip-button">Skip</button>
+            <div id="session-log" style="height: 120px; overflow-y: auto; background: #222; color: #fff; font-size: 0.95em; padding: 0.5em; margin-top: 1em; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <!-- Session log will appear here -->
             </div>
-            <button id="next-room-btn" style="display:none; margin-top:1em;">Next Room</button>
-        </main>
 
-        <div id="session-log" style="height: 120px; overflow-y: auto; background: #222; color: #fff; font-size: 0.95em; padding: 0.5em; margin-top: 1em; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <!-- Session log will appear here -->
-        </div>
-
-        <div id="endgame-message" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:2rem; z-index:100; text-align:center; font-size:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
-            <span id="endgame-text"></span>
-            <br><br>
-            <button onclick="location.reload()">Restart</button>
+            <div id="endgame-message" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:2rem; z-index:100; text-align:center; font-size:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+                <span id="endgame-text"></span>
+                <br><br>
+                <button onclick="location.reload()">Restart</button>
+            </div>
         </div>
     </div>
 
@@ -160,5 +150,6 @@
     </div>
 
     <script src="scripts/main.js" type="module"></script>
+    <footer>&copy; 2025 Tin Helm Web</footer>
 </body>
 </html>

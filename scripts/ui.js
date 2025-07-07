@@ -5,6 +5,7 @@ const raceCardImage = document.getElementById('race-card-image');
 const classCardImage = document.getElementById('class-card-image');
 const enemyCardImage = document.getElementById('enemy-card-image');
 const enemyCardDisplay = document.getElementById('enemy-card-display');
+const deckCardImage = document.getElementById('deck-card-image'); // Added for deck slot
 
 // Function to display room card
 export function displayRoomCard(card) {
@@ -30,17 +31,25 @@ export function displayResultCard(card) {
 
 // Function to display race card
 export function displayRaceCard(card) {
-    if (raceCardImage && card && card.image) {
-        raceCardImage.src = card.image;
-        raceCardImage.style.display = 'block';
+    const raceCardDisplay = document.getElementById('race-card-display');
+    if (raceCardDisplay) {
+        if (card && card.image) {
+            raceCardDisplay.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            raceCardDisplay.innerHTML = 'Race';
+        }
     }
 }
 
 // Function to display class card
 export function displayClassCard(card) {
-    if (classCardImage && card && card.image) {
-        classCardImage.src = card.image;
-        classCardImage.style.display = 'block';
+    const classCardDisplay = document.getElementById('class-card-display');
+    if (classCardDisplay) {
+        if (card && card.image) {
+            classCardDisplay.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            classCardDisplay.innerHTML = 'Class';
+        }
     }
 }
 
@@ -79,7 +88,11 @@ const skipButton = document.getElementById('skip-button');
 // Function to show the room decision buttons
 export function showRoomDecisionButtons() {
     if (roomDecisionButtons) {
-        roomDecisionButtons.style.display = 'flex'; // Or 'block', depending on desired layout
+        roomDecisionButtons.style.display = 'flex';
+        if (resolveButton) resolveButton.style.display = 'inline-block';
+        if (skipButton) skipButton.style.display = 'inline-block';
+        const nextRoomBtn = document.getElementById('next-room-btn');
+        if (nextRoomBtn) nextRoomBtn.style.display = 'none';
     }
 }
 
@@ -219,11 +232,12 @@ export function displayDiscardPile(roomCard, resultCard) {
 
 // Function to show the current dungeonRoom card in the deck slot (Slot 1)
 export function displayDeckRoomCard(card) {
-    const deckPlaceholder = document.getElementById('deck-placeholder');
-    if (deckPlaceholder && card && card.image) {
-        deckPlaceholder.innerHTML = `<img src="${card.image}" alt="Dungeon Room Card" style="width:100px;height:150px;object-fit:cover;border-radius:12px;">`;
-    } else if (deckPlaceholder) {
-        deckPlaceholder.innerHTML = 'Dungeon Deck';
+    if (deckCardImage && card && card.image) {
+        deckCardImage.src = card.image;
+        deckCardImage.style.display = 'block';
+    } else if (deckCardImage) {
+        deckCardImage.src = '';
+        deckCardImage.style.display = 'none';
     }
 }
 
@@ -242,16 +256,16 @@ const trackerCubeMap = {
 // These should be tuned to match the visual track positions on the PNGs
 const trackerCubePositions = {
   hp: [
-    {left:133, top:204}, // 0
+    {left:133, top:202}, // 0
     {left:133, top:167}, // 1
     {left:133, top:131}, // 2
     {left:133, top:94},  // 3
     {left:133, top:58},  // 4
-    {left:58,  top:204}, // 5
-    {left:58,  top:167}, // 6
-    {left:58,  top:131}, // 7
-    {left:58,  top:94},  // 8
-    {left:58,  top:58},  // 9
+    {left:83,  top:204}, // 5
+    {left:83,  top:167}, // 6
+    {left:83,  top:131}, // 7
+    {left:83,  top:94},  // 8
+    {left:83,  top:58},  // 9
     {left:36,  top:204}, // 10
     {left:36,  top:167}, // 11
     {left:36,  top:131}, // 12
@@ -259,22 +273,69 @@ const trackerCubePositions = {
     {left:36,  top:58}   // 14
   ],
   energy: [
-    {left:38,top:38},{left:88,top:38},{left:138,top:38},{left:38,top:88},{left:88,top:88},{left:138,top:88}
+    {left:76, top:274}, // 0
+    {left:76, top:242}, // 1
+    {left:76, top:206}, // 2
+    {left:76, top:170},  // 3
+    {left:76, top:133},  // 4
+    {left:76,  top:96}, // 5
+    {left:76,  top:62}, // 6
+    {left:76,  top:23}, // 7
+    {left:42,  top:242},  // 8
+    {left:42,  top:58},  // 9
+    {left:42,  top:170}, // 10
+    {left:42,  top:133}, // 11
+    {left:42,  top:96}, // 12
+    {left:42,  top:61},  // 13
   ],
   rations: [
-    {left:38,top:188},{left:88,top:188},{left:138,top:188},{left:38,top:238},{left:88,top:238},{left:138,top:238}
+    {left:131, top:242}, // 0
+    {left:131, top:206}, // 1
+    {left:131, top:170}, // 2
+    {left:131, top:133},  // 3
+    {left:131, top:96},  // 4
+    {left:131, top:62}, // 5
   ],
   favor: [
-    {left:38,top:38},{left:88,top:38},{left:138,top:38},{left:38,top:88},{left:88,top:88},{left:138,top:88},
-    {left:38,top:138},{left:88,top:138},{left:138,top:138},{left:38,top:188},{left:88,top:188},{left:138,top:188}
+    {left:133, top:240}, // 0
+    {left:133, top:203}, // 1
+    {left:133, top:167}, // 2
+    {left:133, top:131}, // 3
+    {left:133, top:94},  // 4
+    {left:133, top:58},  // 5
+    {left:83,  top:204}, // 6
+    {left:83,  top:167}, // 7
+    {left:83,  top:131}, // 8
+    {left:83,  top:94},  // 9
+    {left:83,  top:58},  // 10
+    {left:36,  top:204}, // 11
+    {left:36,  top:167}, // 12
+    {left:36,  top:131}, // 13
+    {left:36,  top:94},  // 14
+    {left:36,  top:58}   // 15
   ],
   dungeon: [
-    {left:30,top:38},{left:60,top:38},{left:90,top:38},{left:120,top:38},{left:150,top:38},{left:180,top:38},
-    {left:30,top:68},{left:60,top:68},{left:90,top:68},{left:120,top:68},{left:150,top:68},{left:180,top:68}
+    {left:32, top:47}, // 0
+    {left:32, top:47}, // 1
+    {left:76, top:23}, // 2
+    {left:127, top:27}, // 3
+    {left:98, top:60},  // 4
+    {left:138, top:78},  // 5
   ],
   enemy: [
-    {left:30,top:188},{left:60,top:188},{left:90,top:188},{left:120,top:188},{left:150,top:188},{left:180,top:188},
-    {left:30,top:218},{left:60,top:218},{left:90,top:218},{left:120,top:218},{left:150,top:218},{left:180,top:218}
+    {left:129, top:244}, // 0
+    {left:129, top:244}, // 1
+    {left:129, top:208}, // 2
+    {left:129, top:171},  // 3
+    {left:129, top:135},  // 4
+    {left:85,  top:244}, // 5
+    {left:85,  top:208}, // 6
+    {left:85,  top:171}, // 7
+    {left:85,  top:135},  // 8
+    {left:38,  top:244},  // 9
+    {left:38,  top:208}, // 10
+    {left:38,  top:171}, // 11
+    {left:38,  top:135}, // 12
   ]
 };
 
@@ -287,7 +348,7 @@ export function updateTrackerCube(stat, value) {
   // Clamp value to available positions
   const posArr = trackerCubePositions[stat];
   if (!posArr) return;
-  let idx = Math.max(0, Math.min(posArr.length-1, value-1));
+  let idx = Math.max(0, Math.min(posArr.length-1, value));
   const pos = posArr[idx];
   cube.style.left = pos.left + 'px';
   cube.style.top = pos.top + 'px';

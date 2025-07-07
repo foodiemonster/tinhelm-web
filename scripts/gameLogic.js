@@ -868,17 +868,31 @@ async function initiateCombat(enemyCard) {
 // --- Next Room Button Logic ---
 function enableNextRoomButton() {
     const btn = document.getElementById('next-room-btn');
-    if (btn) {
-        btn.disabled = false;
+    const decisionButtons = document.getElementById('room-decision-buttons');
+    if (btn && decisionButtons) {
+        decisionButtons.style.display = 'flex';
         btn.style.display = 'inline-block';
+        btn.disabled = false;
+        // Hide resolve and skip buttons
+        const resolveBtn = document.getElementById('resolve-button');
+        const skipBtn = document.getElementById('skip-button');
+        if (resolveBtn) resolveBtn.style.display = 'none';
+        if (skipBtn) skipBtn.style.display = 'none';
     }
 }
 
 function disableNextRoomButton() {
     const btn = document.getElementById('next-room-btn');
-    if (btn) {
-        btn.disabled = true;
+    const decisionButtons = document.getElementById('room-decision-buttons');
+    if (btn && decisionButtons) {
         btn.style.display = 'none';
+        btn.disabled = true;
+        decisionButtons.style.display = 'none';
+        // Show resolve and skip buttons for next round
+        const resolveBtn = document.getElementById('resolve-button');
+        const skipBtn = document.getElementById('skip-button');
+        if (resolveBtn) resolveBtn.style.display = 'inline-block';
+        if (skipBtn) skipBtn.style.display = 'inline-block';
     }
 }
 

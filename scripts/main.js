@@ -20,20 +20,20 @@ function displayDrawnCards(roomCard, resultCard) {
     if (roomCardImage && roomCard && roomCard.image) {
         roomCardImage.src = roomCard.image;
         roomCardImage.alt = roomCard.name;
+        roomCardImage.style.display = 'block';
     } else {
         console.warn("Could not display room card.", roomCard);
-        if (roomCardImage) roomCardImage.src = ''; // Clear image on error
+        if (roomCardImage) roomCardImage.style.display = 'none'; // Clear image on error
     }
 
      if (resultCardImage && resultCard && resultCard.image) {
         resultCardImage.src = resultCard.image;
         resultCardImage.alt = resultCard.name;
+        resultCardImage.style.display = 'block';
     } else {
         console.warn("Could not display result card.", resultCard);
-         if (resultCardImage) resultCardImage.src = ''; // Clear image on error
+         if (resultCardImage) resultCardImage.style.display = 'none'; // Clear image on error
     }
-
-    // TODO: Add logic to show the card display area and hide character creation
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -46,16 +46,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     raceCards = Object.values(allCardsData).filter(card => card instanceof RaceCard);
     classCards = Object.values(allCardsData).filter(card => card instanceof ClassCard);
 
+    // Initially hide dungeon area until game starts
+    const dungeonArea = document.getElementById('dungeon-area');
+    if (dungeonArea) {
+        dungeonArea.classList.add('hidden');
+    }
+
     // Hide old character creation UI
-    document.getElementById('character-creation').style.display = 'none';
-    document.getElementById('start-game-btn').style.display = 'none';
+    const characterCreation = document.getElementById('character-creation');
+    if (characterCreation) {
+        characterCreation.style.display = 'none';
+    }
+    const startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        startGameBtn.style.display = 'none';
+    }
 
     // Show new modal for character selection
     showCharacterModal(raceCards, classCards, (selectedRaceId, selectedClassId) => {
         initializePlayer(selectedRaceId, selectedClassId);
         startDungeonLevel();
         handleRoom();
-        document.getElementById('dungeon-area').style.display = 'flex';
+        if (dungeonArea) {
+            dungeonArea.classList.remove('hidden');
+        }
     });
 
     // --- Save/Load Logic (Now using gameState.js) ---
@@ -74,8 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadGame();
             restoreGameUIFromState();
             // Show dungeon area and hide character creation after loading
-            document.getElementById('character-creation').style.display = 'none';
-            document.getElementById('dungeon-area').style.display = 'flex';
+            if (characterCreation) {
+                characterCreation.style.display = 'none';
+            }
+            if (dungeonArea) {
+                dungeonArea.classList.remove('hidden');
+            }
             // Update session log UI after loading
             if (typeof window.updateLogUI === 'function') window.updateLogUI();
         });
@@ -83,9 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadBtn.disabled = true;
         }
     }
-
-    // Initially hide dungeon area until game starts
-    document.getElementById('dungeon-area').style.display = 'none';
 
     // --- Next Room Button Logic ---
     const nextRoomBtn = document.getElementById('next-room-btn');

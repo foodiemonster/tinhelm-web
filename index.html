@@ -68,22 +68,39 @@
 
              <button id="start-game-btn">Start Game</button>
 
-            <div class="trackers">
-                <div class="card-small">Health</div>
-                <div class="card-small">Energy & Food</div>
-                <div class="card-small">Food</div>
-                <div class="card-small">Dungeon Level & Enemy HP</div>
+            <div id="trackers-col">
+              <div class="tracker-card-wrapper" id="tracker-hp-wrapper">
+                <img class="tracker-card" id="tracker-hp" src="assets/cards/tracker/Tracker_HP.png" alt="Tracker HP">
+                <div class="tracker-cube hp" id="cube-hp"></div>
+              </div>
+              <div class="tracker-card-wrapper" id="tracker-en-ration-wrapper">
+                <img class="tracker-card" id="tracker-en-ration" src="assets/cards/tracker/Tracker_EN_Ration.png" alt="Tracker EN/Ration">
+                <div class="tracker-cube energy" id="cube-energy"></div>
+                <div class="tracker-cube rations" id="cube-rations"></div>
+              </div>
+              <div class="tracker-card-wrapper" id="tracker-favor-wrapper">
+                <img class="tracker-card" id="tracker-favor" src="assets/cards/tracker/Tracker_Favor.png" alt="Tracker Favor">
+                <div class="tracker-cube favor" id="cube-favor"></div>
+              </div>
+              <div class="tracker-card-wrapper" id="tracker-enemyhp-dungeonlevel-wrapper">
+                <img class="tracker-card" id="tracker-enemyhp-dungeonlevel" src="assets/cards/tracker/Tracker_EnemyHP_DungeonLevel.png" alt="Tracker EnemyHP/DungeonLevel">
+                <div class="tracker-cube dungeon" id="cube-dungeon"></div>
+                <div class="tracker-cube enemy" id="cube-enemy"></div>
+              </div>
             </div>
-            <div class="player-cards">
-                <div id="race-card-display" class="card-small">
+
+            <div id="player-area-row">
+              <div id="player-cards-col">
+                <div id="player-cards-row">
+                  <div id="race-card-display" class="card">
                     <img id="race-card-image" alt="Race Card">
-                </div>
-                <div id="class-card-display" class="card-small">
+                  </div>
+                  <div id="class-card-display" class="card">
                     <img id="class-card-image" alt="Class Card">
+                  </div>
                 </div>
-            </div>
-            <div class="inventory">
                 <div id="inventory-section"></div>
+              </div>
             </div>
             <div class="vertical-ruler"></div>
         </div>

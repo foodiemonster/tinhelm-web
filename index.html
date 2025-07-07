@@ -59,19 +59,28 @@
 
          <button id="start-game-btn">Start Game</button>
 
-        <div id="player-cards">
-            <div id="race-card-display" class="card">
-                <img id="race-card-image" alt="Player Race Card">
+        <div id="player-area-row">
+          <div id="player-cards-col">
+            <div id="player-cards-row">
+              <div id="race-card-display" class="card">
+                <img id="race-card-image" alt="Race Card">
+              </div>
+              <div id="class-card-display" class="card">
+                <img id="class-card-image" alt="Class Card">
+              </div>
             </div>
-            <div id="class-card-display" class="card">
-                <img id="class-card-image" alt="Player Class Card">
+            <div id="inventory-section"></div>
+          </div>
+          <div id="trackers-col">
+            <div id="trackers-row">
+              <img class="tracker-card" id="tracker-hp" src="assets/cards/tracker/Tracker_HP.png" alt="Tracker HP">
+              <img class="tracker-card" id="tracker-en-ration" src="assets/cards/tracker/Tracker_EN_Ration.png" alt="Tracker EN/Ration">
+              <img class="tracker-card" id="tracker-favor" src="assets/cards/tracker/Tracker_Favor.png" alt="Tracker Favor">
+              <img class="tracker-card" id="tracker-enemyhp-dungeonlevel" src="assets/cards/tracker/Tracker_EnemyHP_DungeonLevel.png" alt="Tracker EnemyHP/DungeonLevel">
             </div>
+          </div>
         </div>
-
-        <div id="inventory-container">
-            <h2>Inventory</h2>
-            <div id="inventory-cards"></div>
-        </div>
+        <div class="vertical-ruler"></div>
 
         <main id="dungeon-area">
             <div id="dungeon-slots">

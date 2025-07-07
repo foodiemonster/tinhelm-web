@@ -11,11 +11,25 @@ body {
 
 #game-container {
     width: 100%;
-    max-width: 600px;
+    max-width: 1600px;
     background-color: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 1rem;
+    padding: 1.5rem 1rem;
+    margin: 2vh auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 900px) {
+  #game-container {
+    max-width: 98vw;
+    padding: 1rem 0.5rem;
+    margin: 0;
+  }
 }
 
 #player-stats {
@@ -43,6 +57,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    padding: 0;
 }
 
 #deck-placeholder {
@@ -57,14 +76,14 @@ body {
 }
 
 .card {
-    width: 100px;
-    height: 150px;
+    width: 200px;
+    height: 300px;
     border: 1px solid #333;
     background-color: #eee;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 12px;
+    border-radius: 0;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
@@ -80,22 +99,26 @@ body {
 #dungeon-slots {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: flex-end;
     width: 100%;
-    max-width: 440px;
+    max-width: 700px;
     margin: 1.5em auto 0 auto;
-    gap: 0.5em;
+    gap: 1vw;
+    box-sizing: border-box;
 }
 .dungeon-slot {
-    flex: 1 1 0;
+    flex: 1 1 240px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 100px;
+    min-width: 180px;
+    max-width: 320px;
+    margin: 0.5vw 0;
 }
 #slot-deck, #slot-room, #slot-result, #slot-discard {
-    min-width: 100px;
+    min-width: 200px;
 }
 #discard-pile-display {
     position: relative;
@@ -308,7 +331,136 @@ body {
   border-radius: 8px;
 }
 
+#player-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+#player-area-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  gap: 0;
+  margin-bottom: 2.5rem;
+}
+
+#player-cards-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 400px;
+  max-width: 100vw;
+}
+
+#trackers-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+#trackers-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  margin-left: 0;
+  width: auto;
+  max-width: none;
+  justify-content: flex-start;
+}
+
+#player-cards-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.2rem;
+}
+
+#inventory-section {
+  width: 400px;
+  max-width: 100%;
+  min-height: 110px;
+  background: #f8f8f8;
+  border: 1.5px solid #bbb;
+  border-radius: 14px;
+  margin: 0 auto 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  box-sizing: border-box;
+  padding: 0.7em 1em;
+  transition: width 0.2s;
+}
+
+.inventory-card {
+  width: 100px;
+  height: 150px;
+  border-radius: 10px;
+  border: 1px solid #888;
+  background: #eee;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.inventory-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.tracker-card {
+  width: 200px;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #888;
+  border-radius: 0;
+  background: #111;
+  transition: width 0.2s;
+}
+
+#trackers-row .tracker-card:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+#trackers-row .tracker-card:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
 @media (max-width: 700px) {
+  .card {
+    width: 120px;
+    height: 180px;
+  }
+  .dungeon-slot {
+    min-width: 100px;
+    max-width: 95vw;
+    width: 80vw;
+  }
+  #slot-deck, #slot-room, #slot-result, #slot-discard {
+    min-width: 100px;
+  }
   .responsive-modal {
     padding: 0.5em 0.2em;
     max-width: 100vw;
@@ -328,5 +480,67 @@ body {
   }
   .responsive-card-img {
     max-height: 32vh;
+  }
+  #dungeon-area {
+    width: 100vw;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0 2vw;
+    overflow-x: hidden;
+  }
+  #dungeon-slots {
+    flex-direction: column;
+    align-items: center;
+    width: 100vw;
+    max-width: 100vw;
+    gap: 2vw;
+  }
+  .dungeon-slot {
+    min-width: 120px;
+    max-width: 95vw;
+    width: 80vw;
+    margin: 1vw 0;
+  }
+  #player-section {
+    width: 100vw;
+  }
+  #player-area-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2em;
+  }
+  #player-cards-col, #trackers-col {
+    width: 100vw;
+    max-width: 100vw;
+    align-items: center;
+  }
+  #inventory-section {
+    width: 240px;
+    min-height: 60px;
+    padding: 0.3em 0.3em;
+    gap: 0.3em;
+    justify-content: center;
+  }
+  #player-cards-row {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2em;
+  }
+  .inventory-card {
+    width: 60px;
+    height: 90px;
+    border-radius: 6px;
+  }
+  .inventory-card img {
+    border-radius: 6px;
+  }
+  .tracker-card {
+    width: 120px;
+    height: 180px;
+    min-width: 60px;
+    min-height: 60px;
+    max-width: 90vw;
+    max-height: 180px;
   }
 }

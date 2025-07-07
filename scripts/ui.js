@@ -133,26 +133,24 @@ export function updateStatDisplay(stat, value) {
 
 // Function to display the player's inventory
 export function displayInventory(inventory) {
-    const inventoryCardsContainer = document.getElementById('inventory-cards');
-
-    if (inventoryCardsContainer) {
+    const inventorySection = document.getElementById('inventory-section');
+    if (inventorySection) {
         // Clear existing inventory display
-        inventoryCardsContainer.innerHTML = '';
+        inventorySection.innerHTML = '';
 
         // Loop through inventory and create card elements
         inventory.forEach(item => {
             const cardElement = document.createElement('div');
-            cardElement.classList.add('card');
+            cardElement.classList.add('inventory-card');
             if (item.image) {
                 const img = document.createElement('img');
                 img.src = item.image;
                 img.alt = item.name;
-                img.className = 'inventory-card-img';
                 cardElement.appendChild(img);
             } else {
                 cardElement.textContent = item.name;
             }
-            inventoryCardsContainer.appendChild(cardElement);
+            inventorySection.appendChild(cardElement);
         });
     }
 }

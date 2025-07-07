@@ -1,6 +1,4 @@
 // Get references to the card images
-const roomCardImage = document.getElementById('room-card-image');
-const resultCardImage = document.getElementById('result-card-image');
 const raceCardImage = document.getElementById('race-card-image');
 const classCardImage = document.getElementById('class-card-image');
 const enemyCardImage = document.getElementById('enemy-card-image');
@@ -8,39 +6,49 @@ const enemyCardDisplay = document.getElementById('enemy-card-display');
 
 // Function to display room card
 export function displayRoomCard(card) {
-    if (roomCardImage && card && card.image) {
-        roomCardImage.src = card.image;
-        roomCardImage.style.display = 'block';
-    } else if (roomCardImage) {
-        roomCardImage.src = '';
-        roomCardImage.style.display = 'none';
+    const roomSlot = document.getElementById('slot-room');
+    if (roomSlot) {
+        if (card && card.image) {
+            roomSlot.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            roomSlot.innerHTML = 'Room';
+        }
     }
 }
 
 // Function to display result card
 export function displayResultCard(card) {
-    if (resultCardImage && card && card.image) {
-        resultCardImage.src = card.image;
-        resultCardImage.style.display = 'block';
-    } else if (resultCardImage) {
-        resultCardImage.src = '';
-        resultCardImage.style.display = 'none';
+    const resultSlot = document.getElementById('slot-result');
+    if (resultSlot) {
+        if (card && card.image) {
+            resultSlot.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            resultSlot.innerHTML = 'Result';
+        }
     }
 }
 
 // Function to display race card
 export function displayRaceCard(card) {
-    if (raceCardImage && card && card.image) {
-        raceCardImage.src = card.image;
-        raceCardImage.style.display = 'block';
+    const raceCardDisplay = document.getElementById('race-card-display');
+    if (raceCardDisplay) {
+        if (card && card.image) {
+            raceCardDisplay.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            raceCardDisplay.innerHTML = 'Race';
+        }
     }
 }
 
 // Function to display class card
 export function displayClassCard(card) {
-    if (classCardImage && card && card.image) {
-        classCardImage.src = card.image;
-        classCardImage.style.display = 'block';
+    const classCardDisplay = document.getElementById('class-card-display');
+    if (classCardDisplay) {
+        if (card && card.image) {
+            classCardDisplay.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            classCardDisplay.innerHTML = 'Class';
+        }
     }
 }
 

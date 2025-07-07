@@ -14,26 +14,22 @@ let classCards = [];
 
 // Function to display drawn cards in the UI
 function displayDrawnCards(roomCard, resultCard) {
-    const roomCardImage = document.getElementById('room-card-image');
-    const resultCardImage = document.getElementById('result-card-image');
+    const roomSlot = document.getElementById('slot-room');
+    const resultSlot = document.getElementById('slot-result');
 
-    if (roomCardImage && roomCard && roomCard.image) {
-        roomCardImage.src = roomCard.image;
-        roomCardImage.alt = roomCard.name;
+    if (roomSlot && roomCard && roomCard.image) {
+        roomSlot.innerHTML = `<img src="${roomCard.image}" alt="${roomCard.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
     } else {
         console.warn("Could not display room card.", roomCard);
-        if (roomCardImage) roomCardImage.src = ''; // Clear image on error
+        if (roomSlot) roomSlot.innerHTML = 'Room'; // Clear image on error
     }
 
-     if (resultCardImage && resultCard && resultCard.image) {
-        resultCardImage.src = resultCard.image;
-        resultCardImage.alt = resultCard.name;
+     if (resultSlot && resultCard && resultCard.image) {
+        resultSlot.innerHTML = `<img src="${resultCard.image}" alt="${resultCard.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
     } else {
         console.warn("Could not display result card.", resultCard);
-         if (resultCardImage) resultCardImage.src = ''; // Clear image on error
+         if (resultSlot) resultSlot.innerHTML = 'Result'; // Clear image on error
     }
-
-    // TODO: Add logic to show the card display area and hide character creation
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -46,16 +42,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     raceCards = Object.values(allCardsData).filter(card => card instanceof RaceCard);
     classCards = Object.values(allCardsData).filter(card => card instanceof ClassCard);
 
+    // Initially hide dungeon area until game starts
+    const dungeonArea = document.getElementById('dungeon-area');
+    if (dungeonArea) {
+        dungeonArea.classList.add('hidden');
+    }
+
     // Hide old character creation UI
-    document.getElementById('character-creation').style.display = 'none';
-    document.getElementById('start-game-btn').style.display = 'none';
+    const characterCreation = document.getElementById('character-creation');
+    if (characterCreation) {
+        characterCreation.style.display = 'none';
+    }
+    const startGameBtn = document.getElementById('start-game-btn');
+    if (startGameBtn) {
+        startGameBtn.style.display = 'none';
+    }
 
     // Show new modal for character selection
     showCharacterModal(raceCards, classCards, (selectedRaceId, selectedClassId) => {
         initializePlayer(selectedRaceId, selectedClassId);
         startDungeonLevel();
         handleRoom();
-        document.getElementById('dungeon-area').style.display = 'flex';
+        if (dungeonArea) {
+            dungeonArea.classList.remove('hidden');
+        }
     });
 
     // --- Save/Load Logic (Now using gameState.js) ---
@@ -74,8 +84,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadGame();
             restoreGameUIFromState();
             // Show dungeon area and hide character creation after loading
-            document.getElementById('character-creation').style.display = 'none';
-            document.getElementById('dungeon-area').style.display = 'flex';
+            if (characterCreation) {
+                characterCreation.style.display = 'none';
+            }
+            if (dungeonArea) {
+                dungeonArea.classList.remove('hidden');
+            }
             // Update session log UI after loading
             if (typeof window.updateLogUI === 'function') window.updateLogUI();
         });
@@ -83,9 +97,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadBtn.disabled = true;
         }
     }
-
-    // Initially hide dungeon area until game starts
-    document.getElementById('dungeon-area').style.display = 'none';
 
     // --- Next Room Button Logic ---
     const nextRoomBtn = document.getElementById('next-room-btn');

@@ -21,42 +21,42 @@ Starting in the early prototype you can save your progress to the browser's `loc
 ## ✅ Project Roadmap
 
 ### Phase 1: Scaffolding & Structure
-- [ ] Create base file structure:
+- [X] Create base file structure:
   - `/index.html`, `/style.css`, `/scripts/main.js`
   - `/assets/cards/` for card images
-- [ ] Scaffold initial HTML with:
+- [x] Scaffold initial HTML with:
   - A main game area
   - A status bar (health, energy, food, favor, level)
   - A placeholder deck/draw area
-- [ ] Ensure the app runs locally or via GitHub Pages
+- [x] Ensure the app runs locally or via GitHub Pages
 
 ### Phase 2: Data Setup
-- [ ] Define card types: Dungeon, Enemy, Loot, Trap, Class, Race, Trappings
-- [ ] Create JS object schemas for each card type
-- [ ] Load deck data from JSON or preload into memory
+- [x] Define card types: Dungeon, Enemy, Loot, Trap, Class, Race, Trappings
+- [x] Create JS object schemas for each card type
+- [x] Load deck data from JSON or preload into memory
 
 ### Phase 3: Game Logic Core
-- [ ] Implement player creation flow (select race/class, assign stats)
-- [ ] Implement dungeon level loop:
+- [x] Implement player creation flow (select race/class, assign stats)
+- [x] Implement dungeon level loop:
   - Draw and resolve 6 rooms using 12 cards
   - Apply icons in correct sequence (ENEMY, TRAP, LOOT, etc.)
-- [ ] Build stat tracking (health, energy, food, favor)
+- [x] Build stat tracking (health, energy, food, favor)
 
 ### Phase 4: Combat System
-- [ ] Simulate dice rolls (2d6), implement rules for doubles
+- [x] Simulate dice rolls (2d6), implement rules for doubles
 - [ ] Add energy-expenditure mechanic to boost attack
-- [ ] Add enemy defense, HP, attack response logic
-- [ ] Apply damage to player/enemy
-- [ ] End combat on win/loss
+- [x] Add enemy defense, HP, attack response logic
+- [x] Apply damage to player/enemy
+- [x] End combat on win/loss
 
 ### Phase 5: Card Interactions
-- [ ] Build UI for room vs result card pairing
-- [ ] Implement icon resolution handlers (LOOT, ENEMY, etc.)
-- [ ] Trigger card reveals, add to player inventory, etc.
+- [x] Build UI for room vs result card pairing
+- [x] Implement icon resolution handlers (LOOT, ENEMY, etc.)
+- [x] Trigger card reveals, add to player inventory, etc.
 
 ### Phase 6: Visual Polish
 - [ ] Animate card draws/shuffles
-- [ ] Animate dice rolls
+- [x] Animate dice rolls
 - [ ] Add fading/transition effects for turns and actions
 
 ### Phase 7: Endgame & Scoring

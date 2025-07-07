@@ -131,6 +131,41 @@ export function updateStatDisplay(stat, value) {
     }
 }
 
+// --- Card Zoom Overlay Logic ---
+const cardZoomOverlay = document.getElementById('card-zoom-overlay');
+const cardZoomImg = document.getElementById('card-zoom-img');
+
+function showCardZoom(imageUrl, anchorElem) {
+  if (cardZoomOverlay && cardZoomImg && anchorElem) {
+    const rect = anchorElem.getBoundingClientRect();
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+    // Set overlay position and size to match the card
+    cardZoomOverlay.style.left = (rect.left + scrollX) + 'px';
+    cardZoomOverlay.style.top = (rect.top + scrollY) + 'px';
+    cardZoomOverlay.style.width = rect.width + 'px';
+    cardZoomOverlay.style.height = rect.height + 'px';
+    cardZoomImg.src = imageUrl;
+    cardZoomOverlay.classList.add('active');
+    cardZoomOverlay.style.display = 'block';
+    // Scale up from the center of the card
+    cardZoomImg.style.transform = 'scale(2.3)';
+    cardZoomImg.style.transition = 'transform 0.18s';
+  }
+}
+function hideCardZoom() {
+  if (cardZoomOverlay && cardZoomImg) {
+    cardZoomOverlay.classList.remove('active');
+    cardZoomOverlay.style.display = 'none';
+    cardZoomImg.src = '';
+    cardZoomImg.style.transform = '';
+  }
+}
+if (cardZoomOverlay) {
+  cardZoomOverlay.addEventListener('mouseenter', hideCardZoom);
+  cardZoomOverlay.addEventListener('click', hideCardZoom);
+}
+
 // Function to display the player's inventory
 export function displayInventory(inventory) {
     const inventorySection = document.getElementById('inventory-section');
@@ -146,6 +181,11 @@ export function displayInventory(inventory) {
                 const img = document.createElement('img');
                 img.src = item.image;
                 img.alt = item.name;
+                // --- Card Zoom Mouseover ---
+                img.addEventListener('mouseenter', (e) => showCardZoom(item.image, img));
+                img.addEventListener('mouseleave', hideCardZoom);
+                img.addEventListener('touchstart', (e) => showCardZoom(item.image, img), {passive:true});
+                img.addEventListener('touchend', hideCardZoom, {passive:true});
                 cardElement.appendChild(img);
             } else {
                 cardElement.textContent = item.name;

@@ -301,7 +301,7 @@ function showEndgameMessage(message) {
 
 // Function to resolve icons on a result card
 // Handles all icon types (Enemy, Loot, Trap, etc.) and applies their effects to gameState.
-function resolveIcons(iconCard, legendCard) {
+async function resolveIcons(iconCard, legendCard) {
     // iconCard: the card whose icons are to be resolved (chosen room card)
     // legendCard: the card whose fields (enemy, loot, trap, etc.) are used for icon resolution
     console.log("Inspecting iconCard in resolveIcons:", JSON.stringify(iconCard, null, 2));
@@ -312,7 +312,7 @@ function resolveIcons(iconCard, legendCard) {
         return;
     }
     const icons = iconCard.icons.split(',').map(icon => icon.trim());
-    icons.forEach(icon => {
+    for (const icon of icons) {
         console.log("Resolving icon:", icon);
         switch (icon) {
             case 'Enemy':
@@ -324,7 +324,7 @@ function resolveIcons(iconCard, legendCard) {
                         const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
                         if (enemyCard) {
                             console.log("Found enemy card:", enemyCard);
-                            initiateCombat(enemyCard);
+                            await initiateCombat(enemyCard);
                             logEvent(`Combat started with ${enemyCard.name}`);
                         } else {
                             console.warn(`Enemy card not found for name: ${enemyName}`);
@@ -444,20 +444,47 @@ function resolveIcons(iconCard, legendCard) {
                 const treasureOutcome = legendCard.loot;
                 if (treasureOutcome === 'GainShard') {
                     console.log("Found a Shard of Brahm!");
-                    updatePlayerStats('shards', 1);
+                    await new Promise(resolve => {
+                        showChoiceModal({
+                            title: 'Treasure',
+                            message: 'You found a Shard of Brahm!',
+                            choices: [{ label: 'OK', value: 'ok' }],
+                            onChoice: () => {
+                                updatePlayerStats('shards', 1);
+                                resolve();
+                            }
+                        });
+                    });
                 } else if (treasureOutcome && typeof treasureOutcome === 'string' && treasureOutcome.startsWith('Loot=')) {
                     console.log("Treasure contains loot.");
                     const lootMatch = treasureOutcome.match(/^Loot=(.+)$/);
                     if (lootMatch && lootMatch[1]) {
                         const lootName = lootMatch[1];
                         if (lootName === 'Empty') {
-                            console.log("The treasure chest is empty.");
+                            await new Promise(resolve => {
+                                showChoiceModal({
+                                    title: 'Treasure',
+                                    message: 'The treasure chest is empty.',
+                                    choices: [{ label: 'OK', value: 'ok' }],
+                                    onChoice: resolve
+                                });
+                            });
                         } else {
                             const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
-                                console.log("Gained loot item from treasure:", lootCard.name);
-                                gameState.inventory.push(lootCard);
-                                displayInventory(gameState.inventory);
+                                await new Promise(resolve => {
+                                    showChoiceModal({
+                                        title: 'Treasure',
+                                        message: `You found: ${lootCard.name}`,
+                                        image: lootCard.image,
+                                        choices: [{ label: 'Take', value: 'take' }],
+                                        onChoice: () => {
+                                            gameState.inventory.push(lootCard);
+                                            displayInventory(gameState.inventory);
+                                            resolve();
+                                        }
+                                    });
+                                });
                             } else {
                                 console.warn(`Loot card not found for name in treasure: ${lootName}`);
                             }
@@ -476,13 +503,13 @@ function resolveIcons(iconCard, legendCard) {
                     const refMatch = randomEvent.match(/^Ref=(.+)$/);
                     if (refMatch && refMatch[1]) {
                         const refName = refMatch[1];
-                        const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
-                        if (refCard) {
-                            console.log("Encountered Reference Card:", refCard.name);
-                            handleReferenceCard(refCard);
-                        } else {
-                            console.warn(`Reference card not found for name: ${refName}`);
-                        }
+                    const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
+                    if (refCard) {
+                        console.log("Encountered Reference Card:", refCard.name);
+                        await handleReferenceCard(refCard);
+                    } else {
+                        console.warn(`Reference card not found for name: ${refName}`);
+                    }
                     } else if (randomEvent.startsWith('Enemy=')) {
                         console.log("Random event is an enemy encounter.");
                         const enemyMatch = randomEvent.match(/^Enemy=(.+)$/);
@@ -506,13 +533,13 @@ function resolveIcons(iconCard, legendCard) {
             default:
                 console.warn("Unknown icon encountered:", icon);
         }
-    });
+    }
     // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
 }
 
 // Function to handle Reference Card effects
 // Applies special effects based on reference card name (Altar, Grove, etc.).
-function handleReferenceCard(refCard) {
+async function handleReferenceCard(refCard) {
     console.log("Handling Reference Card effect for:", refCard.name);
     // Implement logic based on refCard.name and GAMERULES.md
     switch (refCard.name) {
@@ -590,25 +617,28 @@ function handleReferenceCard(refCard) {
         case 'Labyrinth':
             console.log("Resolving Labyrinth effect.");
             const labyrinthCard = Object.values(getAllCardsData()).find(card => card.name === 'Labyrinth');
-            showChoiceModal({
-                title: 'Labyrinth',
-                message: 'Lose 1 Ration, or if you have none, lose 2 Energy, or if you have neither, lose up to 3 HP.',
-                image: labyrinthCard && labyrinthCard.image,
-                choices: [
-                    { label: 'Lose 1 Ration', value: 'ration', disabled: !(gameState.player.food >= 1) },
-                    { label: 'Lose 2 Energy', value: 'energy', disabled: !(gameState.player.food < 1 && gameState.player.energy >= 2) },
-                    { label: 'Lose up to 3 HP', value: 'hp', disabled: !(gameState.player.food < 1 && gameState.player.energy < 2 && gameState.player.hp > 0) }
-                ].filter(opt => !opt.disabled),
-                onChoice: (val) => {
-                    if (val === 'ration') {
-                        updatePlayerStats('food', -1);
-                    } else if (val === 'energy') {
-                        updatePlayerStats('energy', -2);
-                    } else if (val === 'hp') {
-                        const damageToTake = Math.min(gameState.player.hp, 3);
-                        updatePlayerStats('hp', -damageToTake);
+            await new Promise(resolve => {
+                showChoiceModal({
+                    title: 'Labyrinth',
+                    message: 'Lose 1 Ration, or if you have none, lose 2 Energy, or if you have neither, lose up to 3 HP.',
+                    image: labyrinthCard && labyrinthCard.image,
+                    choices: [
+                        { label: 'Lose 1 Ration', value: 'ration', disabled: !(gameState.player.food >= 1) },
+                        { label: 'Lose 2 Energy', value: 'energy', disabled: !(gameState.player.food < 1 && gameState.player.energy >= 2) },
+                        { label: 'Lose up to 3 HP', value: 'hp', disabled: !(gameState.player.food < 1 && gameState.player.energy < 2 && gameState.player.hp > 0) }
+                    ].filter(opt => !opt.disabled),
+                    onChoice: (val) => {
+                        if (val === 'ration') {
+                            updatePlayerStats('food', -1);
+                        } else if (val === 'energy') {
+                            updatePlayerStats('energy', -2);
+                        } else if (val === 'hp') {
+                            const damageToTake = Math.min(gameState.player.hp, 3);
+                            updatePlayerStats('hp', -damageToTake);
+                        }
+                        resolve();
                     }
-                }
+                });
             });
             break;
         case 'Pigman':
@@ -628,8 +658,13 @@ function handleReferenceCard(refCard) {
                         if (val === 'favor') {
                             updatePlayerStats('favor', 1);
                         } else if (val === 'shard') {
-                            gameState.inventory.splice(turnipIndex, 1);
-                            displayInventory(gameState.inventory);
+                            // Remove Turnip from inventory and add to loot discard pile
+                            if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
+                            if (turnipIndex !== -1) {
+                                gameState.lootDiscardPile.push(gameState.inventory[turnipIndex]);
+                                gameState.inventory.splice(turnipIndex, 1);
+                                displayInventory(gameState.inventory);
+                            }
                             updatePlayerStats('shards', 1);
                         }
                     }
@@ -1021,8 +1056,14 @@ function processLootAbilitiesAndEffects(eventContext) {
                         if (eventContext.trigger === "on_activate" && loot.id === "LT06") {
                             // Turnip: Discard anytime to gain +3 energy
                             updatePlayerStats('energy', ability.amount || 3);
-                            // Remove from inventory handled elsewhere
                             logEvent("Turnip: Discarded for +3 energy.");
+                            // Remove from inventory and add to loot discard pile
+                            const idx = gameState.inventory.findIndex(i => i.id === loot.id);
+                            if (idx !== -1) {
+                                gameState.lootDiscardPile.push(gameState.inventory[idx]);
+                                gameState.inventory.splice(idx, 1);
+                                displayInventory(gameState.inventory);
+                            }
                         }
                         break;
                     case "avoid_encounter":

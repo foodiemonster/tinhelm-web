@@ -22,7 +22,7 @@
   {
     "id": "CLA03",
     "name": "Footpad",
-    "startingTrapping": ["TRA03", "TRA04"],
+    "startingTrapping": ["TRA03", "TRA08"],
     "healthModifier": 3,
     "energyModifier": 3,
     "abilities": [],

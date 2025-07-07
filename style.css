@@ -491,6 +491,15 @@ button:hover, input:hover, select:hover, textarea:hover {
   color: #f1f1f1;
 }
 
+#player-cards-row .card:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+#player-cards-row .card:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
 #inventory-section {
   width: 400px;
   max-width: 100%;

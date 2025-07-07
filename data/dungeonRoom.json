@@ -46,7 +46,7 @@
   {
     "id": "ROO_05",
     "name": "Quarters",
-    "icons": "Treasure, Enemy",
+    "icons": "Enemy, Treasure",
     "linkedResultId": [
       "RES_05"
     ],
@@ -79,7 +79,7 @@
   {
     "id": "ROO_08",
     "name": "Sanctum",
-    "icons": "Enemy, Trap",
+    "icons": "Trap, Enemy",
     "linkedResultId": [
       "RES_08"
     ],

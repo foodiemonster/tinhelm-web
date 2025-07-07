@@ -2,7 +2,8 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #f1f1f1;
+    background-color: #23272b; /* dark grey */
+    color: #f1f1f1; /* light text for contrast */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -12,9 +13,10 @@ body {
 #game-container {
     width: 100%;
     max-width: 1300px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #23272b; /* match body for seamless look */
+    color: #f1f1f1;
+    border: 1px solid #444;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     padding: 1.5rem 1rem;
     margin: 2vh auto;
     box-sizing: border-box;
@@ -24,12 +26,58 @@ body {
     justify-content: center;
 }
 
-@media (max-width: 900px) {
-  #game-container {
-    max-width: 98vw;
-    padding: 1rem 0.5rem;
-    margin: 0;
-  }
+/* Make all text inside game-container light for contrast */
+#game-container, #game-container * {
+    color: #f1f1f1;
+}
+
+/* Adjust input/button backgrounds for dark mode */
+button, input, select, textarea {
+    background: #181a1b;
+    color: #f1f1f1;
+    border: 1px solid #555;
+}
+button:hover, input:hover, select:hover, textarea:hover {
+    background: #23272b;
+    border-color: #888;
+}
+
+/* Adjust modal backgrounds for dark mode */
+.modal-content, .combat-modal-content, .responsive-modal {
+    background: #23272b;
+    color: #f1f1f1;
+}
+
+/* Adjust inventory and card backgrounds for dark mode */
+#inventory-section {
+    background: #181a1b;
+    border: 1.5px solid #444;
+}
+.card, .inventory-card, .tracker-card {
+    background: #181a1b;
+    color: #f1f1f1;
+    border: 1px solid #555;
+}
+
+/* Adjust sandwich menu for dark mode */
+#sandwich-menu, .sandwich-icon, #sandwich-dropdown {
+    background: #23272b;
+    color: #f1f1f1;
+    border: 1.5px solid #444;
+}
+#sandwich-dropdown button {
+    background: none;
+    color: #f1f1f1;
+}
+#sandwich-dropdown button:hover {
+    background: #181a1b;
+}
+
+/* Adjust log panel for dark mode */
+#session-log {
+    background: #181a1b;
+    color: #f1f1f1;
+    border: 1px solid #444;
 }
 
 #player-stats {
@@ -67,7 +115,7 @@ body {
 #deck-placeholder {
     width: 100px;
     height: 150px;
-    border: 2px dashed #999;
+    border: 2px dashed #9999993d;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,7 +127,7 @@ body {
     width: 200px;
     height: 300px;
     border: 1px solid #333;
-    background-color: #eee;
+    background-color: #9999993d;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -198,7 +246,7 @@ body {
     justify-content: center;
 }
 .modal-content {
-    background: #fff;
+    background: #23272b;
     border-radius: 16px;
     padding: 2em 2em 1em 2em;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
@@ -259,7 +307,7 @@ body {
 
 /* Combat Modal Styles */
 .combat-modal-content {
-    background: #fff;
+    background: #23272b;
     border-radius: 16px;
     padding: 2em 2em 1em 2em;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
@@ -437,12 +485,18 @@ body {
   margin-bottom: 1.2rem;
 }
 
+#player-cards-row .card {
+  border: 1.5px solid #222;
+  background: #181a1b;
+  color: #f1f1f1;
+}
+
 #inventory-section {
   width: 400px;
   max-width: 100%;
   min-height: 110px;
-  background: #f8f8f8;
-  border: 1.5px solid #bbb;
+  background: #f8f8f81a;
+  border: none ;
   border-radius: 14px;
   margin: 0 auto 0 auto;
   display: flex;
@@ -459,7 +513,7 @@ body {
   width: 100px;
   height: 150px;
   border-radius: 10px;
-  border: 1px solid #888;
+  border: none;
   background: #eee;
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   display: flex;
@@ -484,7 +538,7 @@ body {
   display: block;
   margin: 0;
   padding: 0;
-  border: 1px solid #888;
+  border: 1px solid #1a1a1a;
   border-radius: 0;
   background: #111;
   transition: width 0.2s;

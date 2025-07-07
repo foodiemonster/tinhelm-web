@@ -256,6 +256,7 @@ const trackerCubeMap = {
 // These should be tuned to match the visual track positions on the PNGs
 const trackerCubePositions = {
   hp: [
+    {left:133, top:202}, // 0
     {left:133, top:167}, // 1
     {left:133, top:131}, // 2
     {left:133, top:94},  // 3
@@ -272,6 +273,7 @@ const trackerCubePositions = {
     {left:36,  top:58}   // 14
   ],
   energy: [
+    {left:76, top:274}, // 0
     {left:76, top:242}, // 1
     {left:76, top:206}, // 2
     {left:76, top:170},  // 3
@@ -284,7 +286,7 @@ const trackerCubePositions = {
     {left:42,  top:170}, // 10
     {left:42,  top:133}, // 11
     {left:42,  top:96}, // 12
-    {left:42,  top:62},  // 13
+    {left:42,  top:61},  // 13
   ],
   rations: [
     {left:131, top:242}, // 0
@@ -295,6 +297,7 @@ const trackerCubePositions = {
     {left:131, top:62}, // 5
   ],
   favor: [
+    {left:133, top:240}, // 0
     {left:133, top:203}, // 1
     {left:133, top:167}, // 2
     {left:133, top:131}, // 3
@@ -312,6 +315,7 @@ const trackerCubePositions = {
     {left:36,  top:58}   // 15
   ],
   dungeon: [
+    {left:32, top:47}, // 0
     {left:32, top:47}, // 1
     {left:76, top:23}, // 2
     {left:127, top:27}, // 3
@@ -319,6 +323,7 @@ const trackerCubePositions = {
     {left:138, top:78},  // 5
   ],
   enemy: [
+    {left:129, top:244}, // 0
     {left:129, top:244}, // 1
     {left:129, top:208}, // 2
     {left:129, top:171},  // 3
@@ -343,7 +348,7 @@ export function updateTrackerCube(stat, value) {
   // Clamp value to available positions
   const posArr = trackerCubePositions[stat];
   if (!posArr) return;
-  let idx = Math.max(0, Math.min(posArr.length-1, value-1));
+  let idx = Math.max(0, Math.min(posArr.length-1, value));
   const pos = posArr[idx];
   cube.style.left = pos.left + 'px';
   cube.style.top = pos.top + 'px';

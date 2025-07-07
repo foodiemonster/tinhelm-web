@@ -226,3 +226,83 @@ export function displayDeckRoomCard(card) {
         deckPlaceholder.innerHTML = 'Dungeon Deck';
     }
 }
+
+// --- Tracker Cube Overlay Logic ---
+// Map stat to cube id and card wrapper
+const trackerCubeMap = {
+  hp: { cube: 'cube-hp', wrapper: 'tracker-hp-wrapper', card: 'tracker-hp' },
+  energy: { cube: 'cube-energy', wrapper: 'tracker-en-ration-wrapper', card: 'tracker-en-ration' },
+  rations: { cube: 'cube-rations', wrapper: 'tracker-en-ration-wrapper', card: 'tracker-en-ration' },
+  favor: { cube: 'cube-favor', wrapper: 'tracker-favor-wrapper', card: 'tracker-favor' },
+  dungeon: { cube: 'cube-dungeon', wrapper: 'tracker-enemyhp-dungeonlevel-wrapper', card: 'tracker-enemyhp-dungeonlevel' },
+  enemy: { cube: 'cube-enemy', wrapper: 'tracker-enemyhp-dungeonlevel-wrapper', card: 'tracker-enemyhp-dungeonlevel' },
+};
+
+// Position maps: for each stat, map value to {left, top} in px (relative to wrapper)
+// These should be tuned to match the visual track positions on the PNGs
+const trackerCubePositions = {
+  hp: [
+    {left:133, top:204}, // 0
+    {left:133, top:167}, // 1
+    {left:133, top:131}, // 2
+    {left:133, top:94},  // 3
+    {left:133, top:58},  // 4
+    {left:58,  top:204}, // 5
+    {left:58,  top:167}, // 6
+    {left:58,  top:131}, // 7
+    {left:58,  top:94},  // 8
+    {left:58,  top:58},  // 9
+    {left:36,  top:204}, // 10
+    {left:36,  top:167}, // 11
+    {left:36,  top:131}, // 12
+    {left:36,  top:94},  // 13
+    {left:36,  top:58}   // 14
+  ],
+  energy: [
+    {left:38,top:38},{left:88,top:38},{left:138,top:38},{left:38,top:88},{left:88,top:88},{left:138,top:88}
+  ],
+  rations: [
+    {left:38,top:188},{left:88,top:188},{left:138,top:188},{left:38,top:238},{left:88,top:238},{left:138,top:238}
+  ],
+  favor: [
+    {left:38,top:38},{left:88,top:38},{left:138,top:38},{left:38,top:88},{left:88,top:88},{left:138,top:88},
+    {left:38,top:138},{left:88,top:138},{left:138,top:138},{left:38,top:188},{left:88,top:188},{left:138,top:188}
+  ],
+  dungeon: [
+    {left:30,top:38},{left:60,top:38},{left:90,top:38},{left:120,top:38},{left:150,top:38},{left:180,top:38},
+    {left:30,top:68},{left:60,top:68},{left:90,top:68},{left:120,top:68},{left:150,top:68},{left:180,top:68}
+  ],
+  enemy: [
+    {left:30,top:188},{left:60,top:188},{left:90,top:188},{left:120,top:188},{left:150,top:188},{left:180,top:188},
+    {left:30,top:218},{left:60,top:218},{left:90,top:218},{left:120,top:218},{left:150,top:218},{left:180,top:218}
+  ]
+};
+
+export function updateTrackerCube(stat, value) {
+  const map = trackerCubeMap[stat];
+  if (!map) return;
+  const cube = document.getElementById(map.cube);
+  const wrapper = document.getElementById(map.wrapper);
+  if (!cube || !wrapper) return;
+  // Clamp value to available positions
+  const posArr = trackerCubePositions[stat];
+  if (!posArr) return;
+  let idx = Math.max(0, Math.min(posArr.length-1, value-1));
+  const pos = posArr[idx];
+  cube.style.left = pos.left + 'px';
+  cube.style.top = pos.top + 'px';
+  cube.style.display = 'block';
+  // Set tooltip for accessibility and hover
+  cube.title = value;
+  cube.setAttribute('aria-label', value);
+}
+
+export function updateAllTrackerCubes(stats) {
+  console.log('[updateAllTrackerCubes] stats:', stats);
+  updateTrackerCube('hp', stats.hp);
+  updateTrackerCube('energy', stats.energy);
+  updateTrackerCube('rations', stats.food);
+  updateTrackerCube('favor', stats.favor);
+  updateTrackerCube('dungeon', stats.level);
+  updateTrackerCube('enemy', stats.enemyHp);
+}

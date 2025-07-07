@@ -65,6 +65,17 @@ function updateUIFromState() {
     document.getElementById('food-value').textContent = food;
     document.getElementById('favor-value').textContent = favor;
     document.getElementById('level-value').textContent = gameState.level;
+    // Add: update tracker cubes
+    import('./ui.js').then(ui => {
+      ui.updateAllTrackerCubes({
+        hp,
+        energy,
+        food,
+        favor,
+        level: gameState.level,
+        enemyHp: gameState.enemyHp || 1 // fallback if not set
+      });
+    });
 }
 
 // GameLogicAgent: call saveGame() at the end of turns or after combat.

@@ -1,5 +1,5 @@
 import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
-import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard } from './ui.js';
+import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard, updateAllTrackerCubes } from './ui.js';
 import { gameState, saveGame } from './gameState.js';
 import { showCombatBoard, hideCombatBoard } from './ui.combatBoard.js';
 import { showChoiceModal } from './ui.choiceModal.js';
@@ -115,6 +115,15 @@ function initializePlayer(raceId, classId) {
     displayRaceCard(raceCard);
     displayClassCard(classCard);
     displayInventory(gameState.inventory);
+    // Update tracker cubes on game start
+    updateAllTrackerCubes({
+        hp: gameState.player.hp,
+        energy: gameState.player.energy,
+        food: gameState.player.food,
+        favor: gameState.player.favor,
+        level: gameState.level,
+        enemyHp: gameState.enemyHp || 1
+    });
     logEvent(`Player created: Race = ${raceCard.name}, Class = ${classCard.name}`);
     saveGame();
 }
@@ -696,6 +705,16 @@ function updatePlayerStats(stat, amount) {
             updateStatDisplay('shards', gameState.player.shards);
         }
         displayInventory(gameState.inventory);
+
+        // Update tracker cubes after any stat change
+        updateAllTrackerCubes({
+            hp: gameState.player.hp,
+            energy: gameState.player.energy,
+            food: gameState.player.food,
+            favor: gameState.player.favor,
+            level: gameState.level,
+            enemyHp: gameState.enemyHp || 1 // fallback if not set
+        });
 
         // Check for player defeat after health changes
         if (stat === 'hp' && gameState.player.hp <= 0) {

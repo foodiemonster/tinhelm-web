@@ -7,6 +7,7 @@ const gameState = {
         energy: 5,
         food: 2,
         favor: 0,
+        shards: 0,
     },
     level: 1,
     decks: {},
@@ -14,6 +15,7 @@ const gameState = {
     inventory: [],
     turn: 0,
     timestamp: Date.now(),
+    log: [], // Session log for game events
 };
 
 // Check if localStorage is available
@@ -66,3 +68,5 @@ function updateUIFromState() {
 }
 
 // GameLogicAgent: call saveGame() at the end of turns or after combat.
+
+export { gameState, saveGame, loadGame, updateUIFromState };

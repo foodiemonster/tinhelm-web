@@ -2,7 +2,8 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #f1f1f1;
+    background-color: #23272b; /* dark grey */
+    color: #f1f1f1; /* light text for contrast */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -11,11 +12,72 @@ body {
 
 #game-container {
     width: 100%;
-    max-width: 600px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 1rem;
+    max-width: 1300px;
+    background-color: #23272b; /* match body for seamless look */
+    color: #f1f1f1;
+    border: 1px solid #444;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    padding: 1.5rem 1rem;
+    margin: 2vh auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Make all text inside game-container light for contrast */
+#game-container, #game-container * {
+    color: #f1f1f1;
+}
+
+/* Adjust input/button backgrounds for dark mode */
+button, input, select, textarea {
+    background: #181a1b;
+    color: #f1f1f1;
+    border: 1px solid #555;
+}
+button:hover, input:hover, select:hover, textarea:hover {
+    background: #23272b;
+    border-color: #888;
+}
+
+/* Adjust modal backgrounds for dark mode */
+.modal-content, .combat-modal-content, .responsive-modal {
+    background: #23272b;
+    color: #f1f1f1;
+}
+
+/* Adjust inventory and card backgrounds for dark mode */
+#inventory-section {
+    background: #181a1b;
+    border: 1.5px solid #444;
+}
+.card, .inventory-card, .tracker-card {
+    background: #181a1b;
+    color: #f1f1f1;
+    border: 1px solid #555;
+}
+
+/* Adjust sandwich menu for dark mode */
+#sandwich-menu, .sandwich-icon, #sandwich-dropdown {
+    background: #23272b;
+    color: #f1f1f1;
+    border: 1.5px solid #444;
+}
+#sandwich-dropdown button {
+    background: none;
+    color: #f1f1f1;
+}
+#sandwich-dropdown button:hover {
+    background: #181a1b;
+}
+
+/* Adjust log panel for dark mode */
+#session-log {
+    background: #181a1b;
+    color: #f1f1f1;
+    border: 1px solid #444;
 }
 
 #player-stats {
@@ -43,12 +105,17 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    padding: 0;
 }
 
 #deck-placeholder {
     width: 100px;
     height: 150px;
-    border: 2px dashed #999;
+    border: 2px dashed #9999993d;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -57,14 +124,14 @@ body {
 }
 
 .card {
-    width: 100px;
-    height: 150px;
+    width: 200px;
+    height: 300px;
     border: 1px solid #333;
-    background-color: #eee;
+    background-color: #9999993d;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 12px;
+    border-radius: 0;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
@@ -75,4 +142,551 @@ body {
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+#dungeon-slots {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; /* Force horizontal row on desktop */
+    justify-content: center;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 900px;
+    margin: 1.5em auto 0 auto;
+    gap: 1vw;
+    box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  #dungeon-slots {
+    flex-wrap: wrap; /* Allow wrapping on mobile */
+    justify-content: center;
+  }
+}
+.dungeon-slot {
+  width: 200px !important;
+  height: 300px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  min-height: 300px !important;
+  max-height: 300px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5vw;
+  box-sizing: border-box;
+  flex: 0 0 auto !important;
+}
+.dungeon-slot > * {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  .dungeon-slot {
+    width: 120px !important;
+    height: 180px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    min-height: 180px !important;
+    max-height: 180px !important;
+    margin-bottom: 1em;
+  }
+}
+@media (max-width: 1100px) {
+  #dungeon-slots {
+    max-width: 98vw;
+    gap: 1.5vw;
+  }
+  .dungeon-slot {
+    flex-basis: 24%;
+    min-width: 120px;
+    max-width: 180px;
+  }
+}
+@media (max-width: 700px) {
+  #dungeon-slots {
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    gap: 2vw;
+  }
+  .dungeon-slot {
+    flex-basis: 48%;
+    min-width: 90px;
+    max-width: 140px;
+    margin-bottom: 1em;
+  }
+}
+#discard-pile-display {
+    position: relative;
+}
+#discard-pile-display img {
+    width: 48px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #888;
+    margin: 2px;
+    background: #ccc;
+}
+#deck-placeholder {
+    margin-bottom: 0;
+}
+
+/* Character Selection Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: #23272b;
+    border-radius: 16px;
+    padding: 2em 2em 1em 2em;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    min-width: 340px;
+    max-width: 90vw;
+    text-align: center;
+    position: relative;
+}
+.card-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.5em;
+    margin: 1.5em 0 1em 0;
+}
+.modal-card {
+    width: 180px;
+    height: 270px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    background: #eee;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 2px solid transparent;
+}
+.modal-card.selected {
+    border: 2px solid #a00;
+    box-shadow: 0 0 16px 2px #a00;
+    transform: scale(1.08) rotate(-2deg);
+}
+.modal-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+.card-label {
+    font-size: 1em;
+    font-weight: bold;
+    margin: 0.5em 0 0.7em 0;
+    color: #222;
+}
+.modal-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.5em;
+    margin-top: 1em;
+}
+#character-modal {
+    z-index: 2000;
+}
+
+/* Combat Modal Styles */
+.combat-modal-content {
+    background: #23272b;
+    border-radius: 16px;
+    padding: 2em 2em 1em 2em;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    min-width: 400px;
+    max-width: 95vw;
+    text-align: center;
+    position: relative;
+}
+.combat-cards-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2em;
+    margin-bottom: 1em;
+}
+.combat-card {
+    width: 180px;
+    height: 270px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    background: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #888;
+    position: relative;
+}
+.combat-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+/* Removed .mini-card styles as enemy card in combat modal should match player card size */
+/* .mini-card {
+    width: 90px;
+    height: 140px;
+    margin: 0 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.mini-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+} */
+.combat-vs {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #a00;
+    align-self: center;
+}
+.combat-die {
+    display: inline-block;
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 0.5em;
+    padding: 0.2em 0.5em;
+    background: #f5f5f5;
+    color: #222; /* Ensure die number is dark on light background */
+    border-radius: 8px;
+    border: 2px solid #aaa;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.combat-message {
+    font-size: 1.1em;
+    margin: 1em 0 0.5em 0;
+    min-height: 2em;
+}
+.combat-actions {
+    margin-top: 1em;
+}
+
+/* Responsive modal and card styles for React-friendly, mobile-first design */
+
+.responsive-modal {
+  max-width: 95vw;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1.5em 1em;
+  border-radius: 12px;
+  background: #222;
+  color: #fff;
+  margin: 2vh auto;
+  overflow-y: auto;
+}
+
+.responsive-cards-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2vw;
+  flex-wrap: wrap;
+}
+
+.responsive-card {
+  width: 22vw;
+  max-width: 180px;
+  min-width: 90px;
+  aspect-ratio: 5/7;
+  background: #181818;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5vw;
+}
+
+.responsive-card-img {
+  width: 100%;
+  height: auto;
+  max-height: 28vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+#player-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+#player-area-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  gap: 0;
+  margin-bottom: 2.5rem;
+}
+
+#player-cards-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 400px;
+  max-width: 100vw;
+}
+
+#trackers-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+#trackers-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  margin-left: 0;
+  width: auto;
+  max-width: none;
+  justify-content: flex-start;
+}
+
+#player-cards-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.2rem;
+}
+
+#player-cards-row .card {
+  border: 1.5px solid #222;
+  background: #181a1b;
+  color: #f1f1f1;
+}
+
+#inventory-section {
+  width: 400px;
+  max-width: 100%;
+  min-height: 110px;
+  background: #f8f8f81a;
+  border: none ;
+  border-radius: 14px;
+  margin: 0 auto 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  box-sizing: border-box;
+  padding: 0.7em 1em;
+  transition: width 0.2s;
+}
+
+.inventory-card {
+  width: 100px;
+  height: 150px;
+  border-radius: 10px;
+  border: none;
+  background: #eee;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.inventory-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.tracker-card {
+  width: 200px;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #1a1a1a;
+  border-radius: 0;
+  background: #111;
+  transition: width 0.2s;
+}
+
+#trackers-row .tracker-card:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+#trackers-row .tracker-card:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* --- Sandwich menu styles --- */
+#sandwich-menu {
+  position: absolute;
+  top: 1.2rem;
+  right: 2rem;
+  z-index: 10;
+}
+.sandwich-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: background 0.2s;
+}
+.sandwich-icon:hover {
+  background: #f5f5f5;
+}
+.sandwich-bar {
+  width: 22px;
+  height: 3px;
+  background: #444;
+  margin: 3px 0;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+#sandwich-dropdown {
+  display: none;
+  position: absolute;
+  top: 44px;
+  right: 0;
+  background: #fff;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+  min-width: 120px;
+  padding: 0.5em 0.7em;
+  z-index: 20;
+}
+#sandwich-dropdown button {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.6em 0;
+  font-size: 1em;
+  color: #222;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.18s;
+}
+#sandwich-dropdown button:hover {
+  background: #f1f1f1;
+}
+@media (max-width: 900px) {
+  #sandwich-menu {
+    right: 0.7rem;
+    top: 0.7rem;
+  }
+  #sandwich-dropdown {
+    right: 0;
+    min-width: 100px;
+  }
+}
+
+#slot-deck .card, #slot-discard .card {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#slot-deck .card img, #slot-discard .card img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+#slot-deck > *, #deck-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#deck-placeholder img, #slot-deck > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+#card-zoom-overlay {
+  display: none;
+  position: absolute;
+  z-index: 10000;
+  pointer-events: none;
+  background: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+#card-zoom-overlay.active {
+  display: block;
+}
+#card-zoom-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: #fff;
+  object-fit: cover;
+  pointer-events: none;
+  transition: transform 0.18s;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+@media (max-width: 700px) {
+  #card-zoom-img {
+    width: 180px;
+    height: 270px;
+  }
 }

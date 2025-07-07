@@ -537,10 +537,11 @@ button:hover, input:hover, select:hover, textarea:hover {
 #trackers-col {
   display: grid; /* Use grid for 2x2 layout */
   grid-template-columns: repeat(2, 1fr); /* Two columns, equal width */
-  gap: 1em; /* Gap between tracker cards */
+  gap: 0; /* Gap between tracker cards */
   align-items: start;
   justify-content: center;
   margin-left: 0;
+  margin-bottom: 0;
 }
 
 /* #trackers-row is no longer needed as #trackers-col is now a grid container */
@@ -633,7 +634,7 @@ button:hover, input:hover, select:hover, textarea:hover {
   height: 300px;
   vertical-align: top;
   background: none;
-  overflow: visible !important;
+  overflow: hidden; /* Changed to hidden to clip content for rounded corners */
   z-index: 1;
 }
 .tracker-card-wrapper .tracker-card {
@@ -650,6 +651,25 @@ button:hover, input:hover, select:hover, textarea:hover {
   z-index: 10;
   display: block !important;
   opacity: 0.85;
+}
+
+/* Apply rounded corners to specific tracker cards for a unified look */
+#trackers-col .tracker-card-wrapper:nth-child(1) { /* Top-left */
+  border-top-left-radius: 12px;
+}
+#trackers-col .tracker-card-wrapper:nth-child(2) { /* Top-right */
+  border-top-right-radius: 12px;
+}
+#trackers-col .tracker-card-wrapper:nth-child(3) { /* Bottom-left */
+  border-bottom-left-radius: 12px;
+}
+#trackers-col .tracker-card-wrapper:nth-child(4) { /* Bottom-right */
+  border-bottom-right-radius: 12px;
+}
+
+/* Ensure the image inside also respects the rounded corners */
+.tracker-card-wrapper img {
+  border-radius: inherit; /* Inherit border-radius from parent */
 }
 
 /* Removed debug CSS for .tracker-cube. Restore normal appearance and stacking */

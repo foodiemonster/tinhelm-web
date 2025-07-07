@@ -3,8 +3,8 @@
     "id": "CLA01",
     "name": "Alchemist",
     "startingTrapping": ["TRA05", "TRA06"],
-    "healthModifier": 0,
-    "energyModifier": 3,
+    "healthModifier": 3,
+    "energyModifier": 4,
     "abilities": [],
     "effects": [],
     "image": "assets/cards/class/CLA01.png"
@@ -13,8 +13,8 @@
     "id": "CLA02",
     "name": "Marauder",
     "startingTrapping": ["TRA01", "TRA02"],
-    "healthModifier": 2,
-    "energyModifier": 1,
+    "healthModifier": 5,
+    "energyModifier": 2,
     "abilities": [],
     "effects": [],
     "image": "assets/cards/class/CLA02.png"
@@ -23,8 +23,8 @@
     "id": "CLA03",
     "name": "Footpad",
     "startingTrapping": ["TRA03", "TRA04"],
-    "healthModifier": 1,
-    "energyModifier": 2,
+    "healthModifier": 3,
+    "energyModifier": 3,
     "abilities": [],
     "effects": [],
     "image": "assets/cards/class/CLA03.png"
@@ -33,8 +33,8 @@
     "id": "CLA04",
     "name": "Parson",
     "startingTrapping": ["TRA07", "TRA04"],
-    "healthModifier": 3,
-    "energyModifier": 0,
+    "healthModifier": 4,
+    "energyModifier": 3,
     "abilities": [],
     "effects": [],
     "image": "assets/cards/class/CLA04.png"

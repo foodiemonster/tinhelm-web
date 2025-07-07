@@ -577,6 +577,13 @@ function handleReferenceCard(refCard) {
                         updatePlayerStats('food', 2);
                         logEvent('Grove: Gain 2 Rations.');
                     }
+                    // Explicitly close the modal if still open (vanilla JS fallback)
+                    const modal = document.getElementById('choice-modal');
+                    if (modal && modal.parentNode) {
+                        setTimeout(() => {
+                            if (modal.parentNode) modal.parentNode.removeChild(modal);
+                        }, 900);
+                    }
                 }
             });
             break;
@@ -909,13 +916,156 @@ function updatePlayerStats(stat, amount) {
     }
 }
 
-// Function to simulate rolling two six-sided dice
-// Returns an array [roll1, roll2].
-function rollDice() {
-    const roll1 = Math.floor(Math.random() * 6) + 1;
-    const roll2 = Math.floor(Math.random() * 6) + 1;
-    console.log(`Dice rolled: ${roll1}, ${roll2}`);
-    return [roll1, roll2];
+/**
+ * Process loot abilities and effects for all loot cards in player inventory.
+ * Call this function at relevant game events (combat, encounter, discard, altar, etc.).
+ * Handles all actions/triggers/targets from data/loot.json.
+ */
+function processLootAbilitiesAndEffects(eventContext) {
+    // Ensure loot discard pile exists
+    if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
+    // eventContext: { trigger, encounterType, discardItemId, altarContext, combatContext, etc. }
+    const lootItems = gameState.inventory.filter(item => item.id && item.id.startsWith('LT'));
+    for (const loot of lootItems) {
+        // Passive effects
+        if (loot.effects && loot.effects.length) {
+            for (const effect of loot.effects) {
+                if (effect.action === "damage_reduction" && eventContext.trigger === "on_receive_damage") {
+                    // Shield: Reduce damage by 1 if single attack damage is 6 or more
+                    if (eventContext.damage >= 6) {
+                        eventContext.damage = Math.max(0, eventContext.damage - (effect.amount || 1));
+                        logEvent("Shield reduced damage by 1.");
+                    }
+                }
+            }
+        }
+        // Abilities
+        if (loot.abilities && loot.abilities.length) {
+            for (const ability of loot.abilities) {
+                switch (ability.action) {
+                    case "roll_dice":
+                        if (eventContext.trigger === "on_water_encounter") {
+                            // GillNet: Roll 3 dice instead of 1, gain 1 ration per success (4+)
+                            let successes = 0;
+                            for (let i = 0; i < (ability.amount || 3); i++) {
+                                const [roll] = rollDice();
+                                if (roll >= 4) successes++;
+                            }
+                            if (successes > 0) {
+                                updatePlayerStats('food', successes);
+                                logEvent(`GillNet: Gained ${successes} rations.`);
+                            }
+                        }
+                        break;
+                    case "bypass_encounter":
+                        if (eventContext.trigger === "on_encounter" && eventContext.encounterType === "enemy") {
+                            // Ring: Spend 1 favor to bypass enemy encounter (once per dungeon level)
+                            if (gameState.player.favor > 0 && !loot._bypassedThisLevel) {
+                                gameState.player.favor -= 1;
+                                loot._bypassedThisLevel = true;
+                                logEvent("Ring: Enemy encounter bypassed by spending 1 favor.");
+                                // Skip encounter logic here
+                                eventContext.bypassed = true;
+                            }
+                        }
+                        break;
+                    case "discard_item":
+                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === loot.id) {
+                            // Shield: Discard to activate (handled elsewhere)
+                            logEvent("Shield discarded.");
+                        }
+                        break;
+                    case "apply_damage":
+                        if (eventContext.trigger === "on_attack" && eventContext.combatContext) {
+                            // Sword: Deal 5 damage to enemy
+                            eventContext.combatContext.enemyHp -= (ability.amount || 5);
+                            logEvent("Sword: Dealt 5 damage to enemy.");
+                        }
+                        break;
+                    case "ignore_miss":
+                        if (eventContext.trigger === "on_roll_double" && eventContext.combatContext) {
+                            // Sword: Ignore miss on doubles
+                            eventContext.combatContext.ignoreMiss = true;
+                            logEvent("Sword: Ignored miss on doubles.");
+                        }
+                        break;
+                    case "modify_altar_reward":
+                        if (eventContext.trigger === "on_altar") {
+                            // Symbol: Reward level = current favor + 1
+                            eventContext.altarContext.rewardLevel = gameState.player.favor + 1;
+                            logEvent("Symbol: Altar reward level increased by 1.");
+                        }
+                        break;
+                    case "discard_to_gain":
+                        if (eventContext.trigger === "during_ref_pigman" && eventContext.discardItemId === loot.id) {
+                            // Turnip: Discard to gain shard
+                            updatePlayerStats('shards', 1);
+                            // Remove from inventory handled elsewhere
+                            logEvent("Turnip: Discarded for 1 shard.");
+                        }
+                        break;
+                    case "gain_resource":
+                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === loot.id) {
+                            // Potion: Discard to gain health/energy, then move to loot discard pile
+                            if (ability.target === "health") updatePlayerStats('hp', ability.amount || 2);
+                            if (ability.target === "energy") updatePlayerStats('energy', ability.amount || 2);
+                            logEvent(`Potion: Gained ${ability.amount} ${ability.target}.`);
+                            // Remove from inventory and add to loot discard pile
+                            const idx = gameState.inventory.findIndex(i => i.id === loot.id);
+                            if (idx !== -1) {
+                                gameState.lootDiscardPile.push(gameState.inventory[idx]);
+                                gameState.inventory.splice(idx, 1);
+                                displayInventory(gameState.inventory);
+                            }
+                        }
+                        if (eventContext.trigger === "on_activate" && loot.id === "LT06") {
+                            // Turnip: Discard anytime to gain +3 energy
+                            updatePlayerStats('energy', ability.amount || 3);
+                            // Remove from inventory handled elsewhere
+                            logEvent("Turnip: Discarded for +3 energy.");
+                        }
+                        break;
+                    case "avoid_encounter":
+                        if (eventContext.trigger === "on_encounter" && eventContext.encounterType === "combat") {
+                            // Wedge: Avoid combat encounter
+                            eventContext.avoided = true;
+                            logEvent("Wedge: Combat encounter avoided.");
+                        }
+                        break;
+                    case "use_scroll":
+                        if (eventContext.trigger === "on_use_scroll" && eventContext.scrollItemId === loot.id) {
+                            // Scroll: Defeat undead enemy (e.g., Skelepede)
+                            // Find current enemy in combat
+                            const undeadEnemies = ["Skelepede", "Skeleton", "Ghoul", "Wraith", "Lich"]; // Add more as needed
+                            const encounter = gameState.encounter;
+                            if (encounter && encounter.inProgress) {
+                                const enemyCard = getCardById(encounter.enemyId);
+                                if (enemyCard && undeadEnemies.some(name => enemyCard.name === name || (enemyCard.traits && enemyCard.traits.includes("Undead")))) {
+                                    // Defeat the enemy
+                                    encounter.enemyHp = 0;
+                                    logEvent("Scroll: Undead enemy instantly defeated!");
+                                    // Remove Scroll from inventory and add to loot discard pile
+                                    const idx = gameState.inventory.findIndex(i => i.id === loot.id);
+                                    if (idx !== -1) {
+                                        gameState.lootDiscardPile.push(gameState.inventory[idx]);
+                                        gameState.inventory.splice(idx, 1);
+                                        displayInventory(gameState.inventory);
+                                    }
+                                } else {
+                                    logEvent("Scroll: No undead enemy to defeat.");
+                                }
+                            } else {
+                                logEvent("Scroll: No enemy encounter in progress.");
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
 }
 
 // Full combat logic for enemy encounters
@@ -1159,5 +1309,60 @@ function advanceToNextRoom() {
     // Start the next room
     handleRoom();
 }
+
+/**
+ * Simulate rolling two six-sided dice.
+ * @returns {[number, number]}
+ */
+function rollDice() {
+    const roll1 = Math.floor(Math.random() * 6) + 1;
+    const roll2 = Math.floor(Math.random() * 6) + 1;
+    console.log(`Dice rolled: ${roll1}, ${roll2}`);
+    return [roll1, roll2];
+}
+
+/**
+ * Process use of trappings (e.g., Scroll TRA04).
+ * @param {object} eventContext - { trigger, trappingId }
+ */
+function processTrappingUse(eventContext) {
+    // Ensure trappings discard pile exists
+    if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
+    // Only handle Scroll (TRA04) for now
+    if (eventContext.trigger === "on_use_scroll" && eventContext.trappingId === "TRA04") {
+        // Find current enemy in combat
+        const undeadEnemies = ["Skelepede", "Skeleton", "Ghoul", "Wraith", "Lich"]; // Add more as needed
+        const encounter = gameState.encounter;
+        if (encounter && encounter.inProgress) {
+            const enemyCard = getCardById(encounter.enemyId);
+            if (enemyCard && (
+                undeadEnemies.includes(enemyCard.name) ||
+                (enemyCard.traits && enemyCard.traits.includes("Undead")) ||
+                enemyCard.enemyType === "Undead"
+            )) {
+                // Defeat the enemy and end combat
+                encounter.enemyHp = 0;
+                encounter.inProgress = false;
+                logEvent("Scroll: Undead enemy instantly defeated!");
+                // Remove Scroll from inventory and add to trappings discard pile
+                const idx = gameState.inventory.findIndex(i => i.id === "TRA04");
+                if (idx !== -1) {
+                    gameState.trappingsDiscardPile.push(gameState.inventory[idx]);
+                    gameState.inventory.splice(idx, 1);
+                    displayInventory(gameState.inventory);
+                }
+                // Hide combat board if visible
+                if (typeof hideCombatBoard === "function") hideCombatBoard();
+            } else {
+                logEvent("Scroll: No undead enemy to defeat.");
+            }
+        } else {
+            logEvent("Scroll: No enemy encounter in progress.");
+        }
+    }
+}
+
+window.processLootAbilitiesAndEffects = processLootAbilitiesAndEffects;
+window.processTrappingUse = processTrappingUse;
 
 export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom };

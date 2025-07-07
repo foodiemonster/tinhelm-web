@@ -1,30 +1,31 @@
 // Get references to the card images
+const roomCardImage = document.getElementById('room-card-image');
+const resultCardImage = document.getElementById('result-card-image');
 const raceCardImage = document.getElementById('race-card-image');
 const classCardImage = document.getElementById('class-card-image');
 const enemyCardImage = document.getElementById('enemy-card-image');
 const enemyCardDisplay = document.getElementById('enemy-card-display');
+const deckCardImage = document.getElementById('deck-card-image'); // Added for deck slot
 
 // Function to display room card
 export function displayRoomCard(card) {
-    const roomSlot = document.getElementById('slot-room');
-    if (roomSlot) {
-        if (card && card.image) {
-            roomSlot.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
-        } else {
-            roomSlot.innerHTML = 'Room';
-        }
+    if (roomCardImage && card && card.image) {
+        roomCardImage.src = card.image;
+        roomCardImage.style.display = 'block';
+    } else if (roomCardImage) {
+        roomCardImage.src = '';
+        roomCardImage.style.display = 'none';
     }
 }
 
 // Function to display result card
 export function displayResultCard(card) {
-    const resultSlot = document.getElementById('slot-result');
-    if (resultSlot) {
-        if (card && card.image) {
-            resultSlot.innerHTML = `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
-        } else {
-            resultSlot.innerHTML = 'Result';
-        }
+    if (resultCardImage && card && card.image) {
+        resultCardImage.src = card.image;
+        resultCardImage.style.display = 'block';
+    } else if (resultCardImage) {
+        resultCardImage.src = '';
+        resultCardImage.style.display = 'none';
     }
 }
 
@@ -87,7 +88,11 @@ const skipButton = document.getElementById('skip-button');
 // Function to show the room decision buttons
 export function showRoomDecisionButtons() {
     if (roomDecisionButtons) {
-        roomDecisionButtons.style.display = 'flex'; // Or 'block', depending on desired layout
+        roomDecisionButtons.style.display = 'flex';
+        if (resolveButton) resolveButton.style.display = 'inline-block';
+        if (skipButton) skipButton.style.display = 'inline-block';
+        const nextRoomBtn = document.getElementById('next-room-btn');
+        if (nextRoomBtn) nextRoomBtn.style.display = 'none';
     }
 }
 
@@ -227,11 +232,12 @@ export function displayDiscardPile(roomCard, resultCard) {
 
 // Function to show the current dungeonRoom card in the deck slot (Slot 1)
 export function displayDeckRoomCard(card) {
-    const deckPlaceholder = document.getElementById('deck-placeholder');
-    if (deckPlaceholder && card && card.image) {
-        deckPlaceholder.innerHTML = `<img src="${card.image}" alt="Dungeon Room Card" style="width:100px;height:150px;object-fit:cover;border-radius:12px;">`;
-    } else if (deckPlaceholder) {
-        deckPlaceholder.innerHTML = 'Dungeon Deck';
+    if (deckCardImage && card && card.image) {
+        deckCardImage.src = card.image;
+        deckCardImage.style.display = 'block';
+    } else if (deckCardImage) {
+        deckCardImage.src = '';
+        deckCardImage.style.display = 'none';
     }
 }
 

@@ -14,21 +14,25 @@ let classCards = [];
 
 // Function to display drawn cards in the UI
 function displayDrawnCards(roomCard, resultCard) {
-    const roomSlot = document.getElementById('slot-room');
-    const resultSlot = document.getElementById('slot-result');
+    const roomCardImage = document.getElementById('room-card-image');
+    const resultCardImage = document.getElementById('result-card-image');
 
-    if (roomSlot && roomCard && roomCard.image) {
-        roomSlot.innerHTML = `<img src="${roomCard.image}" alt="${roomCard.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    if (roomCardImage && roomCard && roomCard.image) {
+        roomCardImage.src = roomCard.image;
+        roomCardImage.alt = roomCard.name;
+        roomCardImage.style.display = 'block';
     } else {
         console.warn("Could not display room card.", roomCard);
-        if (roomSlot) roomSlot.innerHTML = 'Room'; // Clear image on error
+        if (roomCardImage) roomCardImage.style.display = 'none'; // Clear image on error
     }
 
-     if (resultSlot && resultCard && resultCard.image) {
-        resultSlot.innerHTML = `<img src="${resultCard.image}" alt="${resultCard.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+     if (resultCardImage && resultCard && resultCard.image) {
+        resultCardImage.src = resultCard.image;
+        resultCardImage.alt = resultCard.name;
+        resultCardImage.style.display = 'block';
     } else {
         console.warn("Could not display result card.", resultCard);
-         if (resultSlot) resultSlot.innerHTML = 'Result'; // Clear image on error
+         if (resultCardImage) resultCardImage.style.display = 'none'; // Clear image on error
     }
 }
 

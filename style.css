@@ -83,8 +83,7 @@ header, footer {
     background: #fff;
     border: 1px solid #aaa;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    /* Removed align-items: center; and justify-content: center; to prevent stretching */
     text-align: center;
     flex: 1 1 100px;
     max-width: 120px;
@@ -255,13 +254,37 @@ button:hover, input:hover, select:hover, textarea:hover {
   box-sizing: border-box;
   flex: 0 0 auto !important;
 }
-.dungeon-slot > * {
+.dungeon-slot > img { /* Target images directly inside dungeon-slot */
   width: 100% !important;
   height: 100% !important;
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
+  object-fit: cover; /* Use cover to fill the space, or contain if aspect ratio is critical */
   box-sizing: border-box;
+  border-radius: 0; /* Remove any default border-radius from .card */
+}
+
+.dungeon-slot > #deck-placeholder { /* Target the deck placeholder specifically */
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure images inside deck-placeholder also scale correctly */
+#deck-placeholder img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block;
+  margin: 0;
+  padding: 0;
 }
 @media (max-width: 700px) {
   .dungeon-slot {
@@ -790,9 +813,33 @@ button:hover, input:hover, select:hover, textarea:hover {
   margin: 0;
   padding: 0;
 }
-#slot-deck > *, #deck-placeholder {
+#slot-deck {
+  position: relative;
+  display: flex; /* Make it a flex container */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center children horizontally */
+  justify-content: flex-start; /* Align children to the start (top) */
+}
+
+#slot-deck > img { /* Target only the image directly inside slot-deck */
+  width: 100% !important; /* Keep width important for card aspect ratio */
+  height: auto; /* Allow height to adjust based on content and flexbox */
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  display: block; /* Changed from flex to block for image */
+  object-fit: cover;
+}
+
+#slot-deck > #room-decision-buttons { /* Target the buttons div specifically */
+  flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+#slot-deck > #deck-placeholder { /* Keep placeholder styles if needed */
   width: 100% !important;
-  height: 100% !important;
+  height: 100% !important; /* Keep height important for placeholder */
   min-width: 0;
   min-height: 0;
   max-width: 100%;
@@ -801,6 +848,16 @@ button:hover, input:hover, select:hover, textarea:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#room-decision-buttons {
+  display: none; /* Hidden by default, will be shown by JS */
+  flex-direction: row;
+  gap: 0.5em;
+  justify-content: center;
+  width: 100%; /* Take full width of parent for centering */
+  margin-top: 0.5em; /* Add space below the card image */
+  box-sizing: border-box;
 }
 #deck-placeholder img, #slot-deck > img {
   width: 100% !important;

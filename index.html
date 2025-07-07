@@ -106,22 +106,29 @@
         <div class="area2">
             <div class="dungeon-area">
                 <div class="dungeon-row" style="flex-wrap: nowrap;">
-                    <div class="card-slot" id="slot-deck">Deck</div>
-                    <div class="card-slot" id="slot-room">Room</div>
-                    <div class="card-slot" id="slot-result">Result</div>
-                    <div class="card-slot" id="slot-discard">Discard</div>
+                    <div class="card-slot" id="slot-deck">
+                        <img id="deck-card-image" alt="Dungeon Deck Card" style="display:none;">
+                        <div id="room-decision-buttons">
+                            <button id="resolve-button">Resolve</button>
+                            <button id="skip-button">Skip</button>
+                            <button id="next-room-btn" style="display:none;">Next Room</button>
+                        </div>
+                    </div>
+                    <div class="card-slot" id="slot-room">
+                        <img id="room-card-image" alt="Dungeon Room Card" style="display:none;">
+                    </div>
+                    <div class="card-slot" id="slot-result">
+                        <img id="result-card-image" alt="Dungeon Result Card" style="display:none;">
+                    </div>
+                    <div class="card-slot" id="slot-discard">
+                        <img id="discard-room-image" alt="Discarded Room Card" style="display:none;">
+                        <img id="discard-result-image" alt="Discarded Result Card" style="display:none;">
+                    </div>
                 </div>
             </div>
             <div class="encounter-area">
-                Encounter Area (e.g., Enemies, Reference Cards, Dice, Options)
+              <div id="combat-area"></div>
             </div>
-            <div id="combat-area"></div>
-            <div id="room-decision-buttons" style="display: none;">
-                <button id="resolve-button">Resolve</button>
-                <button id="skip-button">Skip</button>
-            </div>
-            <button id="next-room-btn" style="display:none; margin-top:1em;">Next Room</button>
-
             <div id="session-log" style="height: 120px; overflow-y: auto; background: #222; color: #fff; font-size: 0.95em; padding: 0.5em; margin-top: 1em; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                 <!-- Session log will appear here -->
             </div>

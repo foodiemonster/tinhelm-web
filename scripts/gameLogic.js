@@ -889,10 +889,11 @@ function resumeCombat(enemyId, enemyHp, playerHp) {
         abilities: availableAbilities,
         canUseAxeReroll,
         canDiscardAxe,
-        onAxeReroll: () => handleRoll(() => {}, { type: 'axe-reroll' }),
-        onAxeDiscard: () => handleRoll(() => {}, { type: 'axe-discard' }),
-        onRoll: (cb, ab, forcedRolls) => handleRoll(cb, ab, forcedRolls),
-        onClose: () => { hideCombatBoard(); }
+        onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }),
+        onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }),
+        onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
+        onClose: () => { hideCombatBoard(); },
+        playerEnergy: gameState.player.energy
     });
 
     async function handleRoll(updateModal, usedAbility, forcedRolls) {
@@ -1345,7 +1346,7 @@ async function initiateCombat(enemyCard) {
     }
 
     await new Promise((resolve) => {
-        async function handleRoll(updateModal, usedAbility, forcedRolls) {
+        async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
             let roll1, roll2;
             if (forcedRolls) {
                 [roll1, roll2] = forcedRolls;
@@ -1358,6 +1359,13 @@ async function initiateCombat(enemyCard) {
             let showRollBtn = true;
             let isCombatOver = false;
             let specialAttack = false;
+
+            // Deduct energy at the start of the player's turn
+            if (isPlayerTurn && selectedEnergy > 0) {
+                updatePlayerStats('energy', -selectedEnergy);
+                logEvent(`Spent ${selectedEnergy} energy for skill usage.`);
+            }
+
             if (usedAbility && usedAbility.type === 'axe-discard') {
                 // Axe discard special attack
                 discardAxe();
@@ -1381,11 +1389,28 @@ async function initiateCombat(enemyCard) {
                     if (context.roll1 === context.roll2) {
                         message = message || `You rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
                     } else {
-                        const rawAttackValue = Math.abs(context.roll1 - context.roll2);
-                        const totalAttackDamage = rawAttackValue + (context.attackBonus || 0);
-                        const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
-                        currentEnemyHealth -= damageAfterDefense;
-                        message = message || `You rolled ${context.roll1}, ${context.roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                        let totalDamage = 0;
+                        if (selectedEnergy === 0) {
+                            // Zero cost: 1 point of unblockable damage
+                            totalDamage = 1;
+                            currentEnemyHealth -= totalDamage;
+                            message = message || `You rolled ${context.roll1}, ${context.roll2}. Dealt 1 unblockable damage. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                        } else {
+                            // Non-zero cost: rawAttackPower + bonusDamage - enemyDefense
+                            const rawAttackValue = Math.abs(context.roll1 - context.roll2);
+                            const classData = getCardById(gameState.classId);
+                            let bonusDamage = 0;
+                            if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusDamage) {
+                                const energyIndex = classData.combatBonusDamageEnergyCost.indexOf(selectedEnergy);
+                                if (energyIndex !== -1) {
+                                    bonusDamage = classData.combatBonusDamage[energyIndex];
+                                }
+                            }
+                            totalDamage = rawAttackValue + bonusDamage + (context.attackBonus || 0);
+                            const damageAfterDefense = Math.max(0, totalDamage - enemyCard.defense);
+                            currentEnemyHealth -= damageAfterDefense;
+                            message = message || `You rolled ${context.roll1}, ${context.roll2}. Spent ${selectedEnergy} energy for ${bonusDamage} bonus damage. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                        }
                     }
                     if (currentEnemyHealth <= 0) {
                         message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
@@ -1430,9 +1455,9 @@ async function initiateCombat(enemyCard) {
             abilities: availableAbilities,
             canUseAxeReroll,
             canDiscardAxe,
-            onAxeReroll: () => handleRoll(() => {}, { type: 'axe-reroll' }),
-            onAxeDiscard: () => handleRoll(() => {}, { type: 'axe-discard' }),
-            onRoll: (cb, ab, forcedRolls) => handleRoll(cb, ab, forcedRolls),
+            onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }), // Pass 0 for energy
+            onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }), // Pass 0 for energy
+            onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
             onClose: () => { 
                 // --- CLEAR ENCOUNTER STATE ON CLOSE ---
                 gameState.encounter = {
@@ -1444,7 +1469,8 @@ async function initiateCombat(enemyCard) {
                 };
                 hideCombatBoard(); 
                 resolve(); 
-            }
+            },
+            playerEnergy: gameState.player.energy // Pass player's current energy
         });
     });
 }

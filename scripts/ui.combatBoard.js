@@ -2,7 +2,7 @@
 // Renders combat area in #combat-area
 import { animateDiceRoll } from './ui.dice.js';
 
-export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeReroll, canDiscardAxe, onAxeReroll, onAxeDiscard, onRoll, onClose }) {
+export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeReroll, canDiscardAxe, onAxeReroll, onAxeDiscard, onRoll, onClose, playerEnergy }) {
     if (window.ReactAvailable && window.React && window.ReactDOM) {
         let combatRoot = document.getElementById('combat-area');
         if (!combatRoot) {
@@ -24,6 +24,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
             const [message, setMessage] = window.React.useState("");
             const [showRollBtn, setShowRollBtn] = window.React.useState(true);
             const [isCombatOver, setIsCombatOver] = window.React.useState(false);
+            const [selectedEnergy, setSelectedEnergy] = window.React.useState(0); // New state for energy selection
             const isMountedRef = window.React.useRef(true);
             window.React.useEffect(() => {
                 isMountedRef.current = true;
@@ -52,7 +53,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                 setRolls([1, 1]);
                 setTimeout(() => {
                     if (combatRoot._isUnmounted) return;
-                    props.onRoll(({ roll1, roll2, message, showRollBtn, isCombatOver }) => {
+                    props.onRoll(selectedEnergy, ({ roll1, roll2, message, showRollBtn, isCombatOver }) => { // Pass selectedEnergy
                         if (combatRoot._isUnmounted) return;
                         const diceEls = document.querySelectorAll('.combat-die');
                         animateDiceRoll(diceEls, [roll1, roll2], () => {
@@ -67,6 +68,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
             };
             const canShowAxeReroll = !isCombatOver && props.canUseAxeReroll && props.canUseAxeReroll() && rolls.length === 2 && rolls[0] === rolls[1];
             const canShowAxeDiscard = !isCombatOver && props.canDiscardAxe && props.canDiscardAxe();
+            const energyOptions = [0, 1, 2, 3]; // Energy options
             return window.React.createElement(
                 'section', { className: 'combat-board-area' },
                 window.React.createElement('h2', {}, 'Combat Encounter'),
@@ -89,6 +91,28 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                 window.React.createElement('div', { className: 'combat-message', id: 'combat-message' }, message),
                 window.React.createElement('div', { className: 'combat-actions', id: 'combat-actions' },
                     showRollBtn && !isCombatOver ?
+                        window.React.createElement('div', { className: 'energy-selection-container', style: { marginBottom: '1em' } },
+                            window.React.createElement('h4', { style: { margin: '0 0 0.5em 0', color: '#eee' } }, 'Energy to Spend:'),
+                            energyOptions.map((energyCost) =>
+                                window.React.createElement('button', {
+                                    key: `energy-${energyCost}`,
+                                    className: `energy-select-btn ${selectedEnergy === energyCost ? 'selected' : ''}`,
+                                    onClick: () => setSelectedEnergy(energyCost),
+                                    disabled: energyCost > props.playerEnergy, // Disable if not enough energy
+                                    style: {
+                                        margin: '0 0.2em',
+                                        padding: '0.5em 1em',
+                                        border: `2px solid ${selectedEnergy === energyCost ? '#FFD700' : '#555'}`,
+                                        borderRadius: '5px',
+                                        background: energyCost > props.playerEnergy ? '#444' : (selectedEnergy === energyCost ? '#FFD700' : '#777'),
+                                        color: energyCost > props.playerEnergy ? '#888' : (selectedEnergy === energyCost ? '#333' : '#fff'),
+                                        cursor: energyCost > props.playerEnergy ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold'
+                                    }
+                                }, `${energyCost} Energy`)
+                            )
+                        ) : null,
+                    showRollBtn && !isCombatOver ?
                         window.React.createElement('button', { id: 'combat-roll-btn', onClick: handleRoll }, 'Roll Dice') :
                         null,
                     showRollBtn && !isCombatOver && props.abilities && props.abilities.length > 0 ?
@@ -101,7 +125,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                                     setMessage('Using ability...');
                                     setTimeout(() => {
                                         if (combatRoot._isUnmounted) return;
-                                        props.onRoll((result) => {
+                                        props.onRoll(0, (result) => { // Abilities don't use skill energy, pass 0
                                             if (combatRoot._isUnmounted) return;
                                             const diceEls = document.querySelectorAll('.combat-die');
                                             animateDiceRoll(diceEls, [result.roll1, result.roll2], () => {
@@ -152,7 +176,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                 )
             );
         };
-        safeRender(window.React.createElement(CombatBoard, { classCard, enemyCard, abilities, canUseAxeReroll, canDiscardAxe, onAxeReroll, onAxeDiscard, onRoll, onClose }));
+        safeRender(window.React.createElement(CombatBoard, { classCard, enemyCard, abilities, canUseAxeReroll, canDiscardAxe, onAxeReroll, onAxeDiscard, onRoll, onClose, playerEnergy }));
         return () => {
             combatRoot._isUnmounted = true;
             if (combatRoot._reactRootContainer) {

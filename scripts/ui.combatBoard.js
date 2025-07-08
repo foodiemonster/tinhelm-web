@@ -97,7 +97,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                                 window.React.createElement('button', {
                                     key: `energy-${energyCost}`,
                                     className: `energy-select-btn ${selectedEnergy === energyCost ? 'selected' : ''}`,
-                                    onClick: () => setSelectedEnergy(energyCost),
+onClick: () => setSelectedEnergy(Number(energyCost)),
                                     disabled: energyCost > props.playerEnergy, // Disable if not enough energy
                                     style: {
                                         margin: '0 0.2em',

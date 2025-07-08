@@ -7,8 +7,8 @@
     "energyModifier": 4,
     "abilities": [],
     "effects": [],
-    "combatBonusDamageEnergyCost": [1,2,3],
-    "combatBonusDamage": [2,4,6],
+    "combatBonusDamageEnergyCost": [0,1,2,3],
+    "combatBonusDamage": [0,2,4,6],
     "image": "assets/cards/class/CLA01.png"
   },
   {
@@ -19,8 +19,8 @@
     "energyModifier": 2,
     "abilities": [],
     "effects": [],
-    "combatBonusDamageEnergyCost": [1,2,3],
-    "combatBonusDamage": [3,6,8],
+    "combatBonusDamageEnergyCost": [0,1,2,3],
+    "combatBonusDamage": [0,3,6,8],
     "image": "assets/cards/class/CLA02.png"
   },
   {
@@ -31,8 +31,8 @@
     "energyModifier": 3,
     "abilities": [],
     "effects": [],
-    "combatBonusDamageEnergyCost": [1,2,3],
-    "combatBonusDamage": [2,5,7],
+    "combatBonusDamageEnergyCost": [0,1,2,3],
+    "combatBonusDamage": [0,2,5,7],
     "image": "assets/cards/class/CLA03.png"
   },
   {
@@ -43,8 +43,8 @@
     "energyModifier": 3,
     "abilities": [],
     "effects": [],
-    "combatBonusDamageEnergyCost": [1,2,3],
-    "combatBonusDamage": [3,5,7],
+    "combatBonusDamageEnergyCost": [0,1,2,3],
+    "combatBonusDamage": [0,3,5,7],
     "image": "assets/cards/class/CLA04.png"
   }
 ]

@@ -842,61 +842,62 @@ function resumeCombat(enemyId, enemyHp, playerHp) {
 
     // Re-create the combat UI and re-attach event handlers
     // This is similar to initiateCombat, but skips the intro and uses the saved HPs
-    const raceCard = getCardById(gameState.raceId);
-    // Initialize enemy HP tracker on resume
-    updateAllTrackerCubes({
-        hp: gameState.player.hp,
-        energy: gameState.player.energy,
-        food: gameState.player.food,
-        favor: gameState.player.favor,
-        level: gameState.level,
-        enemyHp: currentEnemyHealth // Use currentEnemyHealth from loaded state
-    });
-    const availableAbilities = [];
-    for (const item of gameState.inventory) {
-        if (item.abilities && item.abilities.length > 0) {
-            for (const ability of item.abilities) {
-                if (ability.trigger === 'on_attack') {
-                    availableAbilities.push({
-                        label: `${item.name}: ${ability.details || ability.action}`,
-                        itemId: item.id,
-                        ability
-                    });
-                }
+const classCard = getCardById(gameState.classId);
+// Initialize enemy HP tracker on resume
+updateAllTrackerCubes({
+    hp: gameState.player.hp,
+    energy: gameState.player.energy,
+    food: gameState.player.food,
+    favor: gameState.player.favor,
+    level: gameState.level,
+    enemyHp: currentEnemyHealth // Use currentEnemyHealth from loaded state
+});
+const availableAbilities = [];
+for (const item of gameState.inventory) {
+    if (item.abilities && item.abilities.length > 0) {
+        for (const ability of item.abilities) {
+            if (ability.trigger === 'on_attack') {
+                availableAbilities.push({
+                    label: `${item.name}: ${ability.details || ability.action}`,
+                    itemId: item.id,
+                    ability
+                });
             }
         }
     }
-    let currentEnemyHealth = typeof enemyHp === 'number' ? enemyHp : enemyCard.health;
-    let isPlayerTurn = true;
-    let combatOver = false;
-    let axeRerollUsed = false;
-    function canUseAxeReroll() {
-        return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
-    }
-    function useAxeReroll() { axeRerollUsed = true; }
-    function canDiscardAxe() {
-        return gameState.inventory.some(item => item.id === 'TRA01');
-    }
-    function discardAxe() {
-        const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
-        if (idx !== -1) gameState.inventory.splice(idx, 1);
-        displayInventory(gameState.inventory);
-    }
+}
+let currentEnemyHealth = typeof enemyHp === 'number' ? enemyHp : enemyCard.health;
+let isPlayerTurn = true;
+let combatOver = false;
+let axeRerollUsed = false;
+function canUseAxeReroll() {
+    return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
+}
+function useAxeReroll() { axeRerollUsed = true; }
+function canDiscardAxe() {
+    return gameState.inventory.some(item => item.id === 'TRA01');
+}
+function discardAxe() {
+    const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
+    if (idx !== -1) gameState.inventory.splice(idx, 1);
+    displayInventory(gameState.inventory);
+}
 
-    showCombatBoard({
-        classCard: raceCard,
-        enemyCard,
-        abilities: availableAbilities,
-        canUseAxeReroll,
-        canDiscardAxe,
-        onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }),
-        onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }),
-        onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
-        onClose: () => { hideCombatBoard(); },
-        playerEnergy: gameState.player.energy
-    });
+showCombatBoard({
+    classCard: classCard,
+    enemyCard,
+    abilities: availableAbilities,
+    canUseAxeReroll,
+    canDiscardAxe,
+    onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }),
+    onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }),
+    onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
+    onClose: () => { hideCombatBoard(); },
+    playerEnergy: gameState.player.energy
+});
 
-    async function handleRoll(updateModal, usedAbility, forcedRolls) {
+    async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
+        console.log('DEBUG: handleRoll args', arguments);
         let roll1, roll2;
         if (forcedRolls) {
             [roll1, roll2] = forcedRolls;
@@ -925,40 +926,74 @@ function resumeCombat(enemyId, enemyHp, playerHp) {
             context.roll2 = roll2;
             message = `Axe Reroll! New roll: ${roll1}, ${roll2}`;
         }
-        if (!specialAttack) {
-            if (isPlayerTurn) {
-                if (context.roll1 === context.roll2) {
-                    message = message || `You rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
-                } else {
-                    const rawAttackValue = Math.abs(context.roll1 - context.roll2);
-                    const totalAttackDamage = rawAttackValue + (context.attackBonus || 0);
-                    const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
-                    currentEnemyHealth -= damageAfterDefense;
-                    message = message || `You rolled ${context.roll1}, ${context.roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
-                }
-                if (currentEnemyHealth <= 0) {
-                    message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
-                    updatePlayerStats('favor', enemyCard.favor);
-                    showRollBtn = false;
-                    isCombatOver = true;
-                    combatOver = true;
-                }
+if (!specialAttack) {
+    if (isPlayerTurn) {
+        if (context.roll1 === context.roll2) {
+            message = message || `You rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+        } else {
+            let totalDamage = 0;
+            if (selectedEnergy === 0) {
+                // Zero cost: 1 point of unblockable damage
+                totalDamage = 1;
+                currentEnemyHealth -= totalDamage;
+                message = message || `You rolled ${context.roll1}, ${context.roll2}. Dealt 1 unblockable damage. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
             } else {
-                if (context.roll1 === context.roll2) {
-                    message = `${enemyCard.name} rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
-                } else {
-                    let damageDealt = Math.abs(context.roll1 - context.roll2) + enemyCard.attack;
-                    updatePlayerStats('hp', -damageDealt);
-                    message = `${enemyCard.name} rolled ${context.roll1}, ${context.roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
+                // Non-zero cost: rawAttackPower + bonusDamage - enemyDefense
+                const rawAttackValue = Math.abs(context.roll1 - context.roll2);
+                const classData = getCardById(gameState.classId);
+                console.log('DEBUG: classData FULL', classData);
+                let bonusDamage = 0;
+                console.log('DEBUG: classData before bonus check', classData);
+                console.log('DEBUG: classData.combatBonusDamageEnergyCost', classData && classData.combatBonusDamageEnergyCost);
+                console.log('DEBUG: classData.combatBonusDamage', classData && classData.combatBonusDamage);
+                if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusDamage) {
+                    const energyCosts = classData.combatBonusDamageEnergyCost.map(Number);
+                    const bonusArray = classData.combatBonusDamage.map(Number);
+                    console.log('DEBUG: classData', classData);
+                    console.log('DEBUG: selectedEnergy', selectedEnergy, typeof selectedEnergy);
+                    console.log('DEBUG: energyCosts', energyCosts);
+                    console.log('DEBUG: bonusArray', bonusArray);
+                    let energyIndex = energyCosts.indexOf(Number(selectedEnergy));
+                    console.log('DEBUG: energyIndex', energyIndex);
+                    if (energyIndex === -1 && Number.isInteger(selectedEnergy) && selectedEnergy >= 0 && selectedEnergy < bonusArray.length) {
+                        // fallback: use selectedEnergy as index if indexOf fails
+                        energyIndex = selectedEnergy;
+                        console.log('DEBUG: fallback energyIndex', energyIndex);
+                    }
+                    if (energyIndex !== -1) {
+                        bonusDamage = bonusArray[energyIndex];
+                        console.log('DEBUG: bonusDamage', bonusDamage);
+                    }
                 }
-                if (gameState.player.hp <= 0) {
-                    message += `\nYou were defeated by ${enemyCard.name}!`;
-                    showRollBtn = false;
-                    isCombatOver = true;
-                    combatOver = true;
-                }
+                totalDamage = rawAttackValue + bonusDamage + (context.attackBonus || 0);
+                const damageAfterDefense = Math.max(0, totalDamage - enemyCard.defense);
+                currentEnemyHealth -= damageAfterDefense;
+                message = message || `You rolled ${context.roll1}, ${context.roll2}. Spent ${selectedEnergy} energy for ${bonusDamage} bonus damage. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
             }
         }
+        if (currentEnemyHealth <= 0) {
+            message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
+            updatePlayerStats('favor', enemyCard.favor);
+            showRollBtn = false;
+            isCombatOver = true;
+            combatOver = true;
+        }
+    } else {
+        if (context.roll1 === context.roll2) {
+            message = `${enemyCard.name} rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+        } else {
+            let damageDealt = Math.abs(context.roll1 - context.roll2) + enemyCard.attack;
+            updatePlayerStats('hp', -damageDealt);
+            message = `${enemyCard.name} rolled ${context.roll1}, ${context.roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
+        }
+        if (gameState.player.hp <= 0) {
+            message += `\nYou were defeated by ${enemyCard.name}!`;
+            showRollBtn = false;
+            isCombatOver = true;
+            combatOver = true;
+        }
+    }
+}
         isPlayerTurn = !isPlayerTurn;
 
             // --- UPDATE ENCOUNTER STATE ON EACH ROLL ---
@@ -1284,69 +1319,72 @@ function processAllItemEffects(eventContext) {
 // Full combat logic for enemy encounters
 async function initiateCombat(enemyCard) {
     console.log('initiateCombat: gameState.raceId =', gameState.raceId);
-    const raceCard = getCardById(gameState.raceId); // Use race card instead of class card
-    console.log('initiateCombat: raceCard =', raceCard);
-    if (!raceCard) {
-        console.error('initiateCombat: raceCard is undefined for raceId:', gameState.raceId);
-        const allCardIds = Object.keys(getAllCardsData());
-        console.error('Available card IDs:', allCardIds);
-        alert('Error: Player race card not found. Please restart the game.');
-        return;
-    }
-    // Collect available abilities for this combat round
-    const availableAbilities = [];
-    for (const item of gameState.inventory) {
-        if (item.abilities && item.abilities.length > 0) {
-            for (const ability of item.abilities) {
-                if (ability.trigger === 'on_attack') {
-                    availableAbilities.push({
-                        label: `${item.name}: ${ability.details || ability.action}`,
-                        itemId: item.id,
-                        ability
-                    });
-                }
+const classCard = getCardById(gameState.classId); // Use class card for combat logic
+console.log('initiateCombat: classCard =', classCard);
+if (!classCard) {
+    console.error('initiateCombat: classCard is undefined for classId:', gameState.classId);
+    const allCardIds = Object.keys(getAllCardsData());
+    console.error('Available card IDs:', allCardIds);
+    alert('Error: Player class card not found. Please restart the game.');
+    return;
+}
+// Collect available abilities for this combat round
+const availableAbilities = [];
+for (const item of gameState.inventory) {
+    if (item.abilities && item.abilities.length > 0) {
+        for (const ability of item.abilities) {
+            if (ability.trigger === 'on_attack') {
+                availableAbilities.push({
+                    label: `${item.name}: ${ability.details || ability.action}`,
+                    itemId: item.id,
+                    ability
+                });
             }
         }
     }
-    let currentEnemyHealth = enemyCard.health;
-    let isPlayerTurn = true;
-    let combatOver = false;
-    let axeRerollUsed = false;
+}
+let currentEnemyHealth = enemyCard.health;
+let isPlayerTurn = true;
+let combatOver = false;
+let axeRerollUsed = false;
 
-    // --- UPDATE ENCOUNTER STATE ON COMBAT START ---
-    gameState.encounter = {
-        inProgress: true,
-        enemyId: enemyCard.id,
-        enemyHp: currentEnemyHealth,
-        playerHp: gameState.player.hp,
-        html: document.getElementById('combat-area')?.innerHTML || ""
-    };
-    // Initialize enemy HP tracker
-    updateAllTrackerCubes({
-        hp: gameState.player.hp,
-        energy: gameState.player.energy,
-        food: gameState.player.food,
-        favor: gameState.player.favor,
-        level: gameState.level,
-        enemyHp: currentEnemyHealth
-    });
+// --- UPDATE ENCOUNTER STATE ON COMBAT START ---
+gameState.encounter = {
+    inProgress: true,
+    enemyId: enemyCard.id,
+    enemyHp: currentEnemyHealth,
+    playerHp: gameState.player.hp,
+    html: document.getElementById('combat-area')?.innerHTML || ""
+};
+// Initialize enemy HP tracker
+updateAllTrackerCubes({
+    hp: gameState.player.hp,
+    energy: gameState.player.energy,
+    food: gameState.player.food,
+    favor: gameState.player.favor,
+    level: gameState.level,
+    enemyHp: currentEnemyHealth
+});
 
-    function canUseAxeReroll() {
-        // Only allow once per dungeon level
-        return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
-    }
-    function useAxeReroll() { axeRerollUsed = true; }
-    function canDiscardAxe() {
-        return gameState.inventory.some(item => item.id === 'TRA01');
-    }
-    function discardAxe() {
-        const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
-        if (idx !== -1) gameState.inventory.splice(idx, 1);
-        displayInventory(gameState.inventory);
-    }
+function canUseAxeReroll() {
+    // Only allow once per dungeon level
+    return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
+}
+function useAxeReroll() { axeRerollUsed = true; }
+function canDiscardAxe() {
+    return gameState.inventory.some(item => item.id === 'TRA01');
+}
+function discardAxe() {
+    const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
+    if (idx !== -1) gameState.inventory.splice(idx, 1);
+    displayInventory(gameState.inventory);
+}
 
-    await new Promise((resolve) => {
-        async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
+await new Promise((resolve) => {
+    async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
+            console.log('DEBUG: handleRoll (initiateCombat) args', arguments);
+            selectedEnergy = Number(selectedEnergy);
+            console.log('DEBUG: selectedEnergy (coerced)', selectedEnergy, typeof selectedEnergy);
             let roll1, roll2;
             if (forcedRolls) {
                 [roll1, roll2] = forcedRolls;
@@ -1399,13 +1437,26 @@ async function initiateCombat(enemyCard) {
                             // Non-zero cost: rawAttackPower + bonusDamage - enemyDefense
                             const rawAttackValue = Math.abs(context.roll1 - context.roll2);
                             const classData = getCardById(gameState.classId);
-                            let bonusDamage = 0;
-                            if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusDamage) {
-                                const energyIndex = classData.combatBonusDamageEnergyCost.indexOf(selectedEnergy);
-                                if (energyIndex !== -1) {
-                                    bonusDamage = classData.combatBonusDamage[energyIndex];
-                                }
-                            }
+let bonusDamage = 0;
+if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusDamage) {
+    const energyCosts = classData.combatBonusDamageEnergyCost.map(Number);
+    const bonusArray = classData.combatBonusDamage.map(Number);
+    console.log('DEBUG: classData', classData);
+    console.log('DEBUG: selectedEnergy', selectedEnergy, typeof selectedEnergy);
+    console.log('DEBUG: energyCosts', energyCosts);
+    console.log('DEBUG: bonusArray', bonusArray);
+    let energyIndex = energyCosts.indexOf(Number(selectedEnergy));
+    console.log('DEBUG: energyIndex', energyIndex);
+    if (energyIndex === -1 && Number.isInteger(selectedEnergy) && selectedEnergy >= 0 && selectedEnergy < bonusArray.length) {
+        // fallback: use selectedEnergy as index if indexOf fails
+        energyIndex = selectedEnergy;
+        console.log('DEBUG: fallback energyIndex', energyIndex);
+    }
+    if (energyIndex !== -1) {
+        bonusDamage = bonusArray[energyIndex];
+        console.log('DEBUG: bonusDamage', bonusDamage);
+    }
+}
                             totalDamage = rawAttackValue + bonusDamage + (context.attackBonus || 0);
                             const damageAfterDefense = Math.max(0, totalDamage - enemyCard.defense);
                             currentEnemyHealth -= damageAfterDefense;
@@ -1449,29 +1500,29 @@ async function initiateCombat(enemyCard) {
             updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
             if (isCombatOver) setTimeout(resolve, 500);
         }
-        showCombatBoard({
-            classCard: raceCard,
-            enemyCard,
-            abilities: availableAbilities,
-            canUseAxeReroll,
-            canDiscardAxe,
-            onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }), // Pass 0 for energy
-            onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }), // Pass 0 for energy
-            onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
-            onClose: () => { 
-                // --- CLEAR ENCOUNTER STATE ON CLOSE ---
-                gameState.encounter = {
-                    inProgress: false,
-                    enemyId: null,
-                    enemyHp: null,
-                    playerHp: null,
-                    html: ""
-                };
-                hideCombatBoard(); 
-                resolve(); 
-            },
-            playerEnergy: gameState.player.energy // Pass player's current energy
-        });
+showCombatBoard({
+    classCard: classCard,
+    enemyCard,
+    abilities: availableAbilities,
+    canUseAxeReroll,
+    canDiscardAxe,
+    onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }), // Pass 0 for energy
+    onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }), // Pass 0 for energy
+    onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
+    onClose: () => { 
+        // --- CLEAR ENCOUNTER STATE ON CLOSE ---
+        gameState.encounter = {
+            inProgress: false,
+            enemyId: null,
+            enemyHp: null,
+            playerHp: null,
+            html: ""
+        };
+        hideCombatBoard(); 
+        resolve(); 
+    },
+    playerEnergy: gameState.player.energy // Pass player's current energy
+});
     });
 }
 
@@ -1562,6 +1613,7 @@ function advanceToNextRoom() {
  * @returns {[number, number]}
  */
 function rollDice() {
+    console.trace('DEBUG: rollDice called');
     const roll1 = Math.floor(Math.random() * 6) + 1;
     const roll2 = Math.floor(Math.random() * 6) + 1;
     console.log(`Dice rolled: ${roll1}, ${roll2}`);

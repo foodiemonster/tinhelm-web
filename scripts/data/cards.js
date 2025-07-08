@@ -67,9 +67,12 @@ class RaceCard extends Card {
 class ClassCard extends Card {
   constructor(data) {
     super(data);
+    // Copy all properties from data to this instance (including bonus fields)
+    Object.assign(this, data);
+    // Ensure required fields are present (fallbacks)
     this.startingTrapping = data.startingTrapping || null;
     this.healthModifier = data.healthModifier || 0;
-     this.energyModifier = data.energyModifier || 0;
+    this.energyModifier = data.energyModifier || 0;
     this.abilities = data.abilities || [];
     this.effects = data.effects || [];
   }

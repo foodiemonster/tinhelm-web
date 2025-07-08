@@ -1142,9 +1142,9 @@ function processAllItemEffects(eventContext) {
                             }
                         }
                         break;
-                    // --- Potion: Discard to gain health/energy ---
+                    // --- Potion: Use to gain health/energy ---
                     case "gain_resource":
-                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id && item.id === "LT08") {
+                        if (eventContext.trigger === "on_use" && eventContext.itemId === item.id && item.id === "LT08") {
                             if (ability.target === "health") updatePlayerStats('hp', ability.amount || 2);
                             if (ability.target === "energy") updatePlayerStats('energy', ability.amount || 2);
                             logEvent(`${item.name}: Gained ${ability.amount} ${ability.target}.`);
@@ -1218,17 +1218,12 @@ function processAllItemEffects(eventContext) {
                             }
                         }
                         break;
-                    // --- Potion (trapping): Discard for +2 HP and +2 EN ---
+                    // --- Potion (trapping): Use for +2 HP and +2 EN ---
                     case "heal":
-                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id && item.id === "TRA06") {
-                            updatePlayerStats('hp', ability.amount || 2);
-                            logEvent(`${item.name}: Discarded for +${ability.amount || 2} HP.`);
-                        }
-                        break;
-                    case "recover":
-                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id && item.id === "TRA06") {
-                            updatePlayerStats('energy', ability.amount || 2);
-                            logEvent(`${item.name}: Discarded for +${ability.amount || 2} EN.`);
+                        if (eventContext.trigger === "on_use" && eventContext.itemId === item.id && item.id === "TRA06") {
+                            if (ability.target === "health") updatePlayerStats('hp', ability.amount || 2);
+                            if (ability.target === "energy") updatePlayerStats('energy', ability.amount || 2);
+                            logEvent(`${item.name}: Gained ${ability.amount} ${ability.target}.`);
                             // Remove from inventory and add to trappings discard pile
                             const idx = gameState.inventory.findIndex(i => i.id === item.id);
                             if (idx !== -1) {
@@ -1601,12 +1596,58 @@ function handleAltar(altarContext) {
 }
 window.handleAltar = handleAltar;
 
-// Example: Call after discarding an item
-function handleDiscardItem(itemId, context = {}) {
-    processAllItemEffects({ trigger: 'on_discard', discardItemId: itemId, ...context });
-    // ...rest of discard logic
-}
+            // Handle using items (like potions)
+            function handleUseItem(itemId) {
+                const item = getCardById(itemId);
+                if (!item) return;
+
+                // Potion handling (LT08 and TRA06)
+                if (itemId === "LT08" || itemId === "TRA06") {
+                    // First check if any healing is possible
+                    const canHealHP = gameState.player.hp < gameState.player.maxHealth;
+                    const canHealEN = gameState.player.energy < gameState.player.maxEnergy;
+
+                    if (!canHealHP && !canHealEN) {
+                        logEvent(`${item.name}: Cannot use - both HP and Energy are already at maximum.`);
+                        return;
+                    }
+
+                    // Calculate actual heals without exceeding max
+                    const hpHeal = Math.min(2, gameState.player.maxHealth - gameState.player.hp);
+                    const enHeal = Math.min(2, gameState.player.maxEnergy - gameState.player.energy);
+
+                    // Apply heals
+                    if (hpHeal > 0) updatePlayerStats('hp', hpHeal);
+                    if (enHeal > 0) updatePlayerStats('energy', enHeal);
+                    
+                    // Discard only if any healing occurred
+                    if (hpHeal > 0 || enHeal > 0) {
+                        logEvent(`${item.name}: Healed ${hpHeal} HP and ${enHeal} EN`);
+                        const idx = gameState.inventory.findIndex(i => i.id === itemId);
+                        if (idx !== -1) {
+                            const discardPile = itemId.startsWith('LT') ? 
+                                gameState.lootDiscardPile : 
+                                gameState.trappingsDiscardPile;
+                            discardPile.push(gameState.inventory[idx]);
+                            gameState.inventory.splice(idx, 1);
+                            displayInventory(gameState.inventory);
+                        }
+                    } else {
+                        logEvent(`${item.name}: Cannot use - both HP and Energy are already at maximum.`);
+                    }
+                    return;
+                }
+
+                // Default behavior for other items
+                processAllItemEffects({ trigger: 'on_use', itemId });
+            }
+
+            // Handle discarding items (separate from using them)
+            function handleDiscardItem(itemId, context = {}) {
+                processAllItemEffects({ trigger: 'on_discard', discardItemId: itemId, ...context });
+            }
 window.handleDiscardItem = handleDiscardItem;
+window.handleUseItem = handleUseItem;
 
 // Example: Call after pigman reference
 function handlePigmanRef() {
@@ -1615,4 +1656,13 @@ function handlePigmanRef() {
 }
 window.handlePigmanRef = handlePigmanRef;
 
-export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStatsWithItems as updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom };
+export { 
+    initializePlayer, 
+    startDungeonLevel, 
+    handleRoom, 
+    updatePlayerStatsWithItems as updatePlayerStats, 
+    restoreGameUIFromState, 
+    logEvent, 
+    advanceToNextRoom,
+    handleUseItem
+};

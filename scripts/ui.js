@@ -204,26 +204,20 @@ export function displayInventory(inventory) {
                     cardElement.textContent = item.name;
                 }
                 // Add "Use" button for anytime-usable loot (Potion, Turnip) and Scroll (TRA04)
-                if (item.id === "LT08" || item.id === "LT06" || item.id === "TRA04") {
+                if (item.id === "LT08" || item.id === "LT06" || item.id === "TRA04" || item.id === "TRA06") {
                     const useBtn = document.createElement('button');
                     useBtn.textContent = 'Use';
                     useBtn.className = 'inventory-use-btn';
                     useBtn.onclick = () => {
                         // Backend: processLootAbilitiesAndEffects with correct context
                         if (item.id === "LT08") {
-                            // Potion: Discard to gain health/energy
-                            window.processLootAbilitiesAndEffects &&
-                                window.processLootAbilitiesAndEffects({
-                                    trigger: "on_discard",
-                                    discardItemId: item.id
-                                });
+                            // Potion (Loot): Discard to gain health/energy
+                            window.handleDiscardItem &&
+                                window.handleDiscardItem(item.id);
                         } else if (item.id === "LT06") {
-                            // Turnip: Discard anytime to gain +3 energy
-                            window.processLootAbilitiesAndEffects &&
-                                window.processLootAbilitiesAndEffects({
-                                    trigger: "on_activate",
-                                    discardItemId: item.id
-                                });
+                            // Turnip (Loot): Discard anytime to gain +3 energy
+                            window.handleDiscardItem &&
+                                window.handleDiscardItem(item.id);
                         } else if (item.id === "TRA04") {
                             // Scroll (Trapping): Use to defeat undead enemy
                             window.processTrappingUse &&
@@ -231,6 +225,10 @@ export function displayInventory(inventory) {
                                     trigger: "on_use_scroll",
                                     trappingId: item.id
                                 });
+                        } else if (item.id === "TRA06") {
+                            // Potion (Trapping): Use to gain health/energy (handled by handleUseItem)
+                            window.handleUseItem &&
+                                window.handleUseItem(item.id);
                         }
                     };
                     cardElement.appendChild(useBtn);

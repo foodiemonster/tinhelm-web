@@ -54,8 +54,8 @@
     "id": "TRA06",
     "name": "Potion",
     "abilities": [
-      { "trigger": "on_discard", "action": "heal", "target": "player", "amount": 2, "cost": "discard", "details": "Discard to gain 2 HP and 2 EN." },
-      { "trigger": "on_discard", "action": "recover", "target": "energy", "amount": 2, "cost": "discard", "details": "Discard to gain 2 HP and 2 EN." }
+      { "trigger": "on_discard", "action": "gain_resource", "target": "health", "amount": 2, "cost": "discard", "details": "Discard to gain 2 HP and 2 EN." },
+      { "trigger": "on_discard", "action": "gain_resource", "target": "energy", "amount": 2, "cost": "discard", "details": "Discard to gain 2 HP and 2 EN." }
     ],
     "effects": [],
     "blocks": ["Bedroll"],

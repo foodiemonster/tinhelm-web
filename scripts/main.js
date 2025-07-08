@@ -76,17 +76,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveBtn = document.getElementById('save-btn');
     const loadBtn = document.getElementById('load-btn');
 
+    // Sync all relevant UI/game state into gameState before saving
+    function syncGameStateFromUI() {
+        import('./gameState.js').then(({ gameState }) => {
+            // Copy from visibleCards (the real source of truth)
+            if (gameState.visibleCards) {
+                gameState.raceId = gameState.visibleCards.raceId;
+                gameState.classId = gameState.visibleCards.classId;
+                gameState.player.race = gameState.visibleCards.raceId;
+                gameState.player.class = gameState.visibleCards.classId;
+                gameState.inventory = (gameState.visibleCards.inventory || []).map(id => id);
+            }
+            // Copy player stats directly (already up to date)
+            // Copy dungeon/discard/room/result if present in gameState
+            // Copy encounter state if present
+            // Log is already up to date
+        });
+    }
+
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
-            saveGame();
-            if (loadBtn) loadBtn.disabled = false;
+            syncGameStateFromUI();
+            setTimeout(() => {
+                import('./gameState.js').then(({ gameState, saveGame }) => {
+                    console.log('Saving gameState:', JSON.stringify(gameState, null, 2));
+                    saveGame(true);
+                    if (loadBtn) loadBtn.disabled = false;
+                    // Show notification
+                    let notif = document.createElement('div');
+                    notif.textContent = 'Game saved!';
+                    notif.style.position = 'fixed';
+                    notif.style.top = '24px';
+                    notif.style.right = '24px';
+                    notif.style.background = '#23272b';
+                    notif.style.color = '#fff';
+                    notif.style.padding = '1em 2em';
+                    notif.style.borderRadius = '10px';
+                    notif.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
+                    notif.style.zIndex = 9999;
+                    notif.style.fontSize = '1.1em';
+                    document.body.appendChild(notif);
+                    setTimeout(() => notif.remove(), 1800);
+                });
+            }, 50); // Allow sync to complete
         });
     }
 
     if (loadBtn) {
         loadBtn.addEventListener('click', async () => {
             await loadGame();
-            restoreGameUIFromState();
+            // Always re-render UI from gameState after loading
+            import('./gameLogic.js').then(mod => mod.restoreGameUIFromState());
             // Show dungeon area and hide character creation after loading
             if (characterCreation) {
                 characterCreation.style.display = 'none';

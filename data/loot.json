@@ -31,17 +31,18 @@
     "name": "Shield",
     "abilities": [
       {
-        "action": "damage_reduction",
-        "amount": 1,
-        "condition": "single attack damage is 6 or more",
-        "details": "all damage reduction 1. if single attack damage is 6 or more"
-      },
-      {
         "action": "discard_item",
         "target": "self"
       }
     ],
-    "effects": [],
+    "effects": [
+      {
+        "action": "damage_reduction",
+        "amount": 1,
+        "condition": "single attack damage is 6 or more",
+        "details": "all damage reduction 1. if single attack damage is 6 or more"
+      }
+    ],
     "image": "assets/cards/loot/LT03.png"
   },
   {
@@ -51,14 +52,17 @@
       {
         "trigger": "on_roll_double",
         "action": "ignore_miss"
-      },
-      {
-        "action": "apply_damage",
-        "target": "enemy",
-        "amount": 5
       }
     ],
-    "effects": [],
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "action": "apply_damage",
+        "target": "enemy",
+        "amount": 5,
+        "details": "Applies 5 damage to enemy on attack."
+      }
+    ],
     "image": "assets/cards/loot/LT04.png"
   },
   {
@@ -84,6 +88,7 @@
         "target": "shard"
       },
       {
+        "trigger": "on_discard",
         "action": "gain_resource",
         "target": "energy",
         "amount": 3,
@@ -110,13 +115,13 @@
     "name": "Potion",
     "abilities": [
       {
-        "trigger": "on_discard",
+        "trigger": "on_use",
         "action": "gain_resource",
         "target": "health",
         "amount": 2
       },
       {
-        "trigger": "on_discard",
+        "trigger": "on_use",
         "action": "gain_resource",
         "target": "energy",
         "amount": 2

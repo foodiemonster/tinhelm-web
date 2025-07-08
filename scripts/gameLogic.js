@@ -301,7 +301,7 @@ function showEndgameMessage(message) {
 
 // Function to resolve icons on a result card
 // Handles all icon types (Enemy, Loot, Trap, etc.) and applies their effects to gameState.
-function resolveIcons(iconCard, legendCard) {
+async function resolveIcons(iconCard, legendCard) {
     // iconCard: the card whose icons are to be resolved (chosen room card)
     // legendCard: the card whose fields (enemy, loot, trap, etc.) are used for icon resolution
     console.log("Inspecting iconCard in resolveIcons:", JSON.stringify(iconCard, null, 2));
@@ -312,7 +312,7 @@ function resolveIcons(iconCard, legendCard) {
         return;
     }
     const icons = iconCard.icons.split(',').map(icon => icon.trim());
-    icons.forEach(icon => {
+    for (const icon of icons) {
         console.log("Resolving icon:", icon);
         switch (icon) {
             case 'Enemy':
@@ -324,7 +324,7 @@ function resolveIcons(iconCard, legendCard) {
                         const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
                         if (enemyCard) {
                             console.log("Found enemy card:", enemyCard);
-                            initiateCombat(enemyCard);
+                            await initiateCombat(enemyCard);
                             logEvent(`Combat started with ${enemyCard.name}`);
                         } else {
                             console.warn(`Enemy card not found for name: ${enemyName}`);
@@ -374,18 +374,35 @@ function resolveIcons(iconCard, legendCard) {
                     if (trapEffect === 'None') {
                         console.log("No trap triggered.");
                     } else {
-                        const hpMatch = trapEffect.match(/^HP -(\d+)$/);
-                        const enMatch = trapEffect.match(/^EN -(\d+)$/);
-                        if (hpMatch && hpMatch[1]) {
-                            const damage = parseInt(hpMatch[1], 10);
-                            console.log(`Taking ${damage} damage from a trap.`);
-                            updatePlayerStats('hp', -damage);
-                        } else if (enMatch && enMatch[1]) {
-                            const energyLoss = parseInt(enMatch[1], 10);
-                            console.log(`Losing ${energyLoss} energy from a trap.`);
-                            updatePlayerStats('energy', -energyLoss);
+                        // Toolkit integration: allow player to attempt to bypass the trap
+                        let trapContext = { bypassed: false, effect: trapEffect };
+                        await new Promise(resolve => {
+                            // Call processAllItemEffects, which will show Toolkit modal if present
+                            processAllItemEffects({
+                                trigger: 'on_trap_encounter',
+                                trapContext,
+                                resolvePromise: resolve // pass resolve so Toolkit modal can resolve it
+                            });
+                            // If Toolkit is not present, resolve immediately
+                            setTimeout(resolve, 500); // fallback in case Toolkit is not present
+                        });
+                        // Only apply trap effect if not bypassed
+                        if (!trapContext.bypassed) {
+                            const hpMatch = trapEffect.match(/^HP -(\d+)$/);
+                            const enMatch = trapEffect.match(/^EN -(\d+)$/);
+                            if (hpMatch && hpMatch[1]) {
+                                const damage = parseInt(hpMatch[1], 10);
+                                console.log(`Taking ${damage} damage from a trap.`);
+                                updatePlayerStats('hp', -damage);
+                            } else if (enMatch && enMatch[1]) {
+                                const energyLoss = parseInt(enMatch[1], 10);
+                                console.log(`Losing ${energyLoss} energy from a trap.`);
+                                updatePlayerStats('energy', -energyLoss);
+                            } else {
+                                console.warn("Could not parse trap effect:", trapEffect);
+                            }
                         } else {
-                            console.warn("Could not parse trap effect:", trapEffect);
+                            logEvent("Toolkit: Trap bypassed, no effect.");
                         }
                     }
                 } else {
@@ -396,47 +413,78 @@ function resolveIcons(iconCard, legendCard) {
                 console.log("Campsite found.");
                 // Find the reference card for Campsite to get the image
                 const campsiteCard = Object.values(getAllCardsData()).find(card => card.name === 'Campsite');
-                showChoiceModal({
-                    title: 'Campsite',
-                    message: 'Choose your benefit:',
-                    image: campsiteCard && campsiteCard.image,
-                    choices: [
-                        { label: '+2 HP & +1 Energy', value: 'heal' },
-                        { label: '+1 Food', value: 'food' }
-                    ],
-                    onChoice: (val) => {
-                        if (val === 'heal') {
-                            updatePlayerStats('hp', 2);
-                            updatePlayerStats('energy', 1);
-                        } else if (val === 'food') {
-                            updatePlayerStats('food', 1);
+                await new Promise(resolve => {
+                    showChoiceModal({
+                        title: 'Campsite',
+                        message: 'Choose your benefit:',
+                        image: campsiteCard && campsiteCard.image,
+                        choices: [
+                            { label: '+2 HP & +1 Energy', value: 'heal' },
+                            { label: '+1 Food', value: 'food' }
+                        ],
+                        onChoice: (val) => {
+                            if (val === 'heal') {
+                                updatePlayerStats('hp', 2);
+                                updatePlayerStats('energy', 1);
+                            } else if (val === 'food') {
+                                updatePlayerStats('food', 1);
+                            }
+                            resolve();
                         }
-                    }
+                    });
                 });
                 break;
             case 'Water':
                 console.log("Water encountered.");
                 const gillNetCard = gameState.inventory.find(item => item.id === 'LT01');
                 if (gillNetCard) {
-                    console.log("Using Gill Net.");
-                    let successes = 0;
-                    const rolls = [];
-                    for (let i = 0; i < 3; i++) {
-                        const [roll1] = rollDice();
-                        rolls.push(roll1);
-                        if (roll1 >= 4) {
-                            successes++;
-                        }
-                    }
-                    console.log(`Gill Net rolls: ${rolls.join(', ')}. Successes: ${successes}`);
-                    if (successes > 0) {
-                        console.log(`Gaining ${successes} food from Gill Net.`);
-                        updatePlayerStats('food', successes);
-                    } else {
-                        console.log("No food gained from Gill Net.");
-                    }
+                    // Await the modal so nothing else proceeds until it's closed
+                    console.log("Water: About to show Gill Net modal");
+                    await new Promise(resolve => {
+                        showChoiceModal({
+                            title: 'Water',
+                            message: 'You may use your Gill Net: Roll 3 dice. Each 4+ = 1 Ration.',
+                            image: gillNetCard.image,
+                            dieRoll: true,
+                            dieCount: 3,
+                            onRoll: (rolls) => {
+                                let successes = 0;
+                                if (Array.isArray(rolls)) {
+                                    for (const roll of rolls) if (roll >= 4) successes++;
+                                } else if (typeof rolls === 'number') {
+                                    if (rolls >= 4) successes = 1;
+                                }
+                                if (successes > 0) {
+                                    updatePlayerStats('food', successes);
+                                    logEvent(`Gill Net: Gained ${successes} rations.`);
+                                } else {
+                                    logEvent("Gill Net: No food gained.");
+                                }
+                                setTimeout(resolve, 500); // ensure modal is visible before resolving
+                            }
+                        });
+                    });
+                    console.log("Water: Gill Net modal resolved");
                 } else {
-                    console.log("No Gill Net to use.");
+                    // No Gill Net: allow a single die roll for 1 ration on 4+
+                    console.log("Water: About to show single die modal");
+                    await new Promise(resolve => {
+                        showChoiceModal({
+                            title: 'Water',
+                            message: 'Roll a die. On a 4+, gain 1 Ration. Otherwise, gain nothing.',
+                            dieRoll: true,
+                            onRoll: (roll) => {
+                                if (roll >= 4) {
+                                    updatePlayerStats('food', 1);
+                                    logEvent('Water: Gained 1 ration.');
+                                } else {
+                                    logEvent('Water: No food gained.');
+                                }
+                                setTimeout(resolve, 500); // ensure modal is visible before resolving
+                            }
+                        });
+                    });
+                    console.log("Water: Single die modal resolved");
                 }
                 break;
             case 'Treasure':
@@ -444,20 +492,47 @@ function resolveIcons(iconCard, legendCard) {
                 const treasureOutcome = legendCard.loot;
                 if (treasureOutcome === 'GainShard') {
                     console.log("Found a Shard of Brahm!");
-                    updatePlayerStats('shards', 1);
+                    await new Promise(resolve => {
+                        showChoiceModal({
+                            title: 'Treasure',
+                            message: 'You found a Shard of Brahm!',
+                            choices: [{ label: 'OK', value: 'ok' }],
+                            onChoice: () => {
+                                updatePlayerStats('shards', 1);
+                                resolve();
+                            }
+                        });
+                    });
                 } else if (treasureOutcome && typeof treasureOutcome === 'string' && treasureOutcome.startsWith('Loot=')) {
                     console.log("Treasure contains loot.");
                     const lootMatch = treasureOutcome.match(/^Loot=(.+)$/);
                     if (lootMatch && lootMatch[1]) {
                         const lootName = lootMatch[1];
                         if (lootName === 'Empty') {
-                            console.log("The treasure chest is empty.");
+                            await new Promise(resolve => {
+                                showChoiceModal({
+                                    title: 'Treasure',
+                                    message: 'The treasure chest is empty.',
+                                    choices: [{ label: 'OK', value: 'ok' }],
+                                    onChoice: resolve
+                                });
+                            });
                         } else {
                             const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
                             if (lootCard) {
-                                console.log("Gained loot item from treasure:", lootCard.name);
-                                gameState.inventory.push(lootCard);
-                                displayInventory(gameState.inventory);
+                                await new Promise(resolve => {
+                                    showChoiceModal({
+                                        title: 'Treasure',
+                                        message: `You found: ${lootCard.name}`,
+                                        image: lootCard.image,
+                                        choices: [{ label: 'Take', value: 'take' }],
+                                        onChoice: () => {
+                                            gameState.inventory.push(lootCard);
+                                            displayInventory(gameState.inventory);
+                                            resolve();
+                                        }
+                                    });
+                                });
                             } else {
                                 console.warn(`Loot card not found for name in treasure: ${lootName}`);
                             }
@@ -476,13 +551,13 @@ function resolveIcons(iconCard, legendCard) {
                     const refMatch = randomEvent.match(/^Ref=(.+)$/);
                     if (refMatch && refMatch[1]) {
                         const refName = refMatch[1];
-                        const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
-                        if (refCard) {
-                            console.log("Encountered Reference Card:", refCard.name);
-                            handleReferenceCard(refCard);
-                        } else {
-                            console.warn(`Reference card not found for name: ${refName}`);
-                        }
+                    const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
+                    if (refCard) {
+                        console.log("Encountered Reference Card:", refCard.name);
+                        await handleReferenceCard(refCard);
+                    } else {
+                        console.warn(`Reference card not found for name: ${refName}`);
+                    }
                     } else if (randomEvent.startsWith('Enemy=')) {
                         console.log("Random event is an enemy encounter.");
                         const enemyMatch = randomEvent.match(/^Enemy=(.+)$/);
@@ -506,13 +581,13 @@ function resolveIcons(iconCard, legendCard) {
             default:
                 console.warn("Unknown icon encountered:", icon);
         }
-    });
+    }
     // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
 }
 
 // Function to handle Reference Card effects
 // Applies special effects based on reference card name (Altar, Grove, etc.).
-function handleReferenceCard(refCard) {
+async function handleReferenceCard(refCard) {
     console.log("Handling Reference Card effect for:", refCard.name);
     // Implement logic based on refCard.name and GAMERULES.md
     switch (refCard.name) {
@@ -577,31 +652,41 @@ function handleReferenceCard(refCard) {
                         updatePlayerStats('food', 2);
                         logEvent('Grove: Gain 2 Rations.');
                     }
+                    // Explicitly close the modal if still open (vanilla JS fallback)
+                    const modal = document.getElementById('choice-modal');
+                    if (modal && modal.parentNode) {
+                        setTimeout(() => {
+                            if (modal.parentNode) modal.parentNode.removeChild(modal);
+                        }, 900);
+                    }
                 }
             });
             break;
         case 'Labyrinth':
             console.log("Resolving Labyrinth effect.");
             const labyrinthCard = Object.values(getAllCardsData()).find(card => card.name === 'Labyrinth');
-            showChoiceModal({
-                title: 'Labyrinth',
-                message: 'Lose 1 Ration, or if you have none, lose 2 Energy, or if you have neither, lose up to 3 HP.',
-                image: labyrinthCard && labyrinthCard.image,
-                choices: [
-                    { label: 'Lose 1 Ration', value: 'ration', disabled: !(gameState.player.food >= 1) },
-                    { label: 'Lose 2 Energy', value: 'energy', disabled: !(gameState.player.food < 1 && gameState.player.energy >= 2) },
-                    { label: 'Lose up to 3 HP', value: 'hp', disabled: !(gameState.player.food < 1 && gameState.player.energy < 2 && gameState.player.hp > 0) }
-                ].filter(opt => !opt.disabled),
-                onChoice: (val) => {
-                    if (val === 'ration') {
-                        updatePlayerStats('food', -1);
-                    } else if (val === 'energy') {
-                        updatePlayerStats('energy', -2);
-                    } else if (val === 'hp') {
-                        const damageToTake = Math.min(gameState.player.hp, 3);
-                        updatePlayerStats('hp', -damageToTake);
+            await new Promise(resolve => {
+                showChoiceModal({
+                    title: 'Labyrinth',
+                    message: 'Lose 1 Ration, or if you have none, lose 2 Energy, or if you have neither, lose up to 3 HP.',
+                    image: labyrinthCard && labyrinthCard.image,
+                    choices: [
+                        { label: 'Lose 1 Ration', value: 'ration', disabled: !(gameState.player.food >= 1) },
+                        { label: 'Lose 2 Energy', value: 'energy', disabled: !(gameState.player.food < 1 && gameState.player.energy >= 2) },
+                        { label: 'Lose up to 3 HP', value: 'hp', disabled: !(gameState.player.food < 1 && gameState.player.energy < 2 && gameState.player.hp > 0) }
+                    ].filter(opt => !opt.disabled),
+                    onChoice: (val) => {
+                        if (val === 'ration') {
+                            updatePlayerStats('food', -1);
+                        } else if (val === 'energy') {
+                            updatePlayerStats('energy', -2);
+                        } else if (val === 'hp') {
+                            const damageToTake = Math.min(gameState.player.hp, 3);
+                            updatePlayerStats('hp', -damageToTake);
+                        }
+                        resolve();
                     }
-                }
+                });
             });
             break;
         case 'Pigman':
@@ -609,23 +694,31 @@ function handleReferenceCard(refCard) {
             const pigmanCard = Object.values(getAllCardsData()).find(card => card.name === 'Pigman');
             const turnipIndex = gameState.inventory.findIndex(item => item.id === 'LT06');
             if (turnipIndex !== -1) {
-                showChoiceModal({
-                    title: 'Pigman',
-                    message: 'You have a Turnip! Choose:',
-                    image: pigmanCard && pigmanCard.image,
-                    choices: [
-                        { label: 'Gain 1 Favor', value: 'favor' },
-                        { label: 'Discard Turnip for 1 Shard', value: 'shard' }
-                    ],
-                    onChoice: (val) => {
-                        if (val === 'favor') {
-                            updatePlayerStats('favor', 1);
-                        } else if (val === 'shard') {
-                            gameState.inventory.splice(turnipIndex, 1);
-                            displayInventory(gameState.inventory);
-                            updatePlayerStats('shards', 1);
+                await new Promise(resolve => {
+                    showChoiceModal({
+                        title: 'Pigman',
+                        message: 'You have a Turnip! Choose:',
+                        image: pigmanCard && pigmanCard.image,
+                        choices: [
+                            { label: 'Gain 1 Favor', value: 'favor' },
+                            { label: 'Discard Turnip for 1 Shard', value: 'shard' }
+                        ],
+                        onChoice: (val) => {
+                            if (val === 'favor') {
+                                updatePlayerStats('favor', 1);
+                            } else if (val === 'shard') {
+                                // Remove Turnip from inventory and add to loot discard pile
+                                if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
+                                if (turnipIndex !== -1) {
+                                    gameState.lootDiscardPile.push(gameState.inventory[turnipIndex]);
+                                    gameState.inventory.splice(turnipIndex, 1);
+                                    displayInventory(gameState.inventory);
+                                }
+                                updatePlayerStats('shards', 1);
+                            }
+                            resolve();
                         }
-                    }
+                    });
                 });
             } else {
                 updatePlayerStats('favor', 1);
@@ -648,6 +741,8 @@ function handleReferenceCard(refCard) {
 function restoreGameUIFromState() {
     if (!gameState.visibleCards) return;
     const { raceId, classId, inventory, roomCardId, resultCardId, enemyCardId } = gameState.visibleCards;
+
+    // Restore player cards
     if (raceId) {
         const raceCard = getCardById(raceId);
         if (raceCard) displayRaceCard(raceCard);
@@ -656,10 +751,15 @@ function restoreGameUIFromState() {
         const classCard = getCardById(classId);
         if (classCard) displayClassCard(classCard);
     }
+
+    // Restore inventory as objects
     if (Array.isArray(inventory)) {
         const invCards = inventory.map(id => getCardById(id)).filter(Boolean);
+        gameState.inventory = invCards; // Ensure gameState.inventory is objects
         displayInventory(invCards);
     }
+
+    // Restore room/result/enemy cards
     if (roomCardId) {
         const roomCard = getCardById(roomCardId);
         if (roomCard) displayRoomCard(roomCard);
@@ -674,6 +774,7 @@ function restoreGameUIFromState() {
     } else {
         hideEnemyCard();
     }
+
     // Restore stat bars
     updateStatDisplay('hp', gameState.player.hp);
     updateStatDisplay('energy', gameState.player.energy);
@@ -681,12 +782,204 @@ function restoreGameUIFromState() {
     updateStatDisplay('favor', gameState.player.favor);
     updateStatDisplay('level', gameState.level);
     updateStatDisplay('shards', gameState.player.shards);
+
     // Restore discard pile
     const lastRoomId = (gameState.discardPile && gameState.discardPile.room.length > 0) ? gameState.discardPile.room[gameState.discardPile.room.length-1] : null;
     const lastResultId = (gameState.discardPile && gameState.discardPile.result.length > 0) ? gameState.discardPile.result[gameState.discardPile.result.length-1] : null;
     const lastRoom = lastRoomId ? getCardById(lastRoomId) : null;
     const lastResult = lastResultId ? getCardById(lastResultId) : null;
     displayDiscardPile(lastRoom, lastResult);
+
+    // --- Restore all in-memory decks from gameState.dungeon ---
+    if (gameState.dungeon) {
+        // Main dungeon deck
+        if (Array.isArray(gameState.dungeon.deck)) {
+            dungeonDeck.length = 0;
+            gameState.dungeon.deck.forEach(id => {
+                const card = getCardById(id);
+                if (card) dungeonDeck.push(card);
+            });
+            if (dungeonDeck.length > 0) {
+                displayDeckRoomCard(dungeonDeck[0]);
+            }
+        }
+        // Result deck (if you use it)
+        if (Array.isArray(gameState.dungeon.resultDeck)) {
+            dungeonResultDeck.length = 0;
+            gameState.dungeon.resultDeck.forEach(id => {
+                const card = getCardById(id);
+                if (card) dungeonResultDeck.push(card);
+            });
+        }
+        // Optionally: restore discard piles for decks if you use them
+    }
+
+    // Restore current room/turn
+    if (typeof gameState.currentRoom === 'number') {
+        // If you have a UI element for current room, update it here
+        // document.getElementById('current-room-num').textContent = gameState.currentRoom;
+    }
+
+    // Restore encounter/combat area if needed
+    const combatArea = document.getElementById('combat-area');
+    if (gameState.encounter && gameState.encounter.inProgress) {
+        // Do NOT restore innerHTML, let React render the combat board
+        resumeCombat(gameState.encounter.enemyId, gameState.encounter.enemyHp, gameState.encounter.playerHp);
+    } else {
+        combatArea.innerHTML = '';
+    }
+}
+
+// Resume combat logic after loading a save
+function resumeCombat(enemyId, enemyHp, playerHp) {
+    // Find the enemy card
+    const enemyCard = enemyId ? getCardById(enemyId) : null;
+    if (!enemyCard) return;
+
+    // Restore enemy and player HP if provided
+    if (typeof enemyHp === 'number') enemyCard.health = enemyHp;
+    if (typeof playerHp === 'number') gameState.player.hp = playerHp;
+
+    // Re-create the combat UI and re-attach event handlers
+    // This is similar to initiateCombat, but skips the intro and uses the saved HPs
+    const raceCard = getCardById(gameState.raceId);
+    // Initialize enemy HP tracker on resume
+    updateAllTrackerCubes({
+        hp: gameState.player.hp,
+        energy: gameState.player.energy,
+        food: gameState.player.food,
+        favor: gameState.player.favor,
+        level: gameState.level,
+        enemyHp: currentEnemyHealth // Use currentEnemyHealth from loaded state
+    });
+    const availableAbilities = [];
+    for (const item of gameState.inventory) {
+        if (item.abilities && item.abilities.length > 0) {
+            for (const ability of item.abilities) {
+                if (ability.trigger === 'on_attack') {
+                    availableAbilities.push({
+                        label: `${item.name}: ${ability.details || ability.action}`,
+                        itemId: item.id,
+                        ability
+                    });
+                }
+            }
+        }
+    }
+    let currentEnemyHealth = typeof enemyHp === 'number' ? enemyHp : enemyCard.health;
+    let isPlayerTurn = true;
+    let combatOver = false;
+    let axeRerollUsed = false;
+    function canUseAxeReroll() {
+        return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
+    }
+    function useAxeReroll() { axeRerollUsed = true; }
+    function canDiscardAxe() {
+        return gameState.inventory.some(item => item.id === 'TRA01');
+    }
+    function discardAxe() {
+        const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
+        if (idx !== -1) gameState.inventory.splice(idx, 1);
+        displayInventory(gameState.inventory);
+    }
+
+    showCombatBoard({
+        classCard: raceCard,
+        enemyCard,
+        abilities: availableAbilities,
+        canUseAxeReroll,
+        canDiscardAxe,
+        onAxeReroll: () => handleRoll(() => {}, { type: 'axe-reroll' }),
+        onAxeDiscard: () => handleRoll(() => {}, { type: 'axe-discard' }),
+        onRoll: (cb, ab, forcedRolls) => handleRoll(cb, ab, forcedRolls),
+        onClose: () => { hideCombatBoard(); }
+    });
+
+    async function handleRoll(updateModal, usedAbility, forcedRolls) {
+        let roll1, roll2;
+        if (forcedRolls) {
+            [roll1, roll2] = forcedRolls;
+        } else {
+            [roll1, roll2] = rollDice();
+        }
+        let context = { inventory: gameState.inventory, roll1, roll2, attackBonus: 0 };
+        context = applyPassiveEffects('on_attack', context);
+        let message = '';
+        let showRollBtn = true;
+        let isCombatOver = false;
+        let specialAttack = false;
+        if (usedAbility && usedAbility.type === 'axe-discard') {
+            discardAxe();
+            const d6_1 = Math.floor(Math.random() * 6) + 1;
+            const d6_2 = Math.floor(Math.random() * 6) + 1;
+            const total = d6_1 + d6_2;
+            const damageAfterDefense = Math.max(0, total - enemyCard.defense);
+            currentEnemyHealth -= damageAfterDefense;
+            message = `Axe Special Attack! Rolled ${d6_1} + ${d6_2} = ${total}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+            specialAttack = true;
+        } else if (usedAbility && usedAbility.type === 'axe-reroll') {
+            useAxeReroll();
+            [roll1, roll2] = rollDice();
+            context.roll1 = roll1;
+            context.roll2 = roll2;
+            message = `Axe Reroll! New roll: ${roll1}, ${roll2}`;
+        }
+        if (!specialAttack) {
+            if (isPlayerTurn) {
+                if (context.roll1 === context.roll2) {
+                    message = message || `You rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+                } else {
+                    const rawAttackValue = Math.abs(context.roll1 - context.roll2);
+                    const totalAttackDamage = rawAttackValue + (context.attackBonus || 0);
+                    const damageAfterDefense = Math.max(0, totalAttackDamage - enemyCard.defense);
+                    currentEnemyHealth -= damageAfterDefense;
+                    message = message || `You rolled ${context.roll1}, ${context.roll2}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                }
+                if (currentEnemyHealth <= 0) {
+                    message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
+                    updatePlayerStats('favor', enemyCard.favor);
+                    showRollBtn = false;
+                    isCombatOver = true;
+                    combatOver = true;
+                }
+            } else {
+                if (context.roll1 === context.roll2) {
+                    message = `${enemyCard.name} rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+                } else {
+                    let damageDealt = Math.abs(context.roll1 - context.roll2) + enemyCard.attack;
+                    updatePlayerStats('hp', -damageDealt);
+                    message = `${enemyCard.name} rolled ${context.roll1}, ${context.roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
+                }
+                if (gameState.player.hp <= 0) {
+                    message += `\nYou were defeated by ${enemyCard.name}!`;
+                    showRollBtn = false;
+                    isCombatOver = true;
+                    combatOver = true;
+                }
+            }
+        }
+        isPlayerTurn = !isPlayerTurn;
+
+            // --- UPDATE ENCOUNTER STATE ON EACH ROLL ---
+            gameState.encounter = {
+                inProgress: !isCombatOver,
+                enemyId: enemyCard.id,
+                enemyHp: currentEnemyHealth,
+                playerHp: gameState.player.hp,
+                html: document.getElementById('combat-area')?.innerHTML || ""
+            };
+            // Update tracker cubes after any stat change
+            updateAllTrackerCubes({
+                hp: gameState.player.hp,
+                energy: gameState.player.energy,
+                food: gameState.player.food,
+                favor: gameState.player.favor,
+                level: gameState.level,
+                enemyHp: gameState.encounter.enemyHp // Use the value from gameState.encounter
+            });
+
+            updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
+    }
 }
 
 // Function to update player stats (can be used by icon handlers)
@@ -713,7 +1006,7 @@ function updatePlayerStats(stat, amount) {
             food: gameState.player.food,
             favor: gameState.player.favor,
             level: gameState.level,
-            enemyHp: gameState.enemyHp || 1 // fallback if not set
+            enemyHp: gameState.encounter && gameState.encounter.inProgress ? gameState.encounter.enemyHp : 0 // Use encounter enemyHp if in combat, else 0
         });
 
         // Check for player defeat after health changes
@@ -727,13 +1020,264 @@ function updatePlayerStats(stat, amount) {
     }
 }
 
-// Function to simulate rolling two six-sided dice
-// Returns an array [roll1, roll2].
-function rollDice() {
-    const roll1 = Math.floor(Math.random() * 6) + 1;
-    const roll2 = Math.floor(Math.random() * 6) + 1;
-    console.log(`Dice rolled: ${roll1}, ${roll2}`);
-    return [roll1, roll2];
+/**
+ * Centralized handler for all loot and trapping abilities/effects.
+ * Call this function at relevant game events (combat, encounter, discard, altar, trap, etc.).
+ * Handles all actions/triggers/targets from data/loot.json and data/trappings.json.
+ * 
+ * eventContext: {
+ *   trigger: string,
+ *   encounterType?: string,
+ *   discardItemId?: string,
+ *   altarContext?: object,
+ *   combatContext?: object,
+ *   trapContext?: object,
+ *   ...etc
+ * }
+ */
+function processAllItemEffects(eventContext) {
+    // Ensure discard piles exist
+    if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
+    if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
+
+    // Gather all loot and trappings in inventory
+    const allItems = gameState.inventory.filter(item =>
+        (item.id && (item.id.startsWith('LT') || item.id.startsWith('TRA')))
+    );
+
+    for (const item of allItems) {
+        // --- Effects (passive, triggered) ---
+        if (item.effects && item.effects.length) {
+            for (const effect of item.effects) {
+                // --- Shield: damage reduction ---
+                if (effect.action === "damage_reduction" && eventContext.trigger === "on_receive_damage") {
+                    if (eventContext.damage >= 6) {
+                        eventContext.damage = Math.max(0, eventContext.damage - (effect.amount || 1));
+                        logEvent(`${item.name}: Reduced damage by ${effect.amount || 1}.`);
+                    }
+                }
+                // --- Bedroll: +1 HP at campsite ---
+                if (effect.trigger === "on_campsite" && eventContext.trigger === "on_campsite" && effect.action === "heal") {
+                    updatePlayerStats('hp', effect.amount || 1);
+                    logEvent(`${item.name}: Gained ${effect.amount || 1} HP at campsite.`);
+                }
+                // --- Books: +1 EN at campsite ---
+                if (effect.trigger === "on_campsite" && eventContext.trigger === "on_campsite" && effect.action === "recover") {
+                    updatePlayerStats('energy', effect.amount || 1);
+                    logEvent(`${item.name}: Gained ${effect.amount || 1} EN at campsite.`);
+                }
+                // --- Dagger: +1 damage on first room card combat ---
+                if (effect.trigger === "on_attack" && eventContext.trigger === "on_attack" && effect.condition === "first_room_card") {
+                    if (eventContext.combatContext && eventContext.combatContext.isFirstRoomCard) {
+                        eventContext.combatContext.attackBonus = (eventContext.combatContext.attackBonus || 0) + (effect.amount || 1);
+                        logEvent(`${item.name}: +${effect.amount || 1} damage (first room card).`);
+                    }
+                }
+                // --- Mace: +1 damage vs undead ---
+                if (effect.trigger === "on_attack" && eventContext.trigger === "on_attack" && effect.condition === "enemy_type_undead") {
+                    if (eventContext.combatContext && eventContext.combatContext.enemyType === "Undead") {
+                        eventContext.combatContext.attackBonus = (eventContext.combatContext.attackBonus || 0) + (effect.amount || 1);
+                        logEvent(`${item.name}: +${effect.amount || 1} damage vs Undead.`);
+                    }
+                }
+            }
+        }
+
+        // --- Abilities (active, triggered) ---
+        if (item.abilities && item.abilities.length) {
+            for (const ability of item.abilities) {
+                switch (ability.action) {
+                    // --- GillNet: Water encounter, roll 3 dice, gain food per success ---
+                    case "roll_dice":
+                        if (eventContext.trigger === "on_water_encounter" && item.id === "LT01") {
+                            let successes = 0;
+                            for (let i = 0; i < (ability.amount || 3); i++) {
+                                const [roll] = rollDice();
+                                if (roll >= 4) successes++;
+                            }
+                            if (successes > 0) {
+                                updatePlayerStats('food', successes);
+                                logEvent(`${item.name}: Gained ${successes} rations.`);
+                            }
+                        }
+                        break;
+                    // --- Ring: Spend 1 favor to bypass enemy encounter (once per dungeon level) ---
+                    case "bypass_encounter":
+                        if (eventContext.trigger === "on_encounter" && eventContext.encounterType === "enemy" && item.id === "LT02") {
+                            if (gameState.player.favor > 0 && !item._bypassedThisLevel) {
+                                gameState.player.favor -= 1;
+                                item._bypassedThisLevel = true;
+                                logEvent(`${item.name}: Enemy encounter bypassed by spending 1 favor.`);
+                                eventContext.bypassed = true;
+                            }
+                        }
+                        break;
+                    // --- Shield: Discard to activate (handled elsewhere) ---
+                    case "discard_item":
+                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id) {
+                            logEvent(`${item.name}: Discarded.`);
+                        }
+                        break;
+                    // --- Sword: Deal 5 damage to enemy (active) ---
+                    case "apply_damage":
+                        if (eventContext.trigger === "on_attack" && eventContext.combatContext && item.id === "LT04") {
+                            eventContext.combatContext.enemyHp -= (ability.amount || 5);
+                            logEvent(`${item.name}: Dealt ${ability.amount || 5} damage to enemy.`);
+                        }
+                        break;
+                    // --- Sword: Ignore miss on doubles ---
+                    case "ignore_miss":
+                        if (eventContext.trigger === "on_roll_double" && eventContext.combatContext && item.id === "LT04") {
+                            eventContext.combatContext.ignoreMiss = true;
+                            logEvent(`${item.name}: Ignored miss on doubles.`);
+                        }
+                        break;
+                    // --- Symbol: Altar reward level = current favor + 1 ---
+                    case "modify_altar_reward":
+                        if (eventContext.trigger === "on_altar" && item.id === "LT05") {
+                            eventContext.altarContext.rewardLevel = gameState.player.favor + 1;
+                            logEvent(`${item.name}: Altar reward level increased by 1.`);
+                        }
+                        break;
+                    // --- Turnip: Discard during Pigman for a shard ---
+                    case "discard_to_gain":
+                        if (eventContext.trigger === "during_ref_pigman" && eventContext.discardItemId === item.id && item.id === "LT06") {
+                            updatePlayerStats('shards', 1);
+                            logEvent(`${item.name}: Discarded for 1 shard.`);
+                        }
+                        break;
+                    // --- Turnip: Discard anytime for +3 energy ---
+                    case "gain_resource":
+                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id && item.id === "LT06") {
+                            updatePlayerStats('energy', ability.amount || 3);
+                            logEvent(`${item.name}: Discarded for +${ability.amount || 3} energy.`);
+                            // Remove from inventory and add to loot discard pile
+                            const idx = gameState.inventory.findIndex(i => i.id === item.id);
+                            if (idx !== -1) {
+                                gameState.lootDiscardPile.push(gameState.inventory[idx]);
+                                gameState.inventory.splice(idx, 1);
+                                displayInventory(gameState.inventory);
+                            }
+                        }
+                        break;
+                    // --- Potion: Use to gain health/energy ---
+                    case "gain_resource":
+                        if (eventContext.trigger === "on_use" && eventContext.itemId === item.id && item.id === "LT08") {
+                            if (ability.target === "health") updatePlayerStats('hp', ability.amount || 2);
+                            if (ability.target === "energy") updatePlayerStats('energy', ability.amount || 2);
+                            logEvent(`${item.name}: Gained ${ability.amount} ${ability.target}.`);
+                            // Remove from inventory and add to loot discard pile
+                            const idx = gameState.inventory.findIndex(i => i.id === item.id);
+                            if (idx !== -1) {
+                                gameState.lootDiscardPile.push(gameState.inventory[idx]);
+                                gameState.inventory.splice(idx, 1);
+                                displayInventory(gameState.inventory);
+                            }
+                        }
+                        break;
+                    // --- Wedge: Avoid combat encounter ---
+                    case "avoid_encounter":
+                        if (eventContext.trigger === "on_encounter" && eventContext.encounterType === "combat" && item.id === "LT07") {
+                            eventContext.avoided = true;
+                            logEvent(`${item.name}: Combat encounter avoided.`);
+                        }
+                        break;
+                    // --- Scroll: Defeat undead enemy (trapping) ---
+                    case "defeat":
+                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id && item.id === "TRA04") {
+                            // Find current enemy in combat
+                            const encounter = gameState.encounter;
+                            if (encounter && encounter.inProgress) {
+                                const enemyCard = getCardById(encounter.enemyId);
+                                if (enemyCard && (enemyCard.enemyType === "Undead" || (enemyCard.traits && enemyCard.traits.includes("Undead")))) {
+                                    encounter.enemyHp = 0;
+                                    encounter.inProgress = false;
+                                    logEvent(`${item.name}: Undead enemy instantly defeated!`);
+                                    // Remove Scroll from inventory and add to trappings discard pile
+                                    const idx = gameState.inventory.findIndex(i => i.id === item.id);
+                                    if (idx !== -1) {
+                                        gameState.trappingsDiscardPile.push(gameState.inventory[idx]);
+                                        gameState.inventory.splice(idx, 1);
+                                        displayInventory(gameState.inventory);
+                                    }
+                                } else {
+                                    logEvent(`${item.name}: No undead enemy to defeat.`);
+                                }
+                            }
+                        }
+                        break;
+                    // --- Axe: Reroll on doubles (once per dungeon level) ---
+                    case "reroll":
+                        if (eventContext.trigger === "on_attack" && eventContext.combatContext && item.id === "TRA01") {
+                            if (eventContext.combatContext.rolledDoubles && !item._rerolledThisLevel) {
+                                item._rerolledThisLevel = true;
+                                eventContext.combatContext.allowReroll = true;
+                                logEvent(`${item.name}: Reroll allowed (once per level).`);
+                            }
+                        }
+                        break;
+                    // --- Axe: Discard to deal 2d6 damage to enemy ---
+                    case "damage":
+                        if (eventContext.trigger === "on_discard" && eventContext.discardItemId === item.id && item.id === "TRA01") {
+                            // Discard to deal 2d6 damage to enemy
+                            const d6_1 = Math.floor(Math.random() * 6) + 1;
+                            const d6_2 = Math.floor(Math.random() * 6) + 1;
+                            const total = d6_1 + d6_2;
+                            if (eventContext.combatContext) {
+                                eventContext.combatContext.enemyHp -= total;
+                                logEvent(`${item.name}: Discarded for ${total} damage to enemy.`);
+                            }
+                            // Remove from inventory and add to trappings discard pile
+                            const idx = gameState.inventory.findIndex(i => i.id === item.id);
+                            if (idx !== -1) {
+                                gameState.trappingsDiscardPile.push(gameState.inventory[idx]);
+                                gameState.inventory.splice(idx, 1);
+                                displayInventory(gameState.inventory);
+                            }
+                        }
+                        break;
+                    // --- Potion (trapping): Use for +2 HP and +2 EN ---
+                    case "heal":
+                        if (eventContext.trigger === "on_use" && eventContext.itemId === item.id && item.id === "TRA06") {
+                            if (ability.target === "health") updatePlayerStats('hp', ability.amount || 2);
+                            if (ability.target === "energy") updatePlayerStats('energy', ability.amount || 2);
+                            logEvent(`${item.name}: Gained ${ability.amount} ${ability.target}.`);
+                            // Remove from inventory and add to trappings discard pile
+                            const idx = gameState.inventory.findIndex(i => i.id === item.id);
+                            if (idx !== -1) {
+                                gameState.trappingsDiscardPile.push(gameState.inventory[idx]);
+                                gameState.inventory.splice(idx, 1);
+                                displayInventory(gameState.inventory);
+                            }
+                        }
+                        break;
+                    // --- Toolkit: May optionally disarm a trap when encountered ---
+                    case "bypass":
+                        if (eventContext.trigger === "on_trap_encounter" && item.id === "TRA08") {
+                            // Prompt player to disarm trap
+                            showChoiceModal({
+                                title: 'Toolkit',
+                                message: 'Attempt to disarm the trap? Roll a die: 4+ = success (no effect), 1-3 = trap triggers as normal.',
+                                image: item.image,
+                                dieRoll: true,
+                                onRoll: (roll) => {
+                                    if (roll >= 4) {
+                                        eventContext.trapContext.bypassed = true;
+                                        logEvent(`${item.name}: Trap disarmed!`);
+                                    } else {
+                                        eventContext.trapContext.bypassed = false;
+                                        logEvent(`${item.name}: Disarm failed, trap triggers as normal.`);
+                                    }
+                                }
+                            });
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
 }
 
 // Full combat logic for enemy encounters
@@ -767,6 +1311,25 @@ async function initiateCombat(enemyCard) {
     let isPlayerTurn = true;
     let combatOver = false;
     let axeRerollUsed = false;
+
+    // --- UPDATE ENCOUNTER STATE ON COMBAT START ---
+    gameState.encounter = {
+        inProgress: true,
+        enemyId: enemyCard.id,
+        enemyHp: currentEnemyHealth,
+        playerHp: gameState.player.hp,
+        html: document.getElementById('combat-area')?.innerHTML || ""
+    };
+    // Initialize enemy HP tracker
+    updateAllTrackerCubes({
+        hp: gameState.player.hp,
+        energy: gameState.player.energy,
+        food: gameState.player.food,
+        favor: gameState.player.favor,
+        level: gameState.level,
+        enemyHp: currentEnemyHealth
+    });
+
     function canUseAxeReroll() {
         // Only allow once per dungeon level
         return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
@@ -848,6 +1411,16 @@ async function initiateCombat(enemyCard) {
                 }
             }
             isPlayerTurn = !isPlayerTurn;
+
+            // --- UPDATE ENCOUNTER STATE ON EACH ROLL ---
+            gameState.encounter = {
+                inProgress: !isCombatOver,
+                enemyId: enemyCard.id,
+                enemyHp: currentEnemyHealth,
+                playerHp: gameState.player.hp,
+                html: document.getElementById('combat-area')?.innerHTML || ""
+            };
+
             updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
             if (isCombatOver) setTimeout(resolve, 500);
         }
@@ -860,7 +1433,18 @@ async function initiateCombat(enemyCard) {
             onAxeReroll: () => handleRoll(() => {}, { type: 'axe-reroll' }),
             onAxeDiscard: () => handleRoll(() => {}, { type: 'axe-discard' }),
             onRoll: (cb, ab, forcedRolls) => handleRoll(cb, ab, forcedRolls),
-            onClose: () => { hideCombatBoard(); resolve(); }
+            onClose: () => { 
+                // --- CLEAR ENCOUNTER STATE ON CLOSE ---
+                gameState.encounter = {
+                    inProgress: false,
+                    enemyId: null,
+                    enemyHp: null,
+                    playerHp: null,
+                    html: ""
+                };
+                hideCombatBoard(); 
+                resolve(); 
+            }
         });
     });
 }
@@ -947,4 +1531,165 @@ function advanceToNextRoom() {
     handleRoom();
 }
 
-export { initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom };
+/**
+ * Simulate rolling two six-sided dice.
+ * @returns {[number, number]}
+ */
+function rollDice() {
+    const roll1 = Math.floor(Math.random() * 6) + 1;
+    const roll2 = Math.floor(Math.random() * 6) + 1;
+    console.log(`Dice rolled: ${roll1}, ${roll2}`);
+    return [roll1, roll2];
+}
+
+/**
+ * Process use of trappings (e.g., Scroll TRA04).
+ * @param {object} eventContext - { trigger, trappingId }
+ */
+function processTrappingUse(eventContext) {
+    // Ensure trappings discard pile exists
+    if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
+    // Only handle Scroll (TRA04) for now
+    if (eventContext.trigger === "on_use_scroll" && eventContext.trappingId === "TRA04") {
+        // Find current enemy in combat
+        const undeadEnemies = ["Skelepede", "Skeleton", "Ghoul", "Wraith", "Lich"]; // Add more as needed
+        const encounter = gameState.encounter;
+        if (encounter && encounter.inProgress) {
+            const enemyCard = getCardById(encounter.enemyId);
+            if (enemyCard && (
+                undeadEnemies.includes(enemyCard.name) ||
+                (enemyCard.traits && enemyCard.traits.includes("Undead")) ||
+                enemyCard.enemyType === "Undead"
+            )) {
+                // Defeat the enemy and end combat
+                encounter.enemyHp = 0;
+                encounter.inProgress = false;
+                logEvent("Scroll: Undead enemy instantly defeated!");
+                // Remove Scroll from inventory and add to trappings discard pile
+                const idx = gameState.inventory.findIndex(i => i.id === "TRA04");
+                if (idx !== -1) {
+                    gameState.trappingsDiscardPile.push(gameState.inventory[idx]);
+                    gameState.inventory.splice(idx, 1);
+                    displayInventory(gameState.inventory);
+                }
+                // Hide combat board if visible
+                if (typeof hideCombatBoard === "function") hideCombatBoard();
+            } else {
+                logEvent("Scroll: No undead enemy to defeat.");
+            }
+        } else {
+            logEvent("Scroll: No enemy encounter in progress.");
+        }
+    }
+}
+
+window.processAllItemEffects = processAllItemEffects;
+window.processTrappingUse = processTrappingUse;
+
+// --- INTEGRATION: Call processAllItemEffects at key game flow points ---
+
+// Example: Call after updating player stats (for passive triggers like on_receive_damage)
+const _originalUpdatePlayerStats = updatePlayerStats;
+function updatePlayerStatsWithItems(stat, amount) {
+    // Before stat update: check for on_receive_damage
+    if (stat === 'hp' && amount < 0) {
+        processAllItemEffects({ trigger: 'on_receive_damage', damage: Math.abs(amount) });
+    }
+    _originalUpdatePlayerStats(stat, amount);
+}
+window.updatePlayerStats = updatePlayerStatsWithItems;
+
+// Example: Call after combat roll (for on_attack, on_roll_double, etc.)
+// (You may need to call processAllItemEffects in your combat logic, e.g., in initiateCombat and resumeCombat)
+
+// Example: Call after trap encounter
+function handleTrapEncounter(trapContext) {
+    processAllItemEffects({ trigger: 'on_trap_encounter', trapContext });
+    // ...rest of trap logic
+}
+window.handleTrapEncounter = handleTrapEncounter;
+
+// Example: Call after campsite
+function handleCampsite() {
+    processAllItemEffects({ trigger: 'on_campsite' });
+    // ...rest of campsite logic
+}
+window.handleCampsite = handleCampsite;
+
+// Example: Call after altar
+function handleAltar(altarContext) {
+    processAllItemEffects({ trigger: 'on_altar', altarContext });
+    // ...rest of altar logic
+}
+window.handleAltar = handleAltar;
+
+            // Handle using items (like potions)
+            function handleUseItem(itemId) {
+                const item = getCardById(itemId);
+                if (!item) return;
+
+                // Potion handling (LT08 and TRA06)
+                if (itemId === "LT08" || itemId === "TRA06") {
+                    // First check if any healing is possible
+                    const canHealHP = gameState.player.hp < gameState.player.maxHealth;
+                    const canHealEN = gameState.player.energy < gameState.player.maxEnergy;
+
+                    if (!canHealHP && !canHealEN) {
+                        logEvent(`${item.name}: Cannot use - both HP and Energy are already at maximum.`);
+                        return;
+                    }
+
+                    // Calculate actual heals without exceeding max
+                    const hpHeal = Math.min(2, gameState.player.maxHealth - gameState.player.hp);
+                    const enHeal = Math.min(2, gameState.player.maxEnergy - gameState.player.energy);
+
+                    // Apply heals
+                    if (hpHeal > 0) updatePlayerStats('hp', hpHeal);
+                    if (enHeal > 0) updatePlayerStats('energy', enHeal);
+                    
+                    // Discard only if any healing occurred
+                    if (hpHeal > 0 || enHeal > 0) {
+                        logEvent(`${item.name}: Healed ${hpHeal} HP and ${enHeal} EN`);
+                        const idx = gameState.inventory.findIndex(i => i.id === itemId);
+                        if (idx !== -1) {
+                            const discardPile = itemId.startsWith('LT') ? 
+                                gameState.lootDiscardPile : 
+                                gameState.trappingsDiscardPile;
+                            discardPile.push(gameState.inventory[idx]);
+                            gameState.inventory.splice(idx, 1);
+                            displayInventory(gameState.inventory);
+                        }
+                    } else {
+                        logEvent(`${item.name}: Cannot use - both HP and Energy are already at maximum.`);
+                    }
+                    return;
+                }
+
+                // Default behavior for other items
+                processAllItemEffects({ trigger: 'on_use', itemId });
+            }
+
+            // Handle discarding items (separate from using them)
+            function handleDiscardItem(itemId, context = {}) {
+                processAllItemEffects({ trigger: 'on_discard', discardItemId: itemId, ...context });
+            }
+window.handleDiscardItem = handleDiscardItem;
+window.handleUseItem = handleUseItem;
+
+// Example: Call after pigman reference
+function handlePigmanRef() {
+    processAllItemEffects({ trigger: 'during_ref_pigman' });
+    // ...rest of pigman logic
+}
+window.handlePigmanRef = handlePigmanRef;
+
+export { 
+    initializePlayer, 
+    startDungeonLevel, 
+    handleRoom, 
+    updatePlayerStatsWithItems as updatePlayerStats, 
+    restoreGameUIFromState, 
+    logEvent, 
+    advanceToNextRoom,
+    handleUseItem
+};

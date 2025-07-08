@@ -24,7 +24,7 @@
   {
     "id": "ROO_03",
     "name": "Catacombs",
-    "icons": "Random, Enemy",
+    "icons": "Enemy, Random",
     "linkedResultId": [
       "RES_03"
     ],
@@ -35,7 +35,7 @@
   {
     "id": "ROO_04",
     "name": "Corridor",
-    "icons": "Random, Trap",
+    "icons": "Trap, Random",
     "linkedResultId": [
       "RES_04"
     ],

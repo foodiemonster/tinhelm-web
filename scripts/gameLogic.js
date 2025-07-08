@@ -843,6 +843,15 @@ function resumeCombat(enemyId, enemyHp, playerHp) {
     // Re-create the combat UI and re-attach event handlers
     // This is similar to initiateCombat, but skips the intro and uses the saved HPs
     const raceCard = getCardById(gameState.raceId);
+    // Initialize enemy HP tracker on resume
+    updateAllTrackerCubes({
+        hp: gameState.player.hp,
+        energy: gameState.player.energy,
+        food: gameState.player.food,
+        favor: gameState.player.favor,
+        level: gameState.level,
+        enemyHp: currentEnemyHealth // Use currentEnemyHealth from loaded state
+    });
     const availableAbilities = [];
     for (const item of gameState.inventory) {
         if (item.abilities && item.abilities.length > 0) {
@@ -951,16 +960,25 @@ function resumeCombat(enemyId, enemyHp, playerHp) {
         }
         isPlayerTurn = !isPlayerTurn;
 
-        // --- UPDATE ENCOUNTER STATE ON EACH ROLL ---
-        gameState.encounter = {
-            inProgress: !isCombatOver,
-            enemyId: enemyCard.id,
-            enemyHp: currentEnemyHealth,
-            playerHp: gameState.player.hp,
-            html: document.getElementById('combat-area')?.innerHTML || ""
-        };
+            // --- UPDATE ENCOUNTER STATE ON EACH ROLL ---
+            gameState.encounter = {
+                inProgress: !isCombatOver,
+                enemyId: enemyCard.id,
+                enemyHp: currentEnemyHealth,
+                playerHp: gameState.player.hp,
+                html: document.getElementById('combat-area')?.innerHTML || ""
+            };
+            // Update tracker cubes after any stat change
+            updateAllTrackerCubes({
+                hp: gameState.player.hp,
+                energy: gameState.player.energy,
+                food: gameState.player.food,
+                favor: gameState.player.favor,
+                level: gameState.level,
+                enemyHp: gameState.encounter.enemyHp // Use the value from gameState.encounter
+            });
 
-        updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
+            updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
     }
 }
 
@@ -988,7 +1006,7 @@ function updatePlayerStats(stat, amount) {
             food: gameState.player.food,
             favor: gameState.player.favor,
             level: gameState.level,
-            enemyHp: gameState.enemyHp || 1 // fallback if not set
+            enemyHp: gameState.encounter && gameState.encounter.inProgress ? gameState.encounter.enemyHp : 0 // Use encounter enemyHp if in combat, else 0
         });
 
         // Check for player defeat after health changes
@@ -1302,6 +1320,15 @@ async function initiateCombat(enemyCard) {
         playerHp: gameState.player.hp,
         html: document.getElementById('combat-area')?.innerHTML || ""
     };
+    // Initialize enemy HP tracker
+    updateAllTrackerCubes({
+        hp: gameState.player.hp,
+        energy: gameState.player.energy,
+        food: gameState.player.food,
+        favor: gameState.player.favor,
+        level: gameState.level,
+        enemyHp: currentEnemyHealth
+    });
 
     function canUseAxeReroll() {
         // Only allow once per dungeon level

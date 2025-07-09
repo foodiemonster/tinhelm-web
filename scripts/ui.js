@@ -211,9 +211,9 @@ export function displayInventory(inventory) {
                     useBtn.onclick = () => {
                         // Backend: processLootAbilitiesAndEffects with correct context
                         if (item.id === "LT08") {
-                            // Potion (Loot): Discard to gain health/energy
-                            window.handleDiscardItem &&
-                                window.handleDiscardItem(item.id);
+                            // Potion (Loot): Use to gain health/energy
+                            window.handleUseItem &&
+                                window.handleUseItem(item.id);
                         } else if (item.id === "LT06") {
                             // Turnip (Loot): Discard anytime to gain +3 energy
                             window.handleDiscardItem &&

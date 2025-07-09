@@ -1713,6 +1713,8 @@ window.handleAltar = handleAltar;
 
             // Handle using items (like potions)
             function handleUseItem(itemId) {
+                if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
+                if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
                 const item = getCardById(itemId);
                 if (!item) return;
 

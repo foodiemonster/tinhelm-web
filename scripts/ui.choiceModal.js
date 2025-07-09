@@ -94,12 +94,40 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
         let selected = null;
         const cardEls = modal.querySelectorAll('.trapping-modal-card');
         const confirmBtn = modal.querySelector('.modal-confirm-btn');
-        cardEls.forEach(card => {
+        cardEls.forEach((card, idx) => {
             card.onclick = () => {
-                cardEls.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selected = card.getAttribute('data-value');
-                confirmBtn.disabled = false;
+                const wasSelected = card.classList.contains('selected');
+                cardEls.forEach((c, i) => {
+                    c.classList.remove(
+                        'selected',
+                        'centered-left', 'centered-center', 'centered-right',
+                        'centered-left-top', 'centered-center-top', 'centered-right-top',
+                        'centered-left-bottom', 'centered-center-bottom', 'centered-right-bottom'
+                    );
+                });
+                if (wasSelected) {
+                    // Deselect if already selected
+                    selected = null;
+                    confirmBtn.disabled = true;
+                } else {
+                    card.classList.add('selected');
+                    // Determine column: 0 (left), 1 (center), 2 (right)
+                    const col = idx % 3;
+                    const row = Math.floor(idx / 3); // 0 = top, 1 = bottom
+                    let className = '';
+                    if (row === 0) {
+                        if (col === 0) className = 'centered-left-top';
+                        else if (col === 1) className = 'centered-center-top';
+                        else className = 'centered-right-top';
+                    } else {
+                        if (col === 0) className = 'centered-left-bottom';
+                        else if (col === 1) className = 'centered-center-bottom';
+                        else className = 'centered-right-bottom';
+                    }
+                    card.classList.add(className);
+                    selected = card.getAttribute('data-value');
+                    confirmBtn.disabled = false;
+                }
             };
         });
         confirmBtn.onclick = () => {
@@ -107,15 +135,4 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
             if (modal.parentNode) modal.parentNode.removeChild(modal);
         };
     }
-    if (choices && choices.length && !isTrappingGrid) {
-        modal.querySelectorAll('.choice-btn').forEach(btn => {
-            btn.onclick = () => {
-                if (modal.parentNode) {
-                    modal.parentNode.removeChild(modal);
-                    console.log("Modal removed from DOM (choice)");
-                }
-                if (onChoice) onChoice(btn.getAttribute('data-value'));
-            };
-        });
-    }
-}
+};

@@ -661,8 +661,30 @@ header, footer {
 .trapping-modal-card.selected {
   border: 2.5px solid #a00;
   box-shadow: 0 0 16px 2px #a00;
-  transform: scale(1.60) rotate(0deg);
   z-index: 2;
+  /* Default: fallback for legacy, but not used for new logic */
+  transform: scale(1.5);
+}
+/* --- Trapping Modal Card Animations by Grid Position --- */
+/* Top row: animate downward toward center */
+.trapping-modal-card.centered-left-top {
+  transform: scale(1.5) translateX(30%) translateY(10%);
+}
+.trapping-modal-card.centered-center-top {
+  transform: scale(1.5) translateY(10%);
+}
+.trapping-modal-card.centered-right-top {
+  transform: scale(1.5) translateX(-30%) translateY(10%);
+}
+/* Bottom row: animate upward toward center */
+.trapping-modal-card.centered-left-bottom {
+  transform: scale(1.5) translateX(30%) translateY(-10%);
+}
+.trapping-modal-card.centered-center-bottom {
+  transform: scale(1.5) translateY(-10%);
+}
+.trapping-modal-card.centered-right-bottom {
+  transform: scale(1.5) translateX(-30%) translateY(-10%);
 }
 .trapping-modal-card img {
   width: 100%;

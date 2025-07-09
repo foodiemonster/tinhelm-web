@@ -27,135 +27,121 @@
     </script>
 </head>
 <body>
-<header>
-  <img src="assets/ui/logo_top.png" alt="Tin Helm Web UI" style="max-height: 40px; padding-left: 20px;" />
-  <div id="sandwich-menu">
-    <div class="sandwich-icon" onclick="document.getElementById('sandwich-dropdown').style.display = (document.getElementById('sandwich-dropdown').style.display === 'block' ? 'none' : 'block')">
-      <div class="sandwich-bar"></div>
-      <div class="sandwich-bar"></div>
-      <div class="sandwich-bar"></div>
+  <!-- Header -->
+  <header>
+    <img src="assets/ui/logo_top.png" alt="Tin Helm Web UI" style="max-height: 40px; padding-left: 20px;" />
+    <div id="sandwich-menu">
+      <div class="sandwich-icon" onclick="document.getElementById('sandwich-dropdown').style.display = (document.getElementById('sandwich-dropdown').style.display === 'block' ? 'none' : 'block')">
+        <div class="sandwich-bar"></div>
+        <div class="sandwich-bar"></div>
+        <div class="sandwich-bar"></div>
+      </div>
+      <div id="sandwich-dropdown">
+        <button id="save-btn">Save Game</button>
+        <button id="load-btn">Load Game</button>
+      </div>
     </div>
-    <div id="sandwich-dropdown">
-      <button id="save-btn">Save Game</button>
-      <button id="load-btn">Load Game</button>
-    </div>
-  </div>
-</header>
-    <div class="layout">
-        <div class="area1">
+  </header>
 
-            <header id="player-stats" >
-                <div class="stat" id="stat-hp">HP: <span class="value" id="hp-value">10</span></div>
-                <div class="stat" id="stat-energy">Energy: <span class="value" id="energy-value">5</span></div>
-                <div class="stat" id="stat-food">Food: <span class="value" id="food-value">2</span></div>
-                <div class="stat" id="stat-favor">Favor: <span class="value" id="favor-value">0</span></div>
-                <div class="stat" id="stat-level">Level: <span class="value" id="level-value">1</span></div>
-                <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
-            </header>
-
-            <header id="shard-stats" >
-                <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
-            </header>
-
-            <div id="character-creation">
-                <div class="selection-container">
-                    <label for="race-select">Choose your Race:</label>
-                    <select id="race-select">
-                        <option value="">--Please choose a race--</option>
-                    </select>
-                </div>
-                <div class="selection-container">
-                    <label for="class-select">Choose your Class:</label>
-                    <select id="class-select">
-                        <option value="">--Please choose a class--</option>
-                    </select>
-                </div>
-            </div >
-
-             <button id="start-game-btn">Start Game</button>
-
-            <div id="trackers-col">
-              <div class="tracker-card-wrapper" id="tracker-hp-wrapper">
-                <img class="tracker-card" id="tracker-hp" src="assets/cards/tracker/Tracker_HP.png" alt="Tracker HP">
-                <div class="tracker-cube hp" id="cube-hp"></div>
-              </div>
-              <div class="tracker-card-wrapper" id="tracker-en-ration-wrapper">
-                <img class="tracker-card" id="tracker-en-ration" src="assets/cards/tracker/Tracker_EN_Ration.png" alt="Tracker EN/Ration">
-                <div class="tracker-cube energy" id="cube-energy"></div>
-                <div class="tracker-cube rations" id="cube-rations"></div>
-              </div>
-              <div class="tracker-card-wrapper" id="tracker-favor-wrapper">
-                <img class="tracker-card" id="tracker-favor" src="assets/cards/tracker/Tracker_Favor.png" alt="Tracker Favor">
-                <div class="tracker-cube favor" id="cube-favor"></div>
-              </div>
-              <div class="tracker-card-wrapper" id="tracker-enemyhp-dungeonlevel-wrapper">
-                <img class="tracker-card" id="tracker-enemyhp-dungeonlevel" src="assets/cards/tracker/Tracker_EnemyHP_DungeonLevel.png" alt="Tracker EnemyHP/DungeonLevel">
-                <div class="tracker-cube dungeon" id="cube-dungeon"></div>
-                <div class="tracker-cube enemy" id="cube-enemy"></div>
-              </div>
-            </div>
-            <div class="vertical-ruler"></div>
+  <!-- Main Layout -->
+  <main class="main-layout" style="width:100%;max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:2em;">
+    <!-- Top: Tracker + Dungeon/Encounter Row -->
+    <section class="top-row" style="display:flex;flex-direction:row;gap:2em;align-items:flex-start;width:100%;">
+      <!-- Tracker 2x2 grid + Stats -->
+      <div class="tracker-stats-col" style="display:flex;flex-direction:column;align-items:center;min-width:420px;">
+        <div class="tracker-container" style="margin-bottom:1em;">
+          <div class="tracker-card-wrapper" id="tracker-hp-wrapper">
+            <img class="tracker-card" id="tracker-hp" src="assets/cards/tracker/Tracker_HP.png" alt="Tracker HP">
+            <div class="tracker-cube hp" id="cube-hp"></div>
+          </div>
+          <div class="tracker-card-wrapper" id="tracker-en-ration-wrapper">
+            <img class="tracker-card" id="tracker-en-ration" src="assets/cards/tracker/Tracker_EN_Ration.png" alt="Tracker EN/Ration">
+            <div class="tracker-cube energy" id="cube-energy"></div>
+            <div class="tracker-cube rations" id="cube-rations"></div>
+          </div>
+          <div class="tracker-card-wrapper" id="tracker-favor-wrapper">
+            <img class="tracker-card" id="tracker-favor" src="assets/cards/tracker/Tracker_Favor.png" alt="Tracker Favor">
+            <div class="tracker-cube favor" id="cube-favor"></div>
+          </div>
+          <div class="tracker-card-wrapper" id="tracker-enemyhp-dungeonlevel-wrapper">
+            <img class="tracker-card" id="tracker-enemyhp-dungeonlevel" src="assets/cards/tracker/Tracker_EnemyHP_DungeonLevel.png" alt="Tracker EnemyHP/DungeonLevel">
+            <div class="tracker-cube dungeon" id="cube-dungeon"></div>
+            <div class="tracker-cube enemy" id="cube-enemy"></div>
+          </div>
         </div>
-        <div class="area2">
-            <div class="dungeon-area">
-                <div class="dungeon-row" style="flex-wrap: nowrap;">
-                    <div class="card-slot" id="slot-deck">
-                        <img id="deck-card-image" alt="Dungeon Deck Card" style="display:none;">
-                        <div id="room-decision-buttons">
-                            <button id="resolve-button">Resolve</button>
-                            <button id="skip-button">Skip</button>
-                            <button id="next-room-btn" style="display:none;">Next Room</button>
-                        </div>
-                    </div>
-                    <div class="card-slot" id="slot-room">
-                        <img id="room-card-image" alt="Dungeon Room Card" style="display:none;">
-                    </div>
-                    <div class="card-slot" id="slot-result">
-                        <img id="result-card-image" alt="Dungeon Result Card" style="display:none;">
-                    </div>
-                    <div class="card-slot" id="slot-discard">
-                        <img id="discard-room-image" alt="Discarded Room Card" style="display:none;">
-                        <img id="discard-result-image" alt="Discarded Result Card" style="display:none;">
-                    </div>
-                </div>
-            </div>
-                    <div class="encounter-area" style="background-image: url('assets/ui/bg_encounter.png'); object-fit: scale-down; background-size: cover; background-position: center; background-blend-mode: multiply;">
-              <div id="combat-area"></div>
-            </div>
-            <div id="endgame-message" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:2rem; z-index:100; text-align:center; font-size:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
-                <span id="endgame-text"></span>
-                <br><br>
-                <button onclick="location.reload()">Restart</button>
-            </div>
+        <div class="stats-shards-row" style="width:100%;display:flex;flex-direction:row;justify-content:space-around;gap:1em;">
+          <div class="stat" id="stat-hp">HP: <span class="value" id="hp-value">10</span></div>
+          <div class="stat" id="stat-energy">Energy: <span class="value" id="energy-value">5</span></div>
+          <div class="stat" id="stat-food">Food: <span class="value" id="food-value">2</span></div>
+          <div class="stat" id="stat-favor">Favor: <span class="value" id="favor-value">0</span></div>
+          <div class="stat" id="stat-level">Level: <span class="value" id="level-value">1</span></div>
+          <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
         </div>
-    </div>
-    <div class="player-inventory-log-row" style="display: flex; flex-direction: row; width: 100%; max-width: 1200px; margin: 2em auto 0 auto; gap: 2em; align-items: flex-start;">
-      <div id="player-cards-col" style="flex: 1 1 0; min-width: 180px; display: flex; flex-direction: column; align-items: flex-start;">
-        <div id="player-cards-row">
-          <div id="race-card-display" class="card">
+      </div>
+      <!-- Dungeon + Encounter Area -->
+      <div class="dungeon-encounter-col" style="flex:1;display:flex;flex-direction:column;gap:1.5em;">
+        <div class="dungeon-area-container">
+          <div class="dungeon-deck-container">
+            <div class="dungeon-deck-stack" style="display:flex;flex-direction:column;align-items:center;">
+              <div class="dungeon-card deck" id="slot-deck">
+                <img id="deck-card-image" alt="Dungeon Deck Card" style="display:none;">
+              </div>
+              <div class="dungeon-deck-buttons">
+                <button id="resolve-button">Resolve</button>
+                <button id="skip-button">Skip</button>
+                <button id="next-room-btn" style="display:none;">Next Room</button>
+              </div>
+            </div>
+            <div class="dungeon-card room" id="slot-room">
+              <img id="room-card-image" alt="Dungeon Room Card" style="display:none;">
+            </div>
+            <div class="dungeon-card result" id="slot-result">
+              <img id="result-card-image" alt="Dungeon Result Card" style="display:none;">
+            </div>
+            <div class="dungeon-card discard" id="slot-discard">
+              <img id="discard-room-image" alt="Discarded Room Card" style="display:none;">
+              <img id="discard-result-image" alt="Discarded Result Card" style="display:none;">
+            </div>
+          </div>
+        </div>
+        <div class="encounter-container" style="background-image: url('assets/ui/bg_encounter.png'); object-fit: scale-down; background-size: cover; background-position: center; background-blend-mode: multiply;">
+          <div id="combat-area"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom: Player/Inventory/Log Row -->
+    <section class="bottom-row" style="display:flex;flex-direction:row;gap:2em;width:100%;align-items:flex-start;">
+      <!-- Player Cards -->
+      <div class="player-card-container" style="flex:1;min-width:200px;display:flex;flex-direction:column;align-items:center;">
+        <div id="player-cards-row" style="display:flex;flex-direction:row;gap:1em;">
+          <div id="race-card-display" class="player-card">
             <img id="race-card-image" alt="Race Card">
           </div>
-          <div id="class-card-display" class="card">
+          <div id="class-card-display" class="player-card">
             <img id="class-card-image" alt="Class Card">
           </div>
         </div>
       </div>
-      <div id="inventory-col" style="flex: 1 1 0; min-width: 180px; display: flex; flex-direction: column; align-items: center;">
-        <div id="inventory-section"></div>
+      <!-- Inventory Cards -->
+      <div class="inventory-container" style="flex:2;min-width:220px;display:flex;flex-direction:column;align-items:center;">
+        <div id="inventory-section" style="display:flex;flex-wrap:wrap;gap:1em;justify-content:center;align-items:flex-start;max-width:340px;"></div>
       </div>
-      <div id="session-log-col" style="flex: 1 1 0; min-width: 180px; display: flex; flex-direction: column; align-items: flex-end;">
-        <div id="session-log" style="width: 100%;/* max-width: 260px; */min-width: 140px;height: 180px;overflow-y: auto;background: #222;color: #fff;font-size: 0.95em;font-family: monospace;/* padding: 0.5em; */border-radius: 12px;box-shadow: 0 2px 8px rgba(0,0,0,0.08);/* margin-left: auto; */scrollbar-width: none;">
-          <!-- Session log will appear here -->
-        </div>
+      <!-- Log -->
+      <div class="log-container" style="flex:1;min-width:180px;display:flex;flex-direction:column;align-items:flex-end;">
+        <div id="session-log" style="width:100%;min-width:140px;height:180px;overflow-y:auto;font-size:0.95em;font-family:monospace;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);scrollbar-width:none;"></div>
       </div>
-    </div>
-    <!-- Character Selection Modal (hidden by default, injected by JS) -->
-    <div id="character-modal-root"></div>
-    <!-- Card Zoom Overlay (reusable for any card) -->
-    <div id="card-zoom-overlay" style="display:none;">
-      <img id="card-zoom-img" src="" alt="Card Zoom" />
-    </div>
-    <script src="scripts/main.js" type="module"></script>
-    <footer>&copy; 2025 Tin Helm Web</footer>
+    </section>
+  </main>
+
+  <!-- Character Selection Modal (hidden by default, injected by JS) -->
+  <div id="character-modal-root"></div>
+  <!-- Card Zoom Overlay (reusable for any card) -->
+  <div id="card-zoom-overlay" style="display:none;">
+    <img id="card-zoom-img" src="" alt="Card Zoom" />
+  </div>
+  <script src="scripts/main.js" type="module"></script>
+  <!-- Footer -->
+  <footer>&copy; 2025 Tin Helm Web</footer>
 </body>
 </html>

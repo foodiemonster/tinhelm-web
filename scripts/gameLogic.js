@@ -903,7 +903,7 @@ for (const item of gameState.inventory) {
         }
     }
 }
-let currentEnemyHealth = typeof enemyHp === 'number' ? enemyHp : enemyCard.health;
+let currentEnemyHealth = typeof enemyHp === 'number' ? enemyHp : enemyCard.health + gameState.level;
 let isPlayerTurn = true;
 let combatOver = false;
 let axeRerollUsed = false;
@@ -1380,7 +1380,7 @@ for (const item of gameState.inventory) {
         }
     }
 }
-let currentEnemyHealth = enemyCard.health;
+let currentEnemyHealth = enemyCard.health + gameState.level;
 let isPlayerTurn = true;
 let combatOver = false;
 let axeRerollUsed = false;

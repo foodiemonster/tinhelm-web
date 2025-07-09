@@ -227,7 +227,6 @@ button:hover, input:hover, select:hover, textarea:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 0;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
@@ -280,7 +279,6 @@ button:hover, input:hover, select:hover, textarea:hover {
   max-height: 100%;
   object-fit: cover; /* Use cover to fill the space, or contain if aspect ratio is critical */
   box-sizing: border-box;
-  border-radius: 0; /* Remove any default border-radius from .card */
 }
 
 .dungeon-slot > #deck-placeholder { /* Target the deck placeholder specifically */
@@ -770,6 +768,25 @@ button:hover, input:hover, select:hover, textarea:hover {
 .tracker-cube.enemy { background: #34495e; border: 2px solid #fff; }
 
 /* #trackers-row is no longer needed as #trackers-col is now a grid container */
+
+/* Set border-radius for all cards and areas except player cards and tracker card area */
+.card, .card-small, .card-inventory, .modal-card, .combat-card, .responsive-card, .inventory-card,
+.area1, .area2, .encounter-area, #inventory-section,
+.dungeon-slot, .card-slot,
+.modal-content, .combat-modal-content, .responsive-modal {
+  border-radius: 12px;
+}
+
+.card-slot { 
+  overflow: clip;
+}
+
+/* Exceptions: Player cards and tracker card area */
+#player-cards-row .card,
+.tracker-card-wrapper,
+.tracker-card {
+  border-radius: 0 !important;
+}
 
 /* --- Sandwich menu styles --- */
 #sandwich-menu {

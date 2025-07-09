@@ -16,7 +16,7 @@ const gameState = {
     },
     // Progression
     level: 1,
-    currentRoom: 0,
+    currentRoom: 0, // New games begin with Dungeon Level set to 1, and room count resets per level
     turn: 0,
     timestamp: Date.now(),
     // Inventory (array of card objects or IDs)

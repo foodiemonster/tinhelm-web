@@ -170,4 +170,17 @@ function getAllCardsData() {
     return allCards;
 }
 
-export { DungeonCard, EnemyCard, LootCard, TrapCard, RaceCard, ClassCard, TrappingsCard, loadCardData, drawCard, getCardById, dungeonDeck, dungeonResultDeck, getAllCardsData };
+function resetDungeonDecks() {
+    // Clear existing decks
+    dungeonDeck.length = 0;
+    dungeonResultDeck.length = 0;
+
+    // Repopulate and shuffle from allCards data
+    const roomCards = Object.values(allCards).filter(card => card.id && card.id.startsWith('ROO'));
+    const resultCards = Object.values(allCards).filter(card => card.id && card.id.startsWith('RES'));
+
+    Array.prototype.push.apply(dungeonDeck, shuffleArray([...roomCards]));
+    Array.prototype.push.apply(dungeonResultDeck, shuffleArray([...resultCards]));
+}
+
+export { DungeonCard, EnemyCard, LootCard, TrapCard, RaceCard, ClassCard, TrappingsCard, loadCardData, drawCard, getCardById, dungeonDeck, dungeonResultDeck, getAllCardsData, resetDungeonDecks };

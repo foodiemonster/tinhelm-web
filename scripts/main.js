@@ -2,7 +2,7 @@ import {
     loadCardData, getCardById, getAllCardsData, RaceCard, ClassCard
 } from './data/cards.js';
 import {
-    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent, advanceToNextRoom
+    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent
 } from './gameLogic.js';
 import { saveGame, loadGame } from './gameState.js';
 import { showCharacterModal } from './ui.characterModal.js';
@@ -148,7 +148,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextRoomBtn.addEventListener('click', () => {
             nextRoomBtn.disabled = true;
             nextRoomBtn.style.display = 'none';
-            advanceToNextRoom();
+            // The logic for advancing to the next room is now handled within gameLogic.js
+            // by the endDungeonLevel and handleRoom functions.
+            // This button's click listener is no longer needed here.
         });
     }
 });

@@ -1,4 +1,4 @@
-import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData } from './data/cards.js';
+import { drawCard, dungeonDeck, dungeonResultDeck, getCardById, getAllCardsData, resetDungeonDecks } from './data/cards.js';
 import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, displayEnemyCard, hideEnemyCard, awaitPlayerRoomDecision, updateStatDisplay, displayInventory, displayDiscardPile, displayDeckRoomCard, updateAllTrackerCubes } from './ui.js';
 import { gameState, saveGame } from './gameState.js';
 import { showCombatBoard, hideCombatBoard } from './ui.combatBoard.js';
@@ -214,8 +214,12 @@ async function handleRoom() {
         logEvent(`Entering Room ${gameState.currentRoom}`);
         logEvent(`Room Card: ${roomCard.name}, Result Card: ${resultCard.name}`);
         await resolveIcons(roomCard, resultCard);
-        if (gameState.currentRoom === 6) {
-            endDungeonLevel();
+        gameState.currentRoom++; // Increment room counter after resolving icons
+
+        // After all icons are resolved, check if the level is complete
+        if (gameState.currentRoom >= 6) { // Check if 6 or more rooms are cleared
+            logEvent("Room complete. Dungeon deck cleared. Click 'Next Room' to proceed to next level.");
+            enableNextRoomButton(); // Enable the button to trigger endDungeonLevel
         } else {
             logEvent("Room complete. Click 'Next Room' to continue.");
             enableNextRoomButton();
@@ -229,35 +233,68 @@ async function handleRoom() {
 
 // Function to handle the end of a dungeon level
 // Advances level, consumes food or applies starvation damage, shuffles decks, checks win/loss.
-function endDungeonLevel() {
+async function endDungeonLevel() {
     console.log(`Ending Dungeon Level ${gameState.level}.`);
+    logEvent(`Cleared ${gameState.currentRoom} rooms on Dungeon Level ${gameState.level}.`);
 
-    // 1. Move to the next level
-    gameState.level++;
-    console.log(`Proceeding to Dungeon Level ${gameState.level}.`);
-     // TODO: Update UI to show new dungeon level
-
-    // 2. Consume 1 food
-    console.log("Consuming 1 food.");
-    if (gameState.player.food > 0) {
-        updatePlayerStats('food', -1);
-    } else {
-        updatePlayerStats('hp', -3);
-         // TODO: Check for player defeat after taking damage
+    // Check if we are at the end of the game (Level 5)
+    if (gameState.level >= 5) {
+        // If at Level 5 and cleared rooms, check final win/loss conditions
+        checkWinLossConditions();
+        return; // Game ends here, no further level progression
     }
 
-    // 3. Shuffle the dungeon deck for the next level
-     // We need access to the original room data to recreate and shuffle the deck
-     // Refactor card loading/deck management to allow re-shuffling the main dungeonDeck
-     // Instead of recreating, we will shuffle the existing decks here as part of ending the level.
-    console.log("Re-shuffling Dungeon and Result decks for the next level.");
-    shuffleDeck(dungeonDeck); // Added shuffling
-    shuffleDeck(dungeonResultDeck); // Added shuffling
+    // Prompt to go up a level
+    await new Promise(resolve => {
+        showChoiceModal({
+            title: 'Dungeon Cleared!',
+            message: 'You have cleared all rooms on this level. Do you wish to proceed to the next dungeon level?',
+            choices: [
+                { label: 'Proceed to Next Level', value: 'proceed' }
+            ],
+            onChoice: (choice) => {
+                if (choice === 'proceed') {
+                    // 1. Consume 1 food or take damage
+                    if (gameState.player.food > 0) {
+                        updatePlayerStats('food', -1);
+                        logEvent('Consumed 1 Food to proceed to the next level.');
+                    } else {
+                        updatePlayerStats('hp', -3);
+                        logEvent('No Food available. Suffered 3 HP damage to proceed.');
+                    }
 
-    // 4. Check win/loss conditions after ending the level
-    checkWinLossConditions();
+                    // 2. Increase dungeon level by 1
+                    gameState.level++;
+                    gameState.currentRoom = 0; // Reset room counter for the new level
+                    updateStatDisplay('level', gameState.level);
+                    logEvent(`Proceeding to Dungeon Level ${gameState.level}.`);
 
-    // TODO: Prepare for the next level (e.g., show start of level UI, prompt for first room)
+                    // 3. Reset and reshuffle the dungeon decks
+                    resetDungeonDecks();
+
+                    // 4. Clear discard piles
+                    gameState.discardPile.room = [];
+                    gameState.discardPile.result = [];
+                    displayDiscardPile(null, null); // Clear discard UI
+
+                    // 5. Clear UI slots
+                    displayDeckRoomCard(null);
+                    displayRoomCard(null);
+                    displayResultCard(null);
+                    hideEnemyCard();
+
+                    logEvent("Dungeon and Result decks have been reset and reshuffled for the new level.");
+                    saveGame();
+                    checkWinLossConditions(); // Check win/loss after level up
+                }
+                resolve();
+            }
+        });
+    });
+
+    // After handling level transition, prepare for the next room
+    logEvent("Ready for the next room. Click 'Next Room' to continue.");
+    enableNextRoomButton();
 }
 
 // Function to check for win or loss conditions
@@ -265,21 +302,21 @@ function endDungeonLevel() {
 function checkWinLossConditions() {
     console.log("Checking win/loss conditions...");
 
-    // Win condition: Gain 3 Shards
-    if (gameState.player.shards >= 3) {
-        showEndgameMessage('Victory! You collected 3 Shards of Brahm and escaped the dungeon!');
-        return true; // Indicate game is over
-    }
-
-    // Loss condition 1: Health drops to 0 or less (already handled in updatePlayerStats, but good to check here too)
+    // Loss condition: Health drops to 0 or less
     if (gameState.player.hp <= 0) {
         showEndgameMessage('Defeat! You have perished in the dungeon.');
         return true; // Indicate game is over
     }
 
-    // Loss condition 2: Complete the 5th level without 3 Shards
-    if (gameState.level > 5 && gameState.player.shards < 3) {
-        showEndgameMessage('Defeat! You reached the end without enough Shards.');
+    // Win condition: Dungeon Level 5, cleared 6 rooms, and 3 Shards
+    if (gameState.level >= 5 && gameState.currentRoom >= 6 && gameState.player.shards >= 3) {
+        showEndgameMessage('Victory! You reached Dungeon Level 5, cleared all rooms, and collected 3 Shards of Brahm!');
+        return true; // Indicate game is over
+    }
+
+    // Loss condition: Reached end of Dungeon Level 5 (cleared 6 rooms) but do not have 3 Shards
+    if (gameState.level >= 5 && gameState.currentRoom >= 6 && gameState.player.shards < 3) {
+        showEndgameMessage('Defeat! You reached the end of Dungeon Level 5 without enough Shards.');
         return true; // Indicate game is over
     }
 
@@ -1572,51 +1609,36 @@ function disableNextRoomButton() {
     const btn = document.getElementById('next-room-btn');
     if (btn && !btn.dataset.bound) {
         btn.addEventListener('click', async () => {
-            if (!gameState.discardPile) gameState.discardPile = { room: [], result: [] };
-            const { roomCardId, resultCardId } = gameState.visibleCards || {};
-            if (roomCardId) gameState.discardPile.room.push(roomCardId);
-            if (resultCardId) gameState.discardPile.result.push(resultCardId);
-            const lastRoomId = gameState.discardPile.room.length > 0 ? gameState.discardPile.room[gameState.discardPile.room.length - 1] : null;
-            const lastRoomCard = lastRoomId ? getCardById(lastRoomId) : null;
-            displayDiscardPile(lastRoomCard);
-            // Hide the enemy card when advancing to the next round
-            hideEnemyCard();
-            // Only clear visible cards/state, do NOT call displayRoomCard(null) or displayResultCard(null) here
+            disableNextRoomButton(); // Disable button immediately to prevent double clicks
+
+            // Discard previous room and result cards
+            discardPreviousRoomAndResult();
+            hideEnemyCard(); // Hide the enemy card when advancing to the next round
+
+            // Clear visible cards/state for the next round/level
             gameState.visibleCards = {
                 ...gameState.visibleCards,
                 roomCardId: null,
                 resultCardId: null,
                 enemyCardId: null
             };
-            gameState.currentRoom = (gameState.currentRoom || 0) + 1;
+            displayRoomCard(null); // Explicitly clear UI for room/result
+            displayResultCard(null);
+
             saveGame();
-            // Now start the next round (handleRoom will clear the slots and show the Deck slot only)
-            await handleRoom();
+
+            if (gameState.currentRoom >= 6) {
+                // If 6 rooms are cleared, it's time to end the level
+                await endDungeonLevel();
+            } else {
+                // Otherwise, just proceed to the next room within the same level
+                await handleRoom();
+            }
         });
         btn.dataset.bound = 'true';
         disableNextRoomButton();
     }
 })();
-
-// Function to advance to the next room (round)
-function advanceToNextRoom() {
-    // Move previous room and result cards to the discard pile
-    if (!gameState.discardPile) gameState.discardPile = { room: [], result: [] };
-    const { roomCardId, resultCardId } = gameState.visibleCards || {};
-    if (roomCardId) gameState.discardPile.room.push(roomCardId);
-    if (resultCardId) gameState.discardPile.result.push(resultCardId);
-
-    // Clear visible cards for the next round
-    gameState.visibleCards = {
-        ...gameState.visibleCards,
-        roomCardId: null,
-        resultCardId: null,
-        enemyCardId: null
-    };
-    saveGame();
-    // Start the next room
-    handleRoom();
-}
 
 /**
  * Simulate rolling two six-sided dice.
@@ -1780,6 +1802,5 @@ export {
     updatePlayerStatsWithItems as updatePlayerStats, 
     restoreGameUIFromState, 
     logEvent, 
-    advanceToNextRoom,
     handleUseItem
 };

@@ -44,12 +44,16 @@
     <div class="layout">
         <div class="area1">
 
-            <header id="player-stats">
+            <header id="player-stats" >
                 <div class="stat" id="stat-hp">HP: <span class="value" id="hp-value">10</span></div>
                 <div class="stat" id="stat-energy">Energy: <span class="value" id="energy-value">5</span></div>
                 <div class="stat" id="stat-food">Food: <span class="value" id="food-value">2</span></div>
                 <div class="stat" id="stat-favor">Favor: <span class="value" id="favor-value">0</span></div>
                 <div class="stat" id="stat-level">Level: <span class="value" id="level-value">1</span></div>
+                <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
+            </header>
+
+            <header id="shard-stats" >
                 <div class="stat" id="stat-shards">Shards: <span class="value" id="shards-value">0</span></div>
             </header>
 
@@ -115,7 +119,7 @@
                     </div>
                 </div>
             </div>
-            <div class="encounter-area">
+                    <div class="encounter-area" style="background-image: url('assets/ui/bg_encounter.png'); object-fit: scale-down; background-size: cover; background-position: center; background-blend-mode: multiply;">
               <div id="combat-area"></div>
             </div>
             <div id="endgame-message" style="display:none; position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #333; padding:2rem; z-index:100; text-align:center; font-size:1.2rem; box-shadow:0 4px 16px rgba(0,0,0,0.2);">

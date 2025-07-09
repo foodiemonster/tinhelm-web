@@ -1416,6 +1416,14 @@ await new Promise((resolve) => {
                 currentEnemyHealth -= damageAfterDefense;
                 message = `Axe Special Attack! Rolled ${d6_1} + ${d6_2} = ${total}. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
                 specialAttack = true;
+
+                if (currentEnemyHealth <= 0) {
+                    message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`
+                    updatePlayerStats('favor', enemyCard.favor);
+                    showRollBtn = false;
+                    isCombatOver = true;
+                    combatOver = true;
+                }
             } else if (usedAbility && usedAbility.type === 'axe-reroll') {
                 useAxeReroll();
                 // Reroll dice

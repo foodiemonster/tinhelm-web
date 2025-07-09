@@ -46,6 +46,18 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                     });
                 }
             }, []);
+            const updateCallback = ({ roll1, roll2, message, showRollBtn, isCombatOver }) => {
+                if (combatRoot._isUnmounted) return;
+                const diceEls = document.querySelectorAll('.combat-die');
+                animateDiceRoll(diceEls, [roll1, roll2], () => {
+                    if (!isMountedRef.current || combatRoot._isUnmounted) return;
+                    setRolls([roll1, roll2]);
+                    setMessage(message);
+                    setShowRollBtn(showRollBtn);
+                    setIsCombatOver(isCombatOver);
+                });
+            };
+
             // Dice roll animation using shared utility
             const handleRoll = () => {
                 setShowRollBtn(false);
@@ -53,17 +65,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                 setRolls([1, 1]);
                 setTimeout(() => {
                     if (combatRoot._isUnmounted) return;
-                    props.onRoll(selectedEnergy, ({ roll1, roll2, message, showRollBtn, isCombatOver }) => { // Pass selectedEnergy
-                        if (combatRoot._isUnmounted) return;
-                        const diceEls = document.querySelectorAll('.combat-die');
-                        animateDiceRoll(diceEls, [roll1, roll2], () => {
-                            if (!isMountedRef.current || combatRoot._isUnmounted) return;
-                            setRolls([roll1, roll2]);
-                            setMessage(message);
-                            setShowRollBtn(showRollBtn);
-                            setIsCombatOver(isCombatOver);
-                        });
-                    });
+                    props.onRoll(selectedEnergy, updateCallback); // Pass selectedEnergy
                 }, 200);
             };
             const canShowAxeReroll = !isCombatOver && props.canUseAxeReroll && props.canUseAxeReroll() && rolls.length === 2 && rolls[0] === rolls[1];
@@ -149,7 +151,7 @@ onClick: () => setSelectedEnergy(Number(energyCost)),
                                 setMessage('Axe Special Attack...');
                                 setTimeout(() => {
                                     if (combatRoot._isUnmounted) return;
-                                    props.onAxeDiscard();
+                                    props.onAxeDiscard(updateCallback);
                                 }, 200);
                             }
                         }, 'Discard Axe for 2d6 Attack') : null,
@@ -162,7 +164,7 @@ onClick: () => setSelectedEnergy(Number(energyCost)),
                                 setMessage('Axe Reroll...');
                                 setTimeout(() => {
                                     if (combatRoot._isUnmounted) return;
-                                    props.onAxeReroll();
+                                    props.onAxeReroll(updateCallback);
                                 }, 200);
                             }
                         }, 'Axe Reroll (once per level)') : null,

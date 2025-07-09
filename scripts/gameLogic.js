@@ -1409,6 +1409,8 @@ await new Promise((resolve) => {
                 discardAxe();
                 const d6_1 = Math.floor(Math.random() * 6) + 1;
                 const d6_2 = Math.floor(Math.random() * 6) + 1;
+                context.roll1 = d6_1;
+                context.roll2 = d6_2;
                 const total = d6_1 + d6_2;
                 const damageAfterDefense = Math.max(0, total - enemyCard.defense);
                 currentEnemyHealth -= damageAfterDefense;

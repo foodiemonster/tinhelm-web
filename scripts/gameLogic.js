@@ -82,8 +82,9 @@ function initializePlayer(raceId, classId) {
         showChoiceModal({
             title: 'Human Bonus',
             message: 'Choose an extra Trapping:',
-            image: raceCard.image,
-            choices: availableTrappings.map(card => ({ label: card.name, value: card.id })),
+            isTrappingGrid: true,
+            raceCardImage: raceCard.image,
+            choices: availableTrappings.map(card => ({ label: card.name, value: card.id, image: card.image })),
             onChoice: (trappingId) => {
                 const chosen = getCardById(trappingId);
                 if (chosen) {

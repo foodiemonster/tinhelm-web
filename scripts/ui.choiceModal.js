@@ -8,7 +8,7 @@ Usage: showChoiceModal({ title, message, choices, onChoice, dieRoll, dieCount, o
 - onRoll: callback(rollValue or [rolls])
 */
 
-export function showChoiceModal({ title = '', message = '', choices = [], onChoice, dieRoll = false, dieCount = 1, onRoll, image }) {
+export function showChoiceModal({ title = '', message = '', choices = [], onChoice, dieRoll = false, dieCount = 1, onRoll, image, isTrappingGrid = false, raceCardImage = null }) {
     console.log("showChoiceModal called for", title || message || "modal");
     // --- FORCE VANILLA JS MODAL FOR DEBUGGING ---
     // if (window.ReactAvailable && window.React && window.ReactDOM) {
@@ -21,19 +21,41 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
     const modal = document.createElement('div');
     modal.id = 'choice-modal';
     modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
-        ${title ? `<h2>${title}</h2>` : ''}
-        ${image ? `<div class="choice-modal-image-wrap"><img src="${image}" alt="${title}" class="choice-modal-image" style="max-width:220px;margin:0.5em auto;display:block;"></div>` : ''}
-        ${message ? `<div class="choice-modal-message">${message}</div>` : ''}
-        ${dieRoll ? `<div class="choice-dice-row" style="margin:1em 0;">${
-            Array.from({ length: dieCount || 1 }).map(() =>
-                `<span class="choice-die" style="font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;">?</span>`
-            ).join('')
-        }<div><button id="choice-roll-btn">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
-        ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
-      </div>
-    `;
+    if (isTrappingGrid && raceCardImage && choices && choices.length) {
+        // Special layout for trapping selection (now 3x3 grid, no labels)
+        modal.innerHTML = `
+          <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
+            ${title ? `<h2>${title}</h2>` : ''}
+            <div class="trapping-modal-flex">
+              <div class="trapping-modal-race-card">
+                <img src="${raceCardImage}" alt="Race Card" class="trapping-modal-race-img" />
+              </div>
+              <div class="trapping-modal-grid">
+                ${choices.map((opt, i) => `
+                  <div class="trapping-modal-card" data-value="${opt.value}">
+                    <img src="${opt.image}" alt="${opt.label}" />
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <button class="modal-confirm-btn" style="margin-top:1.2em;min-width:120px;" disabled>Confirm</button>
+          </div>
+        `;
+    } else {
+        modal.innerHTML = `
+          <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
+            ${title ? `<h2>${title}</h2>` : ''}
+            ${image ? `<div class="choice-modal-image-wrap"><img src="${image}" alt="${title}" class="choice-modal-image" style="max-width:220px;margin:0.5em auto;display:block;"></div>` : ''}
+            ${message ? `<div class="choice-modal-message">${message}</div>` : ''}
+            ${dieRoll ? `<div class="choice-dice-row" style="margin:1em 0;">${
+                Array.from({ length: dieCount || 1 }).map(() =>
+                    `<span class="choice-die" style="font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;">?</span>`
+                ).join('')
+            }<div><button id="choice-roll-btn">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
+            ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
+          </div>
+        `;
+    }
     document.body.appendChild(modal);
     console.log("Modal element added to DOM");
     if (dieRoll) {
@@ -67,7 +89,25 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
             }, 200);
         };
     }
-    if (choices && choices.length) {
+    // --- Trapping grid selection logic ---
+    if (isTrappingGrid && raceCardImage && choices && choices.length) {
+        let selected = null;
+        const cardEls = modal.querySelectorAll('.trapping-modal-card');
+        const confirmBtn = modal.querySelector('.modal-confirm-btn');
+        cardEls.forEach(card => {
+            card.onclick = () => {
+                cardEls.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selected = card.getAttribute('data-value');
+                confirmBtn.disabled = false;
+            };
+        });
+        confirmBtn.onclick = () => {
+            if (selected && onChoice) onChoice(selected);
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        };
+    }
+    if (choices && choices.length && !isTrappingGrid) {
         modal.querySelectorAll('.choice-btn').forEach(btn => {
             btn.onclick = () => {
                 if (modal.parentNode) {

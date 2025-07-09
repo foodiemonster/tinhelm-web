@@ -100,6 +100,7 @@ header, footer {
     align-items: center;
     justify-content: center;
     text-align: center;
+    border-radius: 16px;
 }
 
 /* Make all text inside game-container light for contrast */
@@ -166,7 +167,13 @@ button:hover, input:hover, select:hover, textarea:hover {
 }
 
 #player-stats {
-    display: flex;
+    display: none;
+    justify-content: space-around;
+    margin-bottom: 1rem;
+}
+
+#shard-stats {
+    display:flex;
     justify-content: space-around;
     margin-bottom: 1rem;
 }
@@ -738,8 +745,8 @@ button:hover, input:hover, select:hover, textarea:hover {
 /* Removed debug CSS for .tracker-cube. Restore normal appearance and stacking */
 .tracker-cube {
   position: absolute;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   z-index: 10;
   opacity: 1;
@@ -755,7 +762,7 @@ button:hover, input:hover, select:hover, textarea:hover {
 }
 
 /* Example stat color classes (customize as needed) */
-.tracker-cube.hp { background: #e74c3c; border: 2px solid #fff; }
+.tracker-cube.hp { background: #e74d3cb9; border: 2px solid #fff; }
 .tracker-cube.energy { background: #3498db; border: 2px solid #fff; }
 .tracker-cube.rations { background: #f1c40f; border: 2px solid #fff; }
 .tracker-cube.favor { background: #9b59b6; border: 2px solid #fff; }

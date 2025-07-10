@@ -349,7 +349,7 @@ function showEndgameMessage(message) {
 }
 
 // --- Sequential Icon Processing ---
-// Kick-off function that extracts icons and starts the recursive processor.
+// Kick-off function that extracts icons and processes them in sequence.
 async function resolveIcons(iconCard, legendCard) {
     console.log("Inspecting iconCard in resolveIcons:", JSON.stringify(iconCard, null, 2));
     console.log("Using legendCard in resolveIcons:", JSON.stringify(legendCard, null, 2));
@@ -359,22 +359,13 @@ async function resolveIcons(iconCard, legendCard) {
         return;
     }
     const icons = iconCard.icons.split(',').map(icon => icon.trim());
-    // Return a promise that resolves when all icons are processed
-    return new Promise(resolve => {
-        processNextIcon(icons, legendCard, resolve);
-    });
+    for (const icon of icons) {
+        await processIcon(icon, legendCard);
+    }
 }
 
-// Recursively process icons one at a time, gated by player interaction
-
-// Function to handle Reference Card effects
-async function processNextIcon(icons, legendCard, done) {
-    if (icons.length === 0) {
-        if (typeof done === 'function') done();
-        return;
-    }
-
-    const [icon, ...rest] = icons;
+// Handle a single icon and wait for the associated interaction
+async function processIcon(icon, legendCard) {
     console.log("Resolving icon:", icon);
 
     // Await the action for the current icon before proceeding
@@ -645,9 +636,6 @@ async function processNextIcon(icons, legendCard, done) {
         default:
             console.warn("Unknown icon encountered:", icon);
     }
-
-    // After handling the current icon, process the rest.
-    await processNextIcon(rest, legendCard, done);
 }
 // Applies special effects based on reference card name (Altar, Grove, etc.).
 async function handleReferenceCard(refCard) {

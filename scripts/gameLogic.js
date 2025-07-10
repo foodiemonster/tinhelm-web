@@ -1613,7 +1613,6 @@ if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusD
             };
 
             updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
-            if (isCombatOver) setTimeout(resolve, 500);
         }
 showCombatBoard({
     classCard: classCard,

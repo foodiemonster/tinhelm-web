@@ -57,11 +57,15 @@ export async function showEncounterModal({ title = '', message = '', image, choi
         }
 
         modalArea.innerHTML = `
-            ${title ? `<h2>${title}</h2>` : ''}
-            ${image ? `<div class="encounter-modal-image-wrap"><img src="${image}" alt="${title}" class="encounter-modal-image" style="max-width:220px;margin:0.5em auto;display:block;border-radius:12px;"></div>` : ''}
-            ${message ? `<div class="encounter-modal-message">${message}</div>` : ''}
-            ${dieRollHTML}
-            ${choicesHTML}
+            ${title ? `<h2 style="margin-bottom:0.7em;">${title}</h2>` : ''}
+            <div style="display:flex;flex-direction:row;gap:1.5em;align-items:flex-start;">
+              ${image ? `<div class=\"encounter-modal-image-wrap\" style=\"flex:0 0 220px;\"><img src=\"${image}\" alt=\"${title}\" class=\"encounter-modal-image\" style=\"max-width:220px;margin:0.5em auto;display:block;border-radius:12px;box-shadow:0 2px 12px #0002;\"></div>` : ''}
+              <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;">
+                ${message ? `<div class=\"encounter-modal-message\" style=\"margin-bottom:1em;\">${message}</div>` : ''}
+                ${dieRollHTML}
+                ${choicesHTML}
+              </div>
+            </div>
         `;
 
         encounterArea.appendChild(modalArea);

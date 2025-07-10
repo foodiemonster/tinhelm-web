@@ -42,17 +42,22 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
           </div>
         `;
     } else {
+        // Modern layout: Title on top, card art left, text/buttons right
         modal.innerHTML = `
-          <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
-            ${title ? `<h2>${title}</h2>` : ''}
-            ${image ? `<div class="choice-modal-image-wrap"><img src="${image}" alt="${title}" class="choice-modal-image" style="max-width:220px;margin:0.5em auto;display:block;"></div>` : ''}
-            ${message ? `<div class="choice-modal-message">${message}</div>` : ''}
-            ${dieRoll ? `<div class="choice-dice-row" style="margin:1em 0;">${
-                Array.from({ length: dieCount || 1 }).map(() =>
-                    `<span class="choice-die" style="font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;">?</span>`
-                ).join('')
-            }<div><button id="choice-roll-btn">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
-            ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn modal-confirm-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
+          <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true" style="display:flex;flex-direction:column;align-items:stretch;">
+            ${title ? `<h2 style=\"margin-bottom:0.7em;\">${title}</h2>` : ''}
+            <div style="display:flex;flex-direction:row;gap:1.5em;align-items:flex-start;">
+              ${image ? `<div class=\"choice-modal-image-wrap\" style=\"flex:0 0 220px;\"><img src=\"${image}\" alt=\"${title}\" class=\"choice-modal-image\" style=\"max-width:220px;margin:0.5em auto;display:block;border-radius:12px;box-shadow:0 2px 12px #0002;\"></div>` : ''}
+              <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;">
+                ${message ? `<div class=\"choice-modal-message\" style=\"margin-bottom:1em;\">${message}</div>` : ''}
+                ${dieRoll ? `<div class=\"choice-dice-row\" style=\"margin:1em 0;\">${
+                    Array.from({ length: dieCount || 1 }).map(() =>
+                        `<span class=\"choice-die\" style=\"font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;\">?</span>`
+                    ).join('')
+                }<div><button id=\"choice-roll-btn\">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
+                ${choices && choices.length ? `<div class=\"choice-modal-actions\" style=\"margin-top:1em;\">${choices.map(opt => `<button class=\"choice-btn modal-confirm-btn\" data-value=\"${opt.value}\">${opt.label}</button>`).join('')}</div>` : ''}
+              </div>
+            </div>
           </div>
         `;
     }

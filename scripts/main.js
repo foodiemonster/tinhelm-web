@@ -2,7 +2,7 @@ import {
     loadCardData, getCardById, getAllCardsData, RaceCard, ClassCard
 } from './data/cards.js';
 import {
-    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState, logEvent
+    initializePlayer, startDungeonLevel, handleRoom, updatePlayerStats, restoreGameUIFromState
 } from './gameLogic.js';
 import { saveGame, loadGame } from './gameState.js';
 import { showCharacterModal } from './ui.characterModal.js';

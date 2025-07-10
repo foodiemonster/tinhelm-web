@@ -10,7 +10,7 @@ import { applyPassiveEffects, promptForActiveAbilities } from './gameLogic.trapp
 
 // --- Session Log ---
 function logEvent(message) {
-    hideCombatBoard(); // Unmount React components before showing new modal
+    // Only log the message without affecting the encounter modal
     if (!gameState.log) gameState.log = [];
     const timestamp = new Date().toLocaleTimeString();
     gameState.log.push(`[${timestamp}] ${message}`);
@@ -18,7 +18,6 @@ function logEvent(message) {
 }
 
 function updateLogUI() {
-    hideCombatBoard(); // Unmount React components before showing new modal
     const logPanel = document.getElementById('session-log');
     if (!logPanel) return;
     logPanel.innerHTML = gameState.log.slice(-100).map(msg => `<div>${msg}</div>`).join('');
@@ -1111,7 +1110,6 @@ if (!specialAttack) {
 // Function to update player stats (can be used by icon handlers)
 // Updates a stat, clamps values, updates UI, checks for defeat, and saves state.
 function updatePlayerStats(stat, amount) {
-    hideCombatBoard(); // Unmount React components before showing new modal
     if (gameState.player.hasOwnProperty(stat)) {
         gameState.player[stat] += amount;
         // Ensure stats don't go below zero or above max (for health and energy)
@@ -1762,7 +1760,6 @@ window.processTrappingUse = processTrappingUse;
 // Example: Call after updating player stats (for passive triggers like on_receive_damage)
 const _originalUpdatePlayerStats = updatePlayerStats;
 function updatePlayerStatsWithItems(stat, amount) {
-    hideCombatBoard(); // Unmount React components before showing new modal
     // Before stat update: check for on_receive_damage
     if (stat === 'hp' && amount < 0) {
         processAllItemEffects({ trigger: 'on_receive_damage', damage: Math.abs(amount) });

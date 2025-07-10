@@ -222,15 +222,19 @@ async function handleRoom() {
     if (roomCard && resultCard) {
         logEvent(`Entering Room ${gameState.currentRoom}`);
         logEvent(`Room Card: ${roomCard.name}, Result Card: ${resultCard.name}`);
-        await resolveIcons(roomCard, resultCard);
-        gameState.currentRoom++; // Increment room counter after resolving icons
+        try {
+            await resolveIcons(roomCard, resultCard);
+        } catch (err) {
+            console.error("Error resolving room icons:", err);
+        } finally {
+            gameState.currentRoom++; // Increment room counter after resolving icons
 
-        // After all icons are resolved, check if the level is complete
-        if (gameState.currentRoom >= 6) { // Check if 6 or more rooms are cleared
-            logEvent("Room complete. Dungeon deck cleared. Click 'Next Room' to proceed to next level.");
-            enableNextRoomButton(); // Enable the button to trigger endDungeonLevel
-        } else {
-            logEvent("Room complete. Click 'Next Room' to continue.");
+            // After all icons are resolved, check if the level is complete
+            if (gameState.currentRoom >= 6) { // Check if 6 or more rooms are cleared
+                logEvent("Room complete. Dungeon deck cleared. Click 'Next Room' to proceed to next level.");
+            } else {
+                logEvent("Room complete. Click 'Next Room' to continue.");
+            }
             enableNextRoomButton();
         }
     } else {

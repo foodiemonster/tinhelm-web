@@ -504,6 +504,7 @@ async function processNextIcon(icons, legendCard, done) {
                         image: gillNetCard.image,
                         dieRoll: true,
                         dieCount: 3,
+                        requireContinue: true,
                         onRoll: rolls => {
                             const s = rolls.filter(r => r >= 4).length;
                             if (s > 0) {
@@ -523,6 +524,7 @@ async function processNextIcon(icons, legendCard, done) {
                         message: 'You found a water source. Roll a die: on a 4+, you gain 1 Ration.',
                         dieRoll: true,
                         dieCount: 1,
+                        requireContinue: true,
                         onRoll: roll => {
                             if (roll >= 4) {
                                 updatePlayerStats('food', 1);
@@ -698,6 +700,7 @@ async function handleReferenceCard(refCard) {
                     message: 'The air hums with ancient energy. Roll a die to see what the grove provides.',
                     image: refCard.image,
                     dieRoll: true,
+                    requireContinue: true,
                     onRoll: (roll) => {
                         let foodGained = 0;
                         if (roll === 1) {
@@ -1388,6 +1391,7 @@ async function processAllItemEffects(eventContext) {
                                     message: 'You can use your Toolkit to try and disarm the trap. Roll a die: a 4+ means you succeed!',
                                     image: item.image,
                                     dieRoll: true,
+                                    requireContinue: true,
                                     onRoll: (roll) => {
                                         if (roll >= 4) {
                                             eventContext.trapContext.bypassed = true;

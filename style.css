@@ -1,596 +1,40 @@
-/* Basic mobile-first styles for Tin Helm Web scaffolding */
+/* =====================
+   Tin Helm Web Stylesheet Refactor
+   ===================== */
+
+/* ====== Base Styles ====== */
 body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #3b3b3b; /* Changed to light background as per wireframe */
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-header, footer {
-    background: #1f1f1f;
-    color: #fff;
-    padding: 1em;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
-}
-
-.layout {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 1em;
-    flex: 1; /* Allow layout to grow and fill space */
-}
-
-.area1 {
-    flex: 1 1 300px;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-}
-
-.area2 {
-    flex: 2 1 500px;
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-    padding-left: 1em;
-}
-
-/* Remove the old #game-container styles as it's no longer used for layout */
-/* #game-container { ... } */
-
-
-.card-small {
-    height: auto;
-    aspect-ratio: 9 / 14;
-    background: #fff;
-    border: 1px solid #aaa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.card-inventory {
-    height: auto;
-    aspect-ratio: 10 / 14;
-    background: #ddd;
-    border: 1px solid #aaa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.dungeon-area {
-    display: grid;
-    gap: 0.5em;
-}
-
-.dungeon-row {
-    display: flex;
-    gap: 0.5em;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.card-slot {
-    width: auto;
-    aspect-ratio: 10 / 14;
-    background: #505050;
-    border: 1px dashed #aaa;
-    display: flex;
-    /* Removed align-items: center; and justify-content: center; to prevent stretching */
-    text-align: center;
-    flex: 1 1 100px;
-    max-width: 120px;
-}
-
-.encounter-area {
-    min-height: 150px;
-    background: #505050;
-    border: 1px dashed #a8a8a8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    border-radius: 16px;
-}
-
-/* Make all text inside game-container light for contrast */
-#game-container, #game-container * {
-    color: #f1f1f1;
-}
-
-/* Adjust input/button backgrounds for dark mode */
-button, input, select, textarea {
-    background: #181a1b;
-    color: #f1f1f1;
-    border: 1px solid #555;
-}
-button:hover, input:hover, select:hover, textarea:hover {
-    background: #23272b;
-    border-color: #888;
-}
-
-/* Adjust modal backgrounds for dark mode */
-.modal-content, .combat-modal-content, .responsive-modal {
-    background: #23272b;
-    max-width: 600px;
-    width: 90%;
-    margin: 5vh auto;
-    padding: 2em 1.5em;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #f1f1f1;
-}
-
-/* Adjust inventory and card backgrounds for dark mode */
-#inventory-section {
-    background: #181a1b;
-    border: 1.5px solid #444;
-}
-.card, .inventory-card, .tracker-card {
-    background: #181a1b;
-    color: #f1f1f1;
-    border: 1px solid #555;
-}
-
-/* Adjust sandwich menu for dark mode */
-#sandwich-menu, .sandwich-icon, #sandwich-dropdown {
-    background: #23272b;
-    color: #f1f1f1;
-    border: 1.5px solid #444;
-}
-#sandwich-dropdown button {
-    background: none;
-    color: #f1f1f1;
-}
-#sandwich-dropdown button:hover {
-    background: #181a1b;
-}
-
-/* Adjust log panel for dark mode */
-#session-log {
-    background: #181a1b;
-    color: #f1f1f1;
-    border: 1px solid #444;
-}
-
-#player-stats {
-    display: none;
-    justify-content: space-around;
-    margin-bottom: 1rem;
-}
-
-#shard-stats {
-    display:flex;
-    justify-content: space-around;
-    margin-bottom: 1rem;
-}
-
-#save-load-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-#save-load-buttons button {
-    padding: 0.5rem 1rem;
-}
-
-.stat {
-    font-size: 0.9rem;
-}
-
-#dungeon-area {
-    display: none; /* Hidden by default */
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 700px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    padding: 0;
-}
-
-.hidden {
-    display: none !important;
-}
-
-#deck-placeholder {
-    width: 100px;
-    height: 150px;
-    border: 2px dashed #9999993d;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 1rem;
-    color: #666;
-}
-
-.card {
-    width: 200px;
-    height: 300px;
-    border: 1px solid #333;
-    background-color: #9999993d;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-/* Ensure images fill the card area while respecting rounded corners */
-.card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-#dungeon-slots {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap; /* Force horizontal row on desktop */
-    justify-content: center;
-    align-items: flex-end;
-    width: 100%;
-    max-width: 900px;
-    margin: 1.5em auto 0 auto;
-    gap: 1vw;
-    box-sizing: border-box;
-}
-@media (max-width: 700px) {
-  #dungeon-slots {
-    flex-wrap: wrap; /* Allow wrapping on mobile */
-    justify-content: center;
-  }
-}
-.dungeon-slot {
-  width: 200px !important;
-  height: 300px !important;
-  min-width: 200px !important;
-  max-width: 200px !important;
-  min-height: 300px !important;
-  max-height: 300px !important;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 0.5vw;
-  box-sizing: border-box;
-  flex: 0 0 auto !important;
-}
-.dungeon-slot > img { /* Target images directly inside dungeon-slot */
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover; /* Use cover to fill the space, or contain if aspect ratio is critical */
-  box-sizing: border-box;
-}
-
-.dungeon-slot > #deck-placeholder { /* Target the deck placeholder specifically */
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 0;
-  min-height: 0;
-  max-width: 100%;
-  max-height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Ensure images inside deck-placeholder also scale correctly */
-#deck-placeholder img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block;
+  font-family: sans-serif;
   margin: 0;
   padding: 0;
-}
-@media (max-width: 700px) {
-  .dungeon-slot {
-    width: 120px !important;
-    height: 180px !important;
-    min-width: 120px !important;
-    max-width: 120px !important;
-    min-height: 180px !important;
-    max-height: 180px !important;
-    margin-bottom: 1em;
-  }
-}
-@media (max-width: 1100px) {
-  #dungeon-slots {
-    max-width: 98vw;
-    gap: 1.5vw;
-  }
-  .dungeon-slot {
-    flex-basis: 24%;
-    min-width: 120px;
-    max-width: 180px;
-  }
-}
-@media (max-width: 700px) {
-  #dungeon-slots {
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-    gap: 2vw;
-  }
-  .dungeon-slot {
-    flex-basis: 48%;
-    min-width: 90px;
-    max-width: 140px;
-    margin-bottom: 1em;
-  }
-}
-#discard-pile-display {
-    position: relative;
-}
-#discard-pile-display img {
-    width: 48px;
-    height: 72px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #888;
-    margin: 2px;
-    background: #ccc;
-}
-#deck-placeholder {
-    margin-bottom: 0;
-}
-
-/* Character Selection Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(20,20,20,0.65); /* Subtle dark overlay, not solid grey */
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.modal-content {
-    background: #23272b;
-    border-radius: 16px;
-    padding: 2em 2em 1em 2em;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    min-width: 340px;
-    max-width: 90vw;
-    text-align: center;
-    position: relative;
-}
-.card-row {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 1.5em;
-    margin: 1.5em 0 1em 0;
-}
-.modal-card {
-    width: 180px;
-    height: 270px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-    background: #eee;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    border: 2px solid transparent;
-}
-.modal-card.selected {
-    border: 2px solid #a00;
-    box-shadow: 0 0 16px 2px #a00;
-    transform: scale(1.08) rotate(-2deg);
-}
-.modal-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 10px;
-}
-.card-label {
-    font-size: 1em;
-    font-weight: bold;
-    margin: 0.5em 0 0.7em 0;
-    color: #222;
-}
-.modal-actions {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 1.5em;
-    margin-top: 1em;
-}
-#character-modal {
-    z-index: 2000;
-}
-
-/* Combat Modal Styles */
-.combat-modal-content {
-    background: #23272b;
-    border-radius: 16px;
-    padding: 2em 2em 1em 2em;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    min-width: 400px;
-    max-width: 95vw;
-    text-align: center;
-    position: relative;
-}
-.combat-cards-row {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 2em;
-    margin-bottom: 1em;
-}
-.combat-card {
-    width: 180px;
-    height: 270px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-    background: #eee;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #888;
-    position: relative;
-}
-.combat-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 10px;
-}
-/* Removed .mini-card styles as enemy card in combat modal should match player card size */
-/* .mini-card {
-    width: 90px;
-    height: 140px;
-    margin: 0 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    border-radius: 8px;
-    overflow: hidden;
-}
-.mini-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-} */
-.combat-vs {
-    font-size: 2.2em;
-    font-weight: bold;
-    color: #a00;
-    align-self: center;
-}
-#combat-area .combat-die {
-    display: inline-block;
-    font-size: 2em;
-    font-weight: bold;
-    margin: 0 0.5em;
-    padding: 0.2em 0.5em;
-    background: #f5f5f5; /* Original light background for dice */
-    color: #000 !important; /* Ensure die number is dark on light background */
-    border-radius: 8px;
-    border: 2px solid #aaa;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-.combat-message {
-    font-size: 1.1em;
-    margin: 1em 0 0.5em 0;
-    min-height: 2em;
-}
-.combat-actions {
-    margin-top: 1em;
-}
-
-/* Responsive modal and card styles for React-friendly, mobile-first design */
-
-.responsive-modal {
-  max-width: 93%;
-  width: max-content;
-  /* min-width: 0; */
-  box-sizing: border-box;
-  padding: 2em 1.5em;
-  border-radius: 16px;
-  background: #23272b;
-  color: #f1f1f1;
-  margin: 5vh auto;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  background: #3b3b3b;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  min-height: 100vh;
 }
-
-.responsive-cards-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 2vw;
-  flex-wrap: wrap;
-}
-
-.responsive-card {
-  width: 22vw;
-  max-width: 180px;
-  min-width: 90px;
-  aspect-ratio: 5/7;
-  background: #181818;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+header, footer {
+  background: #1f1f1f;
+  color: #fff;
+  padding: 1em;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 0 0.5vw;
+  justify-content: space-between;
+  gap: 1em;
 }
 
-.responsive-card-img {
-  width: 100%;
-  height: auto;
-  max-height: 28vh;
-  object-fit: contain;
-  border-radius: 8px;
-}
+/* ====== Container Styles ====== */
 
-#player-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-#player-area-row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
+/* Tracker Container */
+.tracker-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0;
-  margin-bottom: 2.5rem;
-}
-
-#player-cards-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%; /* Adjusted for area1 */
-}
-
-#trackers-col {
-  display: grid; /* Use grid for 2x2 layout */
-  grid-template-columns: repeat(2, 1fr); /* Two columns, equal width */
-  gap: 0; /* Gap between tracker cards */
   align-items: start;
   justify-content: center;
-  margin-left: 0;
-  margin-bottom: 0;
 }
 
-/* #trackers-row is no longer needed as #trackers-col is now a grid container */
-
-#player-cards-row {
+/* Player Card Container */
+.player-card-container {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -599,28 +43,13 @@ button:hover, input:hover, select:hover, textarea:hover {
   margin-bottom: 1.2rem;
 }
 
-#player-cards-row .card {
-  border: 1.5px solid #222;
-  background: #181a1b;
-  color: #f1f1f1;
-}
-
-#player-cards-row .card:first-child {
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
-}
-#player-cards-row .card:last-child {
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
-
-#inventory-section {
-  width: 100%; /* Adjusted for area1 */
+/* Inventory Container */
+.inventory-container {
+  width: 100%;
   min-height: 110px;
   background: #505050;
   border: 1px dashed #a8a8a8;
   border-radius: 14px;
-  margin: 0 auto 0 auto;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -628,17 +57,115 @@ button:hover, input:hover, select:hover, textarea:hover {
   gap: 0.7em;
   box-sizing: border-box;
   padding: 0.7em 1em;
-  transition: width 0.2s;
 }
 
-.inventory-card {
-  width: auto; /* Make responsive */
-  flex: 1 1 auto; /* Allow shrinking/growing */
-  max-width: 100px; /* Max size for inventory cards */
-  height: 150px;
+/* Log Container */
+.log-container {
+  background: #181a1b;
+  color: #f1f1f1;
+  border: 1px solid #444;
+  padding: 1em;
   border-radius: 10px;
-  border: none;
+  margin: 1em 0;
+}
+
+/* Dungeon Area Container */
+.dungeon-area-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Dungeon Deck Containers */
+.dungeon-deck-container,
+.dungeon-room-container,
+.dungeon-result-container,
+.dungeon-discard-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start; /* Align all dungeon slots to the top */
+  justify-content: center;
+  gap: 1vw;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Encounter/Combat Container */
+.encounter-container,
+.combat-container {
+  min-height: 150px;
+  background: #505050;
+  border: 1px dashed #a8a8a8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 16px;
+  margin: 1em 0;
+}
+
+/* ====== Card Styles ====== */
+
+/* --- Tracker Card --- */
+.tracker-card {
+  width: 200px;
+  height: 300px;
+  background: #111;
+  color: #fff;
+  border: 2px solid #1a1a1a;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.tracker-cube {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  z-index: 10;
+  opacity: 1;
+  border: 2px solid #fff;
+}
+.tracker-cube.hp { background: #e74d3cb9; }
+.tracker-cube.energy { background: #3498db; }
+.tracker-cube.rations { background: #f1c40f; }
+.tracker-cube.favor { background: #9b59b6; }
+.tracker-cube.dungeon { background: #2ecc71; }
+.tracker-cube.enemy { background: #34495e; }
+
+/* --- Player Card (Race/Class) --- */
+.player-card {
+  width: 200px;
+  height: 300px;
+  background: #181a1b;
+  color: #f1f1f1;
+  border: 2px solid #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* --- Inventory Card (Loot/Trappings) --- */
+.inventory-card {
+  width: 100px;
+  height: 150px;
   background: #eee;
+  color: #222;
+  border: 1.5px solid #888;
+  border-radius: 10px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;
@@ -647,7 +174,6 @@ button:hover, input:hover, select:hover, textarea:hover {
   overflow: hidden;
   margin: 0;
   padding: 0;
-  transition: box-shadow 0.2s, border 0.2s;
   position: relative;
   box-sizing: border-box;
 }
@@ -657,10 +183,7 @@ button:hover, input:hover, select:hover, textarea:hover {
   object-fit: cover;
   border-radius: 10px;
 }
-
-/* Ensure the Use button is always at the bottom of the inventory card */
-.inventory-card .use-btn,
-.inventory-card button.use-btn {
+.inventory-card .use-btn {
   margin-top: auto;
   width: 90%;
   align-self: center;
@@ -674,14 +197,322 @@ button:hover, input:hover, select:hover, textarea:hover {
   cursor: pointer;
   transition: background 0.2s;
 }
-.inventory-card .use-btn:hover,
-.inventory-card button.use-btn:hover {
+.inventory-card .use-btn:hover {
   background: #40916c;
 }
 
-.tracker-card {
-  width: 200px; /* Fixed width to match player cards */
+/* --- Enemy Card --- */
+.enemy-card {
+  width: 180px;
+  height: 270px;
+  background: #222;
+  color: #fff;
+  border: 2px solid #a00;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(160,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* --- Dungeon Card (Deck, Room, Result, Discard) --- */
+.dungeon-card {
+  width: 200px;
   height: 300px;
+  background: #9999993d;
+  color: #222;
+  border: 2px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.dungeon-card.deck { border-color: #2980b9; }
+.dungeon-card.room { border-color: #27ae60; }
+.dungeon-card.result { border-color: #f39c12; }
+.dungeon-card.discard { border-color: #7f8c8d; }
+
+/* --- Event Card (Reference, Altar, Pigman, etc.) --- */
+.event-card {
+  width: 180px;
+  height: 270px;
+  background: #fffbe6;
+  color: #222;
+  border: 2px solid #bfa600;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(191,166,0,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ====== Modal Styles (Character/Choice/Combat) ====== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(20,20,20,0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content, .choice-modal-content, .responsive-modal {
+  background: #23272be7;
+  border-radius: 16px;
+  padding: 1em 1em 1em 1em;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  min-width: 340px;
+  max-width: 90vw;
+  text-align: center;
+  position: relative;
+  color: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.card-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1.5em;
+  margin: 1em 0 1em 0;
+}
+.modal-card {
+  width: 18%;
+  height: 18%;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  background: #1f1f1f;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.modal-card.selected {
+  border: 2px solid #a00;
+  box-shadow: 0 0 16px 2px #a00;
+  transform: scale(1.08) rotate(-2deg);
+}
+.modal-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+}
+.modal-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1.5em;
+  margin-top: 1em;
+}
+
+/* ====== Combat Board Styles ====== */
+.combat-board-area, .encounter-modal-area {
+  background: #181a1b;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+  padding: 1em 1.2em;
+  margin: 0 auto;
+  max-width: 600px;
+  color: #f1f1f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.encounter-modal-area h2 {
+  color: #f1c40f;
+  font-size: 1.3em;
+  margin-bottom: 0.5em;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000a;
+}
+.encounter-modal-message {
+  font-size: 1.1em;
+  margin: 0.5em 0;
+  line-height: 1.5;
+}
+.encounter-modal-actions {
+  margin-top: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8em;
+  justify-content: center;
+}
+.encounter-modal-actions .choice-btn, #encounter-roll-btn {
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1.5px solid #2980b9;
+  background: #23272b;
+  color: #f1f1f1;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.18s, border 0.18s;
+}
+.encounter-modal-actions .choice-btn:hover, #encounter-roll-btn:hover {
+  background: #2980b9;
+  color: #fff;
+  border-color: #fff;
+}
+.combat-board-area h2 {
+  color: #f1c40f;
+  font-size: 1.3em;
+  margin-bottom: 0.2em; /* minimal spacing below title */
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000a;
+}
+.combat-cards-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  margin: 0.05rem 0 0.05rem 0; /* minimal vertical margin */
+  min-height: 60px; /* half the previous min-height */
+}
+.combat-card,
+.combat-card-player,
+.combat-card-enemy {
+  transform-origin: center center;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.combat-card img,
+.combat-card-player img,
+.combat-card-enemy img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.combat-vs {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #f1c40f;
+  align-self: center;
+  text-shadow: 0 2px 8px #000a;
+}
+.combat-dice-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.2em 0 0.1em 0; /* minimal vertical space above/below dice */
+}
+.combat-message {
+  font-size: 1em;
+  margin: 0.2em 0 0.1em 0; /* minimal vertical space */
+  min-height: 1.5em;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 8px #000a;
+}
+.combat-actions {
+  margin-top: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7em;
+  justify-content: center;
+}
+.combat-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2em;
+  height: 100%;
+  justify-content: center;
+  min-width: 180px;
+}
+.combat-actions button,
+.energy-select-btn,
+.combat-ability-btn,
+.combat-close-btn {
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1.5px solid #2980b9;
+  background: #23272b;
+  color: #f1f1f1;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.18s, border 0.18s;
+}
+.combat-actions button:hover,
+.energy-select-btn:hover,
+.combat-ability-btn:hover,
+.combat-close-btn:hover {
+  background: #2980b9;
+  color: #fff;
+  border-color: #fff;
+}
+.combat-energy-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.7em;
+  margin: 0.5em 0 0.2em 0;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Energy row animation for player/enemy turn */
+.combat-energy-row.energy-row-inactive {
+  opacity: 0.5;
+  transform: scale(0.96);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.combat-energy-row.energy-row-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.combat-energy-btn {
+  transition: opacity 0.2s, transform 0.2s, border 0.18s, box-shadow 0.18s, background 0.18s, color 0.18s;
+}
+.combat-energy-btn.selected {
+  border: 2.5px solid #f1c40f;
+  box-shadow: 0 0 16px 4px #f1c40f, 0 0 8px 2px #27c6ff;
+  background: linear-gradient(135deg, #fffbe6 60%, #27c6ff 100%);
+  color: #222;
+  z-index: 2;
+  transform: scale(1.18);
+  transition: border 0.18s, box-shadow 0.18s, background 0.18s, color 0.18s, transform 0.18s;
+}
+
+/* Keyframe animations for energy button selection pop */
+@keyframes energy-btn-pop {
+  0% { transform: scale(1); }
+  60% { transform: scale(1.22); }
+  100% { transform: scale(1.18); }
+}
+@keyframes energy-btn-unpop {
+  0% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.combat-energy-btn.selected {
+  animation: energy-btn-pop 0.18s cubic-bezier(0.4,1.4,0.6,1) both;
+}
+.combat-energy-btn:not(.selected) {
+  animation: energy-btn-unpop 0.18s cubic-bezier(0.4,1.4,0.6,1) both;
+}
+
+/* ====== Utility & Responsive ====== */
+.card img, .player-card img, .enemy-card img, .dungeon-card img, .event-card img, .tracker-card img, .inventory-card img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
   margin: 0;
@@ -713,7 +544,7 @@ button:hover, input:hover, select:hover, textarea:hover {
   top: 0;
   left: 0;
   z-index: 1;
-}
+  }
 .tracker-card-wrapper .tracker-cube {
   position: absolute;
   z-index: 10;
@@ -733,7 +564,7 @@ button:hover, input:hover, select:hover, textarea:hover {
 }
 #trackers-col .tracker-card-wrapper:nth-child(4) { /* Bottom-right */
   border-bottom-right-radius: 12px;
-}
+  }
 
 /* Ensure the image inside also respects the rounded corners */
 .tracker-card-wrapper img {
@@ -759,179 +590,8 @@ button:hover, input:hover, select:hover, textarea:hover {
   z-index: 1;
 }
 
-/* Example stat color classes (customize as needed) */
-.tracker-cube.hp { background: #e74d3cb9; border: 2px solid #fff; }
-.tracker-cube.energy { background: #3498db; border: 2px solid #fff; }
-.tracker-cube.rations { background: #f1c40f; border: 2px solid #fff; }
-.tracker-cube.favor { background: #9b59b6; border: 2px solid #fff; }
-.tracker-cube.dungeon { background: #2ecc71; border: 2px solid #fff; }
-.tracker-cube.enemy { background: #34495e; border: 2px solid #fff; }
-
-/* #trackers-row is no longer needed as #trackers-col is now a grid container */
-
-/* Set border-radius for all cards and areas except player cards and tracker card area */
-.card, .card-small, .card-inventory, .modal-card, .combat-card, .responsive-card, .inventory-card,
-.area1, .area2, .encounter-area, #inventory-section,
-.dungeon-slot, .card-slot,
-.modal-content, .combat-modal-content, .responsive-modal {
-  border-radius: 12px;
-}
-
-.card-slot { 
-  overflow: clip;
-}
-
-/* Exceptions: Player cards and tracker card area */
-#player-cards-row .card,
-.tracker-card-wrapper,
-.tracker-card {
-  border-radius: 0 !important;
-}
-
-/* --- Sandwich menu styles --- */
-#sandwich-menu {
-  position: static;
-  margin-left: auto;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-}
-.sandwich-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  background: #fff;
-  border: 1.5px solid #bbb;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.2s;
-}
-.sandwich-icon:hover {
-  background: #f5f5f5;
-}
-.sandwich-bar {
-  width: 22px;
-  height: 3px;
-  background: #444;
-  margin: 3px 0;
-  border-radius: 2px;
-  transition: background 0.2s;
-}
-#sandwich-dropdown {
-  display: none;
-  position: absolute;
-  top: 44px;
-  right: 0;
-  background: #fff;
-  border: 1.5px solid #bbb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-  min-width: 120px;
-  padding: 0.5em 0.7em;
-  z-index: 20;
-}
-#sandwich-dropdown button {
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 0.6em 0;
-  font-size: 1em;
-  color: #222;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.18s;
-}
-#sandwich-dropdown button:hover {
-  background: #f1f1f1;
-}
-@media (max-width: 900px) {
-  #sandwich-menu {
-    right: 0.7rem;
-    top: 0.7rem;
-  }
-  #sandwich-dropdown {
-    right: 0;
-    min-width: 100px;
-  }
-}
-
-#slot-deck .card, #slot-discard .card {
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-#slot-deck .card img, #slot-discard .card img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block;
-  margin: 0;
-  padding: 0;
-}
-#slot-deck {
-  position: relative;
-  display: flex; /* Make it a flex container */
-  flex-direction: column; /* Stack children vertically */
-  align-items: center; /* Center children horizontally */
-  justify-content: flex-start; /* Align children to the start (top) */
-}
-
-#slot-deck > img { /* Target only the image directly inside slot-deck */
-  width: 100% !important; /* Keep width important for card aspect ratio */
-  height: auto; /* Allow height to adjust based on content and flexbox */
-  min-width: 0;
-  min-height: 0;
-  max-width: 100%;
-  max-height: 100%;
-  box-sizing: border-box;
-  display: block; /* Changed from flex to block for image */
-  object-fit: cover;
-}
-
-#slot-deck > #room-decision-buttons { /* Target the buttons div specifically */
-  flex-shrink: 0; /* Prevent buttons from shrinking */
-}
-
-#slot-deck > #deck-placeholder { /* Keep placeholder styles if needed */
-  width: 100% !important;
-  height: 100% !important; /* Keep height important for placeholder */
-  min-width: 0;
-  min-height: 0;
-  max-width: 100%;
-  max-height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#room-decision-buttons {
-  display: none; /* Hidden by default, will be shown by JS */
-  flex-direction: row;
-  gap: 0.5em;
-  justify-content: center;
-  width: 100%; /* Take full width of parent for centering */
-  margin-top: 0.5em; /* Add space below the card image */
-  box-sizing: border-box;
-}
-#deck-placeholder img, #slot-deck > img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block;
-  margin: 0;
-  padding: 0;
-}
+/* ====== Remove/Override Old Styles ====== */
+/* Remove legacy .card, .card-small, .card-inventory, .combat-card, .responsive-card, .area1, .area2, .encounter-area, #inventory-section, .dungeon-slot, .card-slot, .modal-content, .combat-modal-content, .responsive-modal, etc. styles that are now replaced by the above. */
 
 #card-zoom-overlay {
   display: none;
@@ -945,8 +605,8 @@ button:hover, input:hover, select:hover, textarea:hover {
   display: block;
 }
 #card-zoom-img {
-  width: 100%;
-  height: 100%;
+  width: 260px;
+  height: 390px;
   border-radius: 16px;
   background: #fff;
   object-fit: cover;
@@ -959,4 +619,248 @@ button:hover, input:hover, select:hover, textarea:hover {
     width: 180px;
     height: 270px;
   }
+}
+
+/* ====== Dungeon Deck Button Styles ====== */
+.dungeon-deck-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 0.7em;
+}
+.dungeon-deck-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.7em;
+  margin-top: 0.5em;
+}
+.dungeon-deck-buttons button {
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1.5px solid #2980b9;
+  background: #23272b;
+  color: #f1f1f1;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.18s, border 0.18s;
+}
+.dungeon-deck-buttons button:hover {
+  background: #2980b9;
+  color: #fff;
+  border-color: #fff;
+}
+
+/* ====== Trapping Choice Modal Layout ====== */
+.trapping-modal-flex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2em;
+  margin: 1em 0 0.5em 0;
+}
+.trapping-modal-race-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 450px;
+  min-width: 20%;
+  aspect-ratio: 3 / 5;
+}
+.trapping-modal-race-img {
+  width: 100%;
+  max-width: 100%;
+  height: 450px;
+  aspect-ratio: 3 / 5;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #000a;
+  background: #181a1b;
+}
+.trapping-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.7em;
+  height: 450px;
+  align-items: center;
+  justify-items: center;
+}
+.trapping-modal-card {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 11 / 16;
+  background: #23272b;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #000a;
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+  transition: border 0.18s, box-shadow 0.18s, transform 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+.trapping-modal-card.selected {
+  border: 2.5px solid #a00;
+  box-shadow: 0 0 16px 2px #a00;
+  z-index: 2;
+  /* Default: fallback for legacy, but not used for new logic */
+  transform: scale(1.5);
+}
+/* --- Trapping Modal Card Animations by Grid Position --- */
+/* Top row: animate downward toward center */
+.trapping-modal-card.centered-left-top {
+  transform: scale(1.5) translateX(30%) translateY(10%);
+}
+.trapping-modal-card.centered-center-top {
+  transform: scale(1.5) translateY(10%);
+}
+.trapping-modal-card.centered-right-top {
+  transform: scale(1.5) translateX(-30%) translateY(10%);
+}
+/* Bottom row: animate upward toward center */
+.trapping-modal-card.centered-left-bottom {
+  transform: scale(1.5) translateX(30%) translateY(-10%);
+}
+.trapping-modal-card.centered-center-bottom {
+  transform: scale(1.5) translateY(-10%);
+}
+.trapping-modal-card.centered-right-bottom {
+  transform: scale(1.5) translateX(-30%) translateY(-10%);
+}
+.trapping-modal-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Fill the card, cropping if needed */
+  border-radius: 8px;
+  background: transparent; /* Remove white background */
+}
+/* Remove label for trapping cards */
+.trapping-modal-card-label { display: none !important; }
+.modal-confirm-btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  padding: 0.7em 2em;
+  margin-top: 1.2em;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.modal-confirm-btn:disabled {
+  background: #888;
+  color: #eee;
+  cursor: not-allowed;
+}
+
+/* ====== Sandwich Menu Styles ====== */
+#sandwich-menu {
+  position: absolute;
+  top: 1em;
+  right: 1.5em;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.sandwich-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  background: #23272b;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #000a;
+  transition: background 0.18s;
+}
+.sandwich-icon:hover {
+  background: #2980b9;
+}
+.sandwich-bar {
+  width: 24px;
+  height: 4px;
+  background: #fff;
+  margin: 3px 0;
+  border-radius: 2px;
+  transition: background 0.18s;
+}
+#sandwich-dropdown {
+  display: none;
+  position: absolute;
+  top: 44px;
+  right: 0;
+  background: #23272b;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px #000a;
+  padding: 0.7em 1em;
+  min-width: 120px;
+  z-index: 2100;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+}
+#sandwich-dropdown button {
+  width: 100%;
+  background: #2980b9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6em 0;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 0.3em;
+  transition: background 0.18s;
+}
+#sandwich-dropdown button:hover {
+  background: #1f6fa5;
+}
+@media (max-width: 700px) {
+  #sandwich-menu {
+    top: 0.5em;
+    right: 0.5em;
+  }
+  .sandwich-icon {
+    width: 30px;
+    height: 30px;
+  }
+  #sandwich-dropdown {
+    top: 36px;
+    min-width: 90px;
+    padding: 0.5em 0.5em;
+  }
+  #sandwich-dropdown button {
+    font-size: 0.95em;
+    padding: 0.5em 0;
+  }
+}
+
+/* ====== Pulsing Glow Animation for Tracker Cube ====== */
+@keyframes tracker-cube-glow {
+  0% { box-shadow: 0 0 8px 2px #fff8, 0 0 0px 0px #fff0; }
+  50% { box-shadow: 0 0 24px 8px #fff8, 0 0 8px 2px #fff4; }
+  100% { box-shadow: 0 0 8px 2px #fff8, 0 0 0px 0px #fff0; }
+}
+.tracker-cube {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  z-index: 10;
+  opacity: 1;
+  display: block;
+  pointer-events: auto;
+  animation: tracker-cube-glow 1.8s ease-in-out infinite;
+  /* Color and border will be set by stat-specific classes */
+  transition: transform 0.35s cubic-bezier(0.4,1.4,0.6,1), box-shadow 1.8s ease-in-out;
 }

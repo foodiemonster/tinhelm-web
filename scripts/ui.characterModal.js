@@ -151,8 +151,8 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
                         )
                     ),
                     step === 'class' && window.React.createElement('div', { className: 'modal-actions', id: 'modal-actions', style: { display: 'flex' } },
-                        window.React.createElement('button', { id: 'confirm-selection-btn', onClick: handleConfirm, disabled: !selectedClass }, 'Confirm'),
-                        window.React.createElement('button', { id: 'reselect-btn', onClick: handleReselect }, 'Reselect Race')
+                        window.React.createElement('button', { id: 'confirm-selection-btn', className: 'modal-confirm-btn', onClick: handleConfirm, disabled: !selectedClass }, 'Confirm'),
+                        window.React.createElement('button', { id: 'reselect-btn', className: 'modal-confirm-btn', style: { background: '#888' }, onClick: handleReselect }, 'Reselect Race')
                     )
                 )
             );
@@ -175,8 +175,8 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
         <div class="card-row" id="race-card-row"></div>
         <div class="card-row" id="class-card-row" style="display:none;"></div>
         <div class="modal-actions" id="modal-actions" style="display:none;">
-          <button id="confirm-selection-btn">Confirm</button>
-          <button id="reselect-btn">Reselect Race</button>
+          <button id="confirm-selection-btn" class="modal-confirm-btn" disabled>Confirm</button>
+          <button id="reselect-btn" class="modal-confirm-btn" style="background:#888;">Reselect Race</button>
         </div>
       </div>
     `;
@@ -228,18 +228,10 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
         document.getElementById('modal-actions').style.display = 'none';
     }
 
-    function selectClass(classId) {
-        selectedClassId = classId;
-        Array.from(classRow.children).forEach(cardDiv => {
-            cardDiv.classList.remove('selected');
-            if (cardDiv.getAttribute('data-id') === classId) {
-                cardDiv.classList.add('selected');
-            }
-        });
-        document.getElementById('modal-actions').style.display = 'flex';
-    }
-
     // Confirm and Reselect logic
+    const confirmBtn = modal.querySelector('#confirm-selection-btn');
+    const reselectBtn = modal.querySelector('#reselect-btn');
+    confirmBtn.disabled = true;
     modal.querySelector('#confirm-selection-btn').onclick = () => {
         // Always get the selected class from the selected card's data-id
         const selectedCard = classRow.querySelector('.modal-card.selected');
@@ -260,5 +252,18 @@ export function showCharacterModal(allRaces, allClasses, onConfirm) {
         selectedRaceId = null;
         selectedClassId = null;
         document.getElementById('modal-actions').style.display = 'none';
+        confirmBtn.disabled = true;
     };
+    // Enable confirm button only when a class is selected
+    function selectClass(classId) {
+        selectedClassId = classId;
+        Array.from(classRow.children).forEach(cardDiv => {
+            cardDiv.classList.remove('selected');
+            if (cardDiv.getAttribute('data-id') === classId) {
+                cardDiv.classList.add('selected');
+            }
+        });
+        document.getElementById('modal-actions').style.display = 'flex';
+        confirmBtn.disabled = false;
+    }
 }

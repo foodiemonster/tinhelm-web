@@ -24,7 +24,8 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
             const [message, setMessage] = window.React.useState("");
             const [showRollBtn, setShowRollBtn] = window.React.useState(true);
             const [isCombatOver, setIsCombatOver] = window.React.useState(false);
-            const [selectedEnergy, setSelectedEnergy] = window.React.useState(0); // New state for energy selection
+            const [selectedEnergy, setSelectedEnergy] = window.React.useState(0);
+            const [isPlayerTurn, setIsPlayerTurn] = window.React.useState(true); // Track turn
             const isMountedRef = window.React.useRef(true);
             window.React.useEffect(() => {
                 isMountedRef.current = true;
@@ -55,127 +56,87 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                     setMessage(message);
                     setShowRollBtn(showRollBtn);
                     setIsCombatOver(isCombatOver);
+                    // Toggle turn unless combat is over
+                    if (!isCombatOver) setIsPlayerTurn(turn => !turn);
                 });
             };
-
-            // Dice roll animation using shared utility
-            const handleRoll = () => {
+            const handlePlayerRoll = () => {
                 setShowRollBtn(false);
                 setMessage('Rolling...');
                 setRolls([1, 1]);
                 setTimeout(() => {
                     if (combatRoot._isUnmounted) return;
-                    props.onRoll(selectedEnergy, updateCallback); // Pass selectedEnergy
+                    props.onRoll(selectedEnergy, updateCallback);
                 }, 200);
             };
-            const canShowAxeReroll = !isCombatOver && props.canUseAxeReroll && props.canUseAxeReroll() && rolls.length === 2 && rolls[0] === rolls[1];
-            const canShowAxeDiscard = !isCombatOver && props.canDiscardAxe && props.canDiscardAxe();
-            const energyOptions = [0, 1, 2, 3]; // Energy options
+            const handleEnemyRoll = () => {
+                setShowRollBtn(false);
+                setMessage('Enemy rolling...');
+                setRolls([1, 1]);
+                setTimeout(() => {
+                    if (combatRoot._isUnmounted) return;
+                    props.onRoll(selectedEnergy, updateCallback);
+                }, 200);
+            };
+            const handleEndCombat = () => {
+                if (props.onClose) props.onClose();
+            };
             return window.React.createElement(
                 'section', { className: 'combat-board-area' },
-                window.React.createElement('h2', {}, 'Combat Encounter'),
-                window.React.createElement('div', { className: 'combat-cards-row responsive-cards-row' },
-                    window.React.createElement('div', { className: 'combat-card responsive-card', id: 'combat-class-card' },
-                        window.React.createElement('img', { src: props.classCard.image, alt: props.classCard.name, className: 'combat-card-img responsive-card-img' })
-                    ),
-                    window.React.createElement('div', { className: 'combat-vs' }, 'vs.'),
+                window.React.createElement('h2', {}, 'An enemy has appeared!'),
+                window.React.createElement('div', { className: 'combat-cards-row responsive-cards-row', style: { justifyContent: 'center', alignItems: 'flex-start' } },
                     window.React.createElement('div', { className: 'combat-card responsive-card', id: 'combat-enemy-card' },
                         window.React.createElement('img', { src: props.enemyCard.image, alt: props.enemyCard.name, className: 'combat-card-img responsive-card-img' })
-                    )
-                ),
-                window.React.createElement('div', { className: 'combat-dice-row', id: 'combat-dice-row', style: { margin: '1em 0' } },
-                    rolls.length ? [
-                        window.React.createElement('span', { className: 'combat-die', key: 'die1' }, rolls[0]),
-                        ' ',
-                        window.React.createElement('span', { className: 'combat-die', key: 'die2' }, rolls[1])
-                    ] : null
-                ),
-                window.React.createElement('div', { className: 'combat-message', id: 'combat-message' }, message),
-                window.React.createElement('div', { className: 'combat-actions', id: 'combat-actions' },
-                    showRollBtn && !isCombatOver ?
-                        window.React.createElement('div', { className: 'energy-selection-container', style: { marginBottom: '1em' } },
-                            window.React.createElement('h4', { style: { margin: '0 0 0.5em 0', color: '#eee' } }, 'Energy to Spend:'),
-                            energyOptions.map((energyCost) =>
+                    ),
+                    window.React.createElement('div', { className: 'combat-actions combat-actions-vertical', id: 'combat-actions', style: { marginLeft: '2em', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1.2em', height: '100%', justifyContent: 'center', minWidth: '180px' } },
+                        window.React.createElement('div', { className: 'combat-dice-area', style: { marginBottom: '0.5em' } },
+                            rolls.length ? [
+                                window.React.createElement('span', { className: 'combat-die', key: 'die1' }, rolls[0]),
+                                window.React.createElement('span', { className: 'combat-die', key: 'die2' }, rolls[1])
+                            ] : null
+                        ),
+                        // Stacked buttons, only one visible at a time
+                        window.React.createElement('button', {
+                            id: 'combat-player-roll-btn',
+                            className: 'combat-btn-player',
+                            style: { display: isCombatOver ? 'none' : (isPlayerTurn ? 'block' : 'none'), alignSelf: 'stretch', marginTop: '1.2em' },
+                            onClick: handlePlayerRoll,
+                            disabled: isCombatOver
+                        }, 'Player Roll'),
+                        window.React.createElement('button', {
+                            id: 'combat-enemy-roll-btn',
+                            className: 'combat-btn-enemy',
+                            style: { display: isCombatOver ? 'none' : (!isPlayerTurn ? 'block' : 'none'), alignSelf: 'stretch', marginTop: '1.2em' },
+                            onClick: handleEnemyRoll,
+                            disabled: isCombatOver
+                        }, 'Enemy Roll'),
+                        window.React.createElement('button', {
+                            id: 'combat-end-btn',
+                            className: 'combat-btn-end',
+                            style: { display: isCombatOver ? 'block' : 'none', alignSelf: 'stretch', marginTop: '1.2em' },
+                            onClick: handleEndCombat
+                        }, 'End Combat'),
+                        window.React.createElement('div', {
+                            className: 'combat-energy-row' + (isPlayerTurn ? ' energy-row-active' : ' energy-row-inactive'),
+                            style: { marginBottom: '0.5em', transition: 'opacity 0.2s, transform 0.2s' }
+                        },
+                            [1, 2, 3].map((energyCost) =>
                                 window.React.createElement('button', {
                                     key: `energy-${energyCost}`,
-                                    className: `energy-select-btn ${selectedEnergy === energyCost ? 'selected' : ''}`,
-onClick: () => setSelectedEnergy(Number(energyCost)),
-                                    disabled: energyCost > props.playerEnergy, // Disable if not enough energy
+                                    className: `combat-energy-btn${selectedEnergy === energyCost ? ' selected' : ''}`,
+                                    onClick: () => setSelectedEnergy(selectedEnergy === energyCost ? 0 : energyCost),
+                                    disabled: !isPlayerTurn || energyCost > props.playerEnergy,
                                     style: {
-                                        margin: '0 0.2em',
-                                        padding: '0.5em 1em',
-                                        border: `2px solid ${selectedEnergy === energyCost ? '#FFD700' : '#555'}`,
-                                        borderRadius: '5px',
-                                        background: energyCost > props.playerEnergy ? '#444' : (selectedEnergy === energyCost ? '#FFD700' : '#777'),
-                                        color: energyCost > props.playerEnergy ? '#888' : (selectedEnergy === energyCost ? '#333' : '#fff'),
-                                        cursor: energyCost > props.playerEnergy ? 'not-allowed' : 'pointer',
-                                        fontWeight: 'bold'
+                                        opacity: isPlayerTurn ? 1 : 0.5,
+                                        transform: isPlayerTurn ? 'scale(1)' : 'scale(0.92)',
+                                        transition: 'opacity 0.2s, transform 0.2s'
                                     }
-                                }, `${energyCost} Energy`)
+                                }, energyCost)
                             )
-                        ) : null,
-                    showRollBtn && !isCombatOver ?
-                        window.React.createElement('button', { id: 'combat-roll-btn', onClick: handleRoll }, 'Roll Dice') :
-                        null,
-                    showRollBtn && !isCombatOver && props.abilities && props.abilities.length > 0 ?
-                        props.abilities.map((ab, idx) =>
-                            window.React.createElement('button', {
-                                key: 'ability-' + idx,
-                                className: 'combat-ability-btn',
-                                onClick: () => {
-                                    setShowRollBtn(false);
-                                    setMessage('Using ability...');
-                                    setTimeout(() => {
-                                        if (combatRoot._isUnmounted) return;
-                                        props.onRoll(0, (result) => { // Abilities don't use skill energy, pass 0
-                                            if (combatRoot._isUnmounted) return;
-                                            const diceEls = document.querySelectorAll('.combat-die');
-                                            animateDiceRoll(diceEls, [result.roll1, result.roll2], () => {
-                                                if (!isMountedRef.current || combatRoot._isUnmounted) return;
-                                                setRolls([result.roll1, result.roll2]);
-                                                setMessage(result.message);
-                                                setShowRollBtn(result.showRollBtn);
-                                                setIsCombatOver(result.isCombatOver);
-                                            });
-                                        }, ab);
-                                    }, 200);
-                                }
-                            }, ab.label)
-                        ) : null,
-                    canShowAxeDiscard ?
-                        window.React.createElement('button', {
-                            id: 'combat-axe-discard-btn',
-                            style: { background: '#b71c1c', color: '#fff', marginLeft: '0.5em' },
-                            onClick: () => {
-                                setShowRollBtn(false);
-                                setMessage('Axe Special Attack...');
-                                setTimeout(() => {
-                                    if (combatRoot._isUnmounted) return;
-                                    props.onAxeDiscard(updateCallback);
-                                }, 200);
-                            }
-                        }, 'Discard Axe for 2d6 Attack') : null,
-                    canShowAxeReroll ?
-                        window.React.createElement('button', {
-                            id: 'combat-axe-reroll-btn',
-                            style: { background: '#1976d2', color: '#fff', marginLeft: '0.5em' },
-                            onClick: () => {
-                                setShowRollBtn(false);
-                                setMessage('Axe Reroll...');
-                                setTimeout(() => {
-                                    if (combatRoot._isUnmounted) return;
-                                    props.onAxeReroll(updateCallback);
-                                }, 200);
-                            }
-                        }, 'Axe Reroll (once per level)') : null,
-                    isCombatOver ?
-                        window.React.createElement('button', {
-                            id: 'combat-close-btn',
-                            className: 'combat-close-btn',
-                            style: { marginLeft: '1em', background: '#333', color: '#fff', fontWeight: 'bold' },
-                            onClick: props.onClose
-                        }, 'Close') : null
-                )
+                        )
+                    )
+                ),
+                window.React.createElement('div', { className: 'combat-message', id: 'combat-message' }, message)
             );
         };
         safeRender(window.React.createElement(CombatBoard, { classCard, enemyCard, abilities, canUseAxeReroll, canDiscardAxe, onAxeReroll, onAxeDiscard, onRoll, onClose, playerEnergy }));
@@ -192,12 +153,15 @@ onClick: () => setSelectedEnergy(Number(energyCost)),
 }
 
 export function hideCombatBoard() {
-    const combatRoot = document.getElementById('combat-area');
-    if (combatRoot && combatRoot._reactRootContainer) {
-        combatRoot._isUnmounted = true;
-        try {
-            combatRoot._reactRootContainer.render(window.React.createElement('div'));
-        } catch (e) {}
-    }
-    // Do NOT clear innerHTML or remove the node!
+    return new Promise(resolve => {
+        const combatRoot = document.getElementById('combat-area');
+        if (combatRoot && combatRoot._reactRootContainer) {
+            combatRoot._reactRootContainer.unmount();
+            combatRoot._reactRootContainer = null;
+            // Give React a moment to clean up before resolving
+            setTimeout(resolve, 50); 
+        } else {
+            resolve(); // Resolve immediately if nothing to unmount
+        }
+    });
 }

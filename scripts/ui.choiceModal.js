@@ -8,7 +8,7 @@ Usage: showChoiceModal({ title, message, choices, onChoice, dieRoll, dieCount, o
 - onRoll: callback(rollValue or [rolls])
 */
 
-export function showChoiceModal({ title = '', message = '', choices = [], onChoice, dieRoll = false, dieCount = 1, onRoll, image }) {
+export function showChoiceModal({ title = '', message = '', choices = [], onChoice, dieRoll = false, dieCount = 1, onRoll, image, isTrappingGrid = false, raceCardImage = null }) {
     console.log("showChoiceModal called for", title || message || "modal");
     // --- FORCE VANILLA JS MODAL FOR DEBUGGING ---
     // if (window.ReactAvailable && window.React && window.ReactDOM) {
@@ -21,19 +21,41 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
     const modal = document.createElement('div');
     modal.id = 'choice-modal';
     modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
-        ${title ? `<h2>${title}</h2>` : ''}
-        ${image ? `<div class="choice-modal-image-wrap"><img src="${image}" alt="${title}" class="choice-modal-image" style="max-width:220px;margin:0.5em auto;display:block;"></div>` : ''}
-        ${message ? `<div class="choice-modal-message">${message}</div>` : ''}
-        ${dieRoll ? `<div class="choice-dice-row" style="margin:1em 0;">${
-            Array.from({ length: dieCount || 1 }).map(() =>
-                `<span class="choice-die" style="font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;">?</span>`
-            ).join('')
-        }<div><button id="choice-roll-btn">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
-        ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
-      </div>
-    `;
+    if (isTrappingGrid && raceCardImage && choices && choices.length) {
+        // Special layout for trapping selection (now 3x3 grid, no labels)
+        modal.innerHTML = `
+          <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
+            ${title ? `<h2>${title}</h2>` : ''}
+            <div class="trapping-modal-flex">
+              <div class="trapping-modal-race-card">
+                <img src="${raceCardImage}" alt="Race Card" class="trapping-modal-race-img" />
+              </div>
+              <div class="trapping-modal-grid">
+                ${choices.map((opt, i) => `
+                  <div class="trapping-modal-card" data-value="${opt.value}">
+                    <img src="${opt.image}" alt="${opt.label}" />
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <button class="modal-confirm-btn" style="margin-top:1.2em;min-width:120px;" disabled>Confirm</button>
+          </div>
+        `;
+    } else {
+        modal.innerHTML = `
+          <div class="modal-content choice-modal-content responsive-modal" role="dialog" aria-modal="true">
+            ${title ? `<h2>${title}</h2>` : ''}
+            ${image ? `<div class="choice-modal-image-wrap"><img src="${image}" alt="${title}" class="choice-modal-image" style="max-width:220px;margin:0.5em auto;display:block;"></div>` : ''}
+            ${message ? `<div class="choice-modal-message">${message}</div>` : ''}
+            ${dieRoll ? `<div class="choice-dice-row" style="margin:1em 0;">${
+                Array.from({ length: dieCount || 1 }).map(() =>
+                    `<span class="choice-die" style="font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;">?</span>`
+                ).join('')
+            }<div><button id="choice-roll-btn">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
+            ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
+          </div>
+        `;
+    }
     document.body.appendChild(modal);
     console.log("Modal element added to DOM");
     if (dieRoll) {
@@ -67,15 +89,50 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
             }, 200);
         };
     }
-    if (choices && choices.length) {
-        modal.querySelectorAll('.choice-btn').forEach(btn => {
-            btn.onclick = () => {
-                if (modal.parentNode) {
-                    modal.parentNode.removeChild(modal);
-                    console.log("Modal removed from DOM (choice)");
+    // --- Trapping grid selection logic ---
+    if (isTrappingGrid && raceCardImage && choices && choices.length) {
+        let selected = null;
+        const cardEls = modal.querySelectorAll('.trapping-modal-card');
+        const confirmBtn = modal.querySelector('.modal-confirm-btn');
+        cardEls.forEach((card, idx) => {
+            card.onclick = () => {
+                const wasSelected = card.classList.contains('selected');
+                cardEls.forEach((c, i) => {
+                    c.classList.remove(
+                        'selected',
+                        'centered-left', 'centered-center', 'centered-right',
+                        'centered-left-top', 'centered-center-top', 'centered-right-top',
+                        'centered-left-bottom', 'centered-center-bottom', 'centered-right-bottom'
+                    );
+                });
+                if (wasSelected) {
+                    // Deselect if already selected
+                    selected = null;
+                    confirmBtn.disabled = true;
+                } else {
+                    card.classList.add('selected');
+                    // Determine column: 0 (left), 1 (center), 2 (right)
+                    const col = idx % 3;
+                    const row = Math.floor(idx / 3); // 0 = top, 1 = bottom
+                    let className = '';
+                    if (row === 0) {
+                        if (col === 0) className = 'centered-left-top';
+                        else if (col === 1) className = 'centered-center-top';
+                        else className = 'centered-right-top';
+                    } else {
+                        if (col === 0) className = 'centered-left-bottom';
+                        else if (col === 1) className = 'centered-center-bottom';
+                        else className = 'centered-right-bottom';
+                    }
+                    card.classList.add(className);
+                    selected = card.getAttribute('data-value');
+                    confirmBtn.disabled = false;
                 }
-                if (onChoice) onChoice(btn.getAttribute('data-value'));
             };
         });
+        confirmBtn.onclick = () => {
+            if (selected && onChoice) onChoice(selected);
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        };
     }
-}
+};

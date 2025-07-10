@@ -3,12 +3,14 @@ import { displayRoomCard, displayResultCard, displayRaceCard, displayClassCard, 
 import { gameState, saveGame } from './gameState.js';
 import { showCombatBoard, hideCombatBoard } from './ui.combatBoard.js';
 import { showChoiceModal } from './ui.choiceModal.js';
+import { showEncounterModal } from './ui.encounterModal.js';
 import { applyPassiveEffects, promptForActiveAbilities } from './gameLogic.trappings.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
 // --- Session Log ---
 function logEvent(message) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     if (!gameState.log) gameState.log = [];
     const timestamp = new Date().toLocaleTimeString();
     gameState.log.push(`[${timestamp}] ${message}`);
@@ -16,6 +18,7 @@ function logEvent(message) {
 }
 
 function updateLogUI() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const logPanel = document.getElementById('session-log');
     if (!logPanel) return;
     logPanel.innerHTML = gameState.log.slice(-100).map(msg => `<div>${msg}</div>`).join('');
@@ -29,6 +32,7 @@ if (!gameState.discardPile) {
 }
 
 function discardPreviousRoomAndResult() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const { roomCardId, resultCardId } = gameState.visibleCards || {};
     if (roomCardId) gameState.discardPile.room.push(roomCardId);
     if (resultCardId) gameState.discardPile.result.push(resultCardId);
@@ -41,6 +45,7 @@ function discardPreviousRoomAndResult() {
 // Function to initialize player stats based on selected race and class
 // Sets up all player stats, inventory, and level in gameState, then updates the UI and saves the game.
 function initializePlayer(raceId, classId) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const raceCard = getCardById(raceId);
     const classCard = getCardById(classId);
 
@@ -82,8 +87,9 @@ function initializePlayer(raceId, classId) {
         showChoiceModal({
             title: 'Human Bonus',
             message: 'Choose an extra Trapping:',
-            image: raceCard.image,
-            choices: availableTrappings.map(card => ({ label: card.name, value: card.id })),
+            isTrappingGrid: true,
+            raceCardImage: raceCard.image,
+            choices: availableTrappings.map(card => ({ label: card.name, value: card.id, image: card.image })),
             onChoice: (trappingId) => {
                 const chosen = getCardById(trappingId);
                 if (chosen) {
@@ -131,6 +137,7 @@ function initializePlayer(raceId, classId) {
 // Function to start a new dungeon level
 // Increments dungeon level, resets room counter, shuffles decks, updates UI, and saves state.
 function startDungeonLevel() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     gameState.level++;
     gameState.currentRoom = 0;
     shuffleDeck(dungeonDeck);
@@ -142,6 +149,7 @@ function startDungeonLevel() {
 // Function to shuffle a deck (Fisher-Yates algorithm)
 // Used for dungeon and result decks at the start of each level.
 function shuffleDeck(deck) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j] ] = [deck[j], deck[i]]; // Swap elements
@@ -151,6 +159,7 @@ function shuffleDeck(deck) {
 // Function to handle a single room in the dungeon
 // Advances room counter, draws cards, prompts player for resolve/skip, and processes result.
 async function handleRoom() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // --- Always clear Room and Result slots at the very start ---
     displayRoomCard(null);
     displayResultCard(null);
@@ -234,6 +243,7 @@ async function handleRoom() {
 // Function to handle the end of a dungeon level
 // Advances level, consumes food or applies starvation damage, shuffles decks, checks win/loss.
 async function endDungeonLevel() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log(`Ending Dungeon Level ${gameState.level}.`);
     logEvent(`Cleared ${gameState.currentRoom} rooms on Dungeon Level ${gameState.level}.`);
 
@@ -300,6 +310,7 @@ async function endDungeonLevel() {
 // Function to check for win or loss conditions
 // Shows endgame message and returns true if game is over, otherwise false.
 function checkWinLossConditions() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log("Checking win/loss conditions...");
 
     // Loss condition: Health drops to 0 or less
@@ -326,6 +337,7 @@ function checkWinLossConditions() {
 
 // --- Endgame Modal ---
 function showEndgameMessage(message) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const modal = document.getElementById('endgame-message');
     const text = document.getElementById('endgame-text');
     if (modal && text) {
@@ -336,11 +348,9 @@ function showEndgameMessage(message) {
     }
 }
 
-// Function to resolve icons on a result card
-// Handles all icon types (Enemy, Loot, Trap, etc.) and applies their effects to gameState.
+// --- Sequential Icon Processing ---
+// Kick-off function that extracts icons and starts the recursive processor.
 async function resolveIcons(iconCard, legendCard) {
-    // iconCard: the card whose icons are to be resolved (chosen room card)
-    // legendCard: the card whose fields (enemy, loot, trap, etc.) are used for icon resolution
     console.log("Inspecting iconCard in resolveIcons:", JSON.stringify(iconCard, null, 2));
     console.log("Using legendCard in resolveIcons:", JSON.stringify(legendCard, null, 2));
     logEvent(`Resolving icons for card: ${iconCard.name} (legend: ${legendCard.name})`);
@@ -349,433 +359,481 @@ async function resolveIcons(iconCard, legendCard) {
         return;
     }
     const icons = iconCard.icons.split(',').map(icon => icon.trim());
-    for (const icon of icons) {
-        console.log("Resolving icon:", icon);
-        switch (icon) {
-            case 'Enemy':
-                console.log("Enemy encounter:", legendCard.enemy);
-                if (legendCard.enemy && typeof legendCard.enemy === 'string') {
-                    const enemyMatch = legendCard.enemy.match(/^Enemy=(.+)$/);
-                    if (enemyMatch && enemyMatch[1]) {
-                        const enemyName = enemyMatch[1];
-                        const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
-                        if (enemyCard) {
-                            console.log("Found enemy card:", enemyCard);
-                            await initiateCombat(enemyCard);
-                            logEvent(`Combat started with ${enemyCard.name}`);
-                        } else {
-                            console.warn(`Enemy card not found for name: ${enemyName}`);
-                        }
-                    } else {
-                        console.warn("Could not parse enemy information from legend card:", legendCard.enemy);
-                    }
-                } else {
-                    console.warn("Enemy icon encountered, but no valid enemy data found on the legend card.", { enemy: legendCard.enemy });
-                }
-                break;
-            case 'Loot':
-                console.log("Loot found:", legendCard.loot);
-                const lootOutcome = legendCard.loot;
-                if (lootOutcome && typeof lootOutcome === 'string') {
-                    if (lootOutcome === 'Empty') {
-                        console.log("The loot chest is empty.");
-                    } else if (lootOutcome === 'GainShard') {
-                        console.log("Found a Shard of Brahm!");
-                        updatePlayerStats('shards', 1);
-                    } else if (lootOutcome.startsWith('Loot=')) {
-                        const lootMatch = lootOutcome.match(/^Loot=(.+)$/);
-                        if (lootMatch && lootMatch[1]) {
-                            const lootName = lootMatch[1];
-                            const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
-                            if (lootCard) {
-                                console.log("Gained loot item from treasure:", lootCard.name);
-                                gameState.inventory.push(lootCard);
-                                displayInventory(gameState.inventory);
-                            } else {
-                                console.warn(`Loot card not found for name: ${lootName}`);
-                            }
-                        } else {
-                            console.warn("Could not parse loot information from legend card:", lootOutcome);
-                        }
-                    } else {
-                        console.warn("Unknown loot outcome format:", lootOutcome);
-                    }
-                } else {
-                    console.warn("Loot icon encountered, but no valid loot data found on the legend card.", { lootOutcome });
-                }
-                break;
-            case 'Trap':
-                console.log("Trap encountered:", legendCard.trap);
-                const trapEffect = legendCard.trap;
-                if (trapEffect && typeof trapEffect === 'string') {
-                    if (trapEffect === 'None') {
-                        console.log("No trap triggered.");
-                    } else {
-                        // Toolkit integration: allow player to attempt to bypass the trap
-                        let trapContext = { bypassed: false, effect: trapEffect };
-                        await new Promise(resolve => {
-                            // Call processAllItemEffects, which will show Toolkit modal if present
-                            processAllItemEffects({
-                                trigger: 'on_trap_encounter',
-                                trapContext,
-                                resolvePromise: resolve // pass resolve so Toolkit modal can resolve it
-                            });
-                            // If Toolkit is not present, resolve immediately
-                            setTimeout(resolve, 500); // fallback in case Toolkit is not present
-                        });
-                        // Only apply trap effect if not bypassed
-                        if (!trapContext.bypassed) {
-                            const hpMatch = trapEffect.match(/^HP -(\d+)$/);
-                            const enMatch = trapEffect.match(/^EN -(\d+)$/);
-                            if (hpMatch && hpMatch[1]) {
-                                const damage = parseInt(hpMatch[1], 10);
-                                console.log(`Taking ${damage} damage from a trap.`);
-                                updatePlayerStats('hp', -damage);
-                            } else if (enMatch && enMatch[1]) {
-                                const energyLoss = parseInt(enMatch[1], 10);
-                                console.log(`Losing ${energyLoss} energy from a trap.`);
-                                updatePlayerStats('energy', -energyLoss);
-                            } else {
-                                console.warn("Could not parse trap effect:", trapEffect);
-                            }
-                        } else {
-                            logEvent("Toolkit: Trap bypassed, no effect.");
-                        }
-                    }
-                } else {
-                    console.warn("Trap icon encountered, but no valid trap effect data found on the legend card.", { trapEffect });
-                }
-                break;
-            case 'Campsite':
-                console.log("Campsite found.");
-                // Find the reference card for Campsite to get the image
-                const campsiteCard = Object.values(getAllCardsData()).find(card => card.name === 'Campsite');
-                await new Promise(resolve => {
-                    showChoiceModal({
-                        title: 'Campsite',
-                        message: 'Choose your benefit:',
-                        image: campsiteCard && campsiteCard.image,
-                        choices: [
-                            { label: '+2 HP & +1 Energy', value: 'heal' },
-                            { label: '+1 Food', value: 'food' }
-                        ],
-                        onChoice: (val) => {
-                            if (val === 'heal') {
-                                updatePlayerStats('hp', 2);
-                                updatePlayerStats('energy', 1);
-                            } else if (val === 'food') {
-                                updatePlayerStats('food', 1);
-                            }
-                            resolve();
-                        }
-                    });
-                });
-                break;
-            case 'Water':
-                console.log("Water encountered.");
-                const gillNetCard = gameState.inventory.find(item => item.id === 'LT01');
-                if (gillNetCard) {
-                    // Await the modal so nothing else proceeds until it's closed
-                    console.log("Water: About to show Gill Net modal");
-                    await new Promise(resolve => {
-                        showChoiceModal({
-                            title: 'Water',
-                            message: 'You may use your Gill Net: Roll 3 dice. Each 4+ = 1 Ration.',
-                            image: gillNetCard.image,
-                            dieRoll: true,
-                            dieCount: 3,
-                            onRoll: (rolls) => {
-                                let successes = 0;
-                                if (Array.isArray(rolls)) {
-                                    for (const roll of rolls) if (roll >= 4) successes++;
-                                } else if (typeof rolls === 'number') {
-                                    if (rolls >= 4) successes = 1;
-                                }
-                                if (successes > 0) {
-                                    updatePlayerStats('food', successes);
-                                    logEvent(`Gill Net: Gained ${successes} rations.`);
-                                } else {
-                                    logEvent("Gill Net: No food gained.");
-                                }
-                                setTimeout(resolve, 500); // ensure modal is visible before resolving
-                            }
-                        });
-                    });
-                    console.log("Water: Gill Net modal resolved");
-                } else {
-                    // No Gill Net: allow a single die roll for 1 ration on 4+
-                    console.log("Water: About to show single die modal");
-                    await new Promise(resolve => {
-                        showChoiceModal({
-                            title: 'Water',
-                            message: 'Roll a die. On a 4+, gain 1 Ration. Otherwise, gain nothing.',
-                            dieRoll: true,
-                            onRoll: (roll) => {
-                                if (roll >= 4) {
-                                    updatePlayerStats('food', 1);
-                                    logEvent('Water: Gained 1 ration.');
-                                } else {
-                                    logEvent('Water: No food gained.');
-                                }
-                                setTimeout(resolve, 500); // ensure modal is visible before resolving
-                            }
-                        });
-                    });
-                    console.log("Water: Single die modal resolved");
-                }
-                break;
-            case 'Treasure':
-                console.log("Treasure found.");
-                const treasureOutcome = legendCard.loot;
-                if (treasureOutcome === 'GainShard') {
-                    console.log("Found a Shard of Brahm!");
-                    await new Promise(resolve => {
-                        showChoiceModal({
-                            title: 'Treasure',
-                            message: 'You found a Shard of Brahm!',
-                            choices: [{ label: 'OK', value: 'ok' }],
-                            onChoice: () => {
-                                updatePlayerStats('shards', 1);
-                                resolve();
-                            }
-                        });
-                    });
-                } else if (treasureOutcome && typeof treasureOutcome === 'string' && treasureOutcome.startsWith('Loot=')) {
-                    console.log("Treasure contains loot.");
-                    const lootMatch = treasureOutcome.match(/^Loot=(.+)$/);
-                    if (lootMatch && lootMatch[1]) {
-                        const lootName = lootMatch[1];
-                        if (lootName === 'Empty') {
-                            await new Promise(resolve => {
-                                showChoiceModal({
-                                    title: 'Treasure',
-                                    message: 'The treasure chest is empty.',
-                                    choices: [{ label: 'OK', value: 'ok' }],
-                                    onChoice: resolve
-                                });
-                            });
-                        } else {
-                            const lootCard = Object.values(getAllCardsData()).find(card => card.name === lootName);
-                            if (lootCard) {
-                                await new Promise(resolve => {
-                                    showChoiceModal({
-                                        title: 'Treasure',
-                                        message: `You found: ${lootCard.name}`,
-                                        image: lootCard.image,
-                                        choices: [{ label: 'Take', value: 'take' }],
-                                        onChoice: () => {
-                                            gameState.inventory.push(lootCard);
-                                            displayInventory(gameState.inventory);
-                                            resolve();
-                                        }
-                                    });
-                                });
-                            } else {
-                                console.warn(`Loot card not found for name in treasure: ${lootName}`);
-                            }
-                        }
-                    } else {
-                        console.warn("Could not parse treasure outcome as loot:", treasureOutcome);
-                    }
-                } else {
-                    console.warn("Unknown treasure outcome format:", treasureOutcome);
-                }
-                break;
-            case 'Random':
-                console.log("Random event:", legendCard.random);
-                const randomEvent = legendCard.random;
-                if (randomEvent && typeof randomEvent === 'string') {
-                    const refMatch = randomEvent.match(/^Ref=(.+)$/);
-                    if (refMatch && refMatch[1]) {
-                        const refName = refMatch[1];
-                    const refCard = Object.values(getAllCardsData()).find(card => card.name === refName);
-                    if (refCard) {
-                        console.log("Encountered Reference Card:", refCard.name);
-                        await handleReferenceCard(refCard);
-                    } else {
-                        console.warn(`Reference card not found for name: ${refName}`);
-                    }
-                    } else if (randomEvent.startsWith('Enemy=')) {
-                        console.log("Random event is an enemy encounter.");
-                        const enemyMatch = randomEvent.match(/^Enemy=(.+)$/);
-                        if (enemyMatch && enemyMatch[1]) {
-                            const enemyName = enemyMatch[1];
-                            const enemyCard = Object.values(getAllCardsData()).find(card => card.name === enemyName);
-                            if (enemyCard) {
-                                console.log("Found enemy card:", enemyCard);
-                                initiateCombat(enemyCard);
-                            } else {
-                                console.warn(`Enemy card not found for name: ${enemyName}`);
-                            }
-                        }
-                    } else {
-                        console.warn("Could not parse random event format:", randomEvent);
-                    }
-                } else {
-                    console.warn("Random icon encountered, but no valid random event data found on the legend card.", { randomEvent });
-                }
-                break;
-            default:
-                console.warn("Unknown icon encountered:", icon);
-        }
-    }
-    // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
+    // Return a promise that resolves when all icons are processed
+    return new Promise(resolve => {
+        processNextIcon(icons, legendCard, resolve);
+    });
 }
 
+// Recursively process icons one at a time, gated by player interaction
+
 // Function to handle Reference Card effects
-// Applies special effects based on reference card name (Altar, Grove, etc.).
-async function handleReferenceCard(refCard) {
-    console.log("Handling Reference Card effect for:", refCard.name);
-    // Implement logic based on refCard.name and GAMERULES.md
-    switch (refCard.name) {
-        case 'Altar':
-            console.log("Resolving Altar effect. Checking player Favor...");
-            const currentFavor = gameState.player.favor;
-            const altarCard = Object.values(getAllCardsData()).find(card => card.name === 'Altar');
-            if (currentFavor >= 10) {
-                showChoiceModal({
-                    title: 'Altar',
-                    message: 'Favor 10+: Choose your reward:',
-                    image: altarCard && altarCard.image,
-                    choices: [
-                        { label: 'Gain a Shard', value: 'shard' },
-                        { label: 'Increase Max HP', value: 'maxhp' }
-                    ],
-                    onChoice: (val) => {
-                        if (val === 'shard') {
-                            updatePlayerStats('shards', 1);
-                        } else if (val === 'maxhp') {
-                            gameState.player.maxHealth += 1;
-                            updatePlayerStats('hp', 1);
-                            updateStatDisplay('hp', gameState.player.hp);
-                        }
+async function processNextIcon(icons, legendCard, done) {
+    if (icons.length === 0) {
+        if (typeof done === 'function') done();
+        return;
+    }
+
+    const [icon, ...rest] = icons;
+    console.log("Resolving icon:", icon);
+
+    // Await the action for the current icon before proceeding
+    switch (icon) {
+        case 'Enemy': {
+            await hideCombatBoard();
+            console.log("Enemy encounter:", legendCard.enemy);
+            if (legendCard.enemy && typeof legendCard.enemy === 'string') {
+                const m = legendCard.enemy.match(/^Enemy=(.+)$/);
+                if (m && m[1]) {
+                    const enemyName = m[1];
+                    const enemyCard = Object.values(getAllCardsData()).find(c => c.name === enemyName);
+                    if (enemyCard) {
+                        await initiateCombat(enemyCard);
+                        logEvent(`Combat started with ${enemyCard.name}`);
+                    } else {
+                        console.warn(`Enemy card not found for name: ${enemyName}`);
                     }
-                });
-            } else if (currentFavor >= 8) {
-                updatePlayerStats('hp', 4);
-                updatePlayerStats('energy', 3);
-            } else if (currentFavor >= 6) {
-                updatePlayerStats('hp', 3);
-                updatePlayerStats('energy', 2);
-            } else if (currentFavor >= 4) {
-                updatePlayerStats('hp', 2);
-                updatePlayerStats('energy', 1);
-            } else if (currentFavor >= 0) {
-                updatePlayerStats('hp', 1);
+                } else {
+                    console.warn("Could not parse enemy information from legend card:", legendCard.enemy);
+                }
+            } else {
+                console.warn("Enemy icon encountered, but no valid enemy data found on the legend card.", { enemy: legendCard.enemy });
             }
             break;
-        case 'Campsite': // Note: Campsite is also a direct icon, but can appear via Random
-            console.log("Resolving Campsite effect via Random.");
-             console.log("Campsite Options: 1. Gain +2 HP and +1 Energy, or 2. Gain +1 Food.");
-            // TODO: Implement player choice for Campsite benefit
-            break;
-        case 'Grove':
-            console.log("Resolving Grove effect.");
-            showChoiceModal({
-                title: 'Grove',
-                message: 'Roll a die for the Grove effect!',
-                dieRoll: true,
-                image: 'assets/cards/reference/REF03.png',
-                onRoll: (groveRoll) => {
-                    if (groveRoll === 1) {
-                        updatePlayerStats('hp', -1);
-                        logEvent('Grove: Lose 1 HP.');
-                    } else if (groveRoll === 2) {
-                        logEvent('Grove: No effect.');
-                    } else if (groveRoll >= 3 && groveRoll <= 4) {
-                        updatePlayerStats('food', 1);
-                        logEvent('Grove: Gain 1 Ration.');
-                    } else if (groveRoll >= 5 && groveRoll <= 6) {
-                        updatePlayerStats('food', 2);
-                        logEvent('Grove: Gain 2 Rations.');
-                    }
-                    // Explicitly close the modal if still open (vanilla JS fallback)
-                    const modal = document.getElementById('choice-modal');
-                    if (modal && modal.parentNode) {
-                        setTimeout(() => {
-                            if (modal.parentNode) modal.parentNode.removeChild(modal);
-                        }, 900);
+        }
+        case 'Loot': {
+            await hideCombatBoard();
+            const lootOutcome = legendCard.loot;
+            if (lootOutcome && typeof lootOutcome === 'string') {
+                if (lootOutcome === 'Empty') {
+                    await new Promise(resolve => {
+                        showEncounterModal({
+                            title: 'Loot',
+                            message: 'The chest is empty.',
+                            choices: [{ label: 'Continue', value: 'ok' }],
+                            onChoice: resolve
+                        });
+                    });
+                } else if (lootOutcome.startsWith('Loot=')) {
+                    const match = lootOutcome.match(/^Loot=(.+)$/);
+                    if (match && match[1]) {
+                        const lootName = match[1];
+                        const lootCard = Object.values(getAllCardsData()).find(c => c.name === lootName);
+                        if (lootCard) {
+                            await new Promise(resolve => {
+                                showEncounterModal({
+                                    title: 'Loot Found!',
+                                    message: `You found: ${lootCard.name}`,
+                                    image: lootCard.image,
+                                    choices: [{ label: 'Take It', value: 'take' }],
+                                    onChoice: () => {
+                                        gameState.inventory.push(lootCard);
+                                        displayInventory(gameState.inventory);
+                                        logEvent(`Loot: Found ${lootCard.name}.`);
+                                        resolve();
+                                    }
+                                });
+                            });
+                        }
                     }
                 }
+            }
+            break;
+        }
+        case 'Trap': {
+            await hideCombatBoard();
+            const trapEffect = legendCard.trap;
+            let trapMessage = '';
+            if (trapEffect && typeof trapEffect === 'string') {
+                if (trapEffect !== 'None') {
+                    let trapContext = { bypassed: false, effect: trapEffect };
+                    await processAllItemEffects({ trigger: 'on_trap_encounter', trapContext });
+                    if (!trapContext.bypassed) {
+                        const hpMatch = trapEffect.match(/^HP -(\d+)$/);
+                        const enMatch = trapEffect.match(/^EN -(\d+)$/);
+                        if (hpMatch && hpMatch[1]) {
+                            updatePlayerStats('hp', -parseInt(hpMatch[1], 10));
+                            trapMessage = `A trap was triggered! You lost ${hpMatch[1]} HP.`;
+                        } else if (enMatch && enMatch[1]) {
+                            updatePlayerStats('energy', -parseInt(enMatch[1], 10));
+                            trapMessage = `A trap was triggered! You lost ${enMatch[1]} Energy.`;
+                        } else {
+                            console.warn("Could not parse trap effect:", trapEffect);
+                            trapMessage = 'A trap was triggered.';
+                        }
+                    } else {
+                        logEvent('Toolkit: Trap bypassed, no effect.');
+                        trapMessage = 'You bypassed the trap.';
+                    }
+                } else {
+                    trapMessage = 'There is no trap effect.';
+                }
+            } else {
+                console.warn("Trap icon encountered, but no valid trap effect data found on the legend card.", { trapEffect });
+                trapMessage = 'A trap was encountered, but its effect is unclear.';
+            }
+            await new Promise(resolve => {
+                showEncounterModal({
+                    title: 'Trap',
+                    message: trapMessage,
+                    choices: [{ label: 'Continue', value: 'ok' }],
+                    onChoice: resolve
+                });
             });
             break;
-        case 'Labyrinth':
-            console.log("Resolving Labyrinth effect.");
-            const labyrinthCard = Object.values(getAllCardsData()).find(card => card.name === 'Labyrinth');
+        }
+        case 'Campsite': {
+            await hideCombatBoard();
+            const campsiteCard = Object.values(getAllCardsData()).find(c => c.name === 'Campsite');
             await new Promise(resolve => {
-                showChoiceModal({
-                    title: 'Labyrinth',
-                    message: 'Lose 1 Ration, or if you have none, lose 2 Energy, or if you have neither, lose up to 3 HP.',
-                    image: labyrinthCard && labyrinthCard.image,
+                showEncounterModal({
+                    title: 'Campsite',
+                    message: 'You find a moment of respite. Choose your benefit:',
+                    image: campsiteCard ? campsiteCard.image : null,
                     choices: [
-                        { label: 'Lose 1 Ration', value: 'ration', disabled: !(gameState.player.food >= 1) },
-                        { label: 'Lose 2 Energy', value: 'energy', disabled: !(gameState.player.food < 1 && gameState.player.energy >= 2) },
-                        { label: 'Lose up to 3 HP', value: 'hp', disabled: !(gameState.player.food < 1 && gameState.player.energy < 2 && gameState.player.hp > 0) }
-                    ].filter(opt => !opt.disabled),
-                    onChoice: (val) => {
-                        if (val === 'ration') {
-                            updatePlayerStats('food', -1);
-                        } else if (val === 'energy') {
-                            updatePlayerStats('energy', -2);
-                        } else if (val === 'hp') {
-                            const damageToTake = Math.min(gameState.player.hp, 3);
-                            updatePlayerStats('hp', -damageToTake);
+                        { label: '+2 HP & +1 Energy', value: 'heal' },
+                        { label: '+1 Food', value: 'food' }
+                    ],
+                    onChoice: val => {
+                        if (val === 'heal') {
+                            updatePlayerStats('hp', 2);
+                            updatePlayerStats('energy', 1);
+                            logEvent('Campsite: Gained +2 HP and +1 Energy.');
+                        } else if (val === 'food') {
+                            updatePlayerStats('food', 1);
+                            logEvent('Campsite: Gained +1 Food.');
                         }
                         resolve();
                     }
                 });
             });
             break;
-        case 'Pigman':
-            console.log("Resolving Pigman effect.");
-            const pigmanCard = Object.values(getAllCardsData()).find(card => card.name === 'Pigman');
-            const turnipIndex = gameState.inventory.findIndex(item => item.id === 'LT06');
-            if (turnipIndex !== -1) {
+        }
+        case 'Water': {
+            await hideCombatBoard();
+            const gillNetCard = gameState.inventory.find(it => it.id === 'LT01');
+            if (gillNetCard) {
                 await new Promise(resolve => {
-                    showChoiceModal({
-                        title: 'Pigman',
-                        message: 'You have a Turnip! Choose:',
-                        image: pigmanCard && pigmanCard.image,
-                        choices: [
-                            { label: 'Gain 1 Favor', value: 'favor' },
-                            { label: 'Discard Turnip for 1 Shard', value: 'shard' }
-                        ],
-                        onChoice: (val) => {
-                            if (val === 'favor') {
-                                updatePlayerStats('favor', 1);
-                            } else if (val === 'shard') {
-                                // Remove Turnip from inventory and add to loot discard pile
-                                if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
-                                if (turnipIndex !== -1) {
-                                    gameState.lootDiscardPile.push(gameState.inventory[turnipIndex]);
-                                    gameState.inventory.splice(turnipIndex, 1);
-                                    displayInventory(gameState.inventory);
-                                }
-                                updatePlayerStats('shards', 1);
+                    showEncounterModal({
+                        title: 'Water Source',
+                        message: 'You can use your Gill Net. Roll 3 dice, and gain 1 Ration for each 4+.',
+                        image: gillNetCard.image,
+                        dieRoll: true,
+                        dieCount: 3,
+                        requireContinue: true,
+                        onRoll: rolls => {
+                            const s = rolls.filter(r => r >= 4).length;
+                            if (s > 0) {
+                                updatePlayerStats('food', s);
+                                logEvent(`Gill Net: Gained ${s} rations.`);
+                            } else {
+                                logEvent('Gill Net: No food gained.');
                             }
                             resolve();
                         }
                     });
                 });
             } else {
-                updatePlayerStats('favor', 1);
+                await new Promise(resolve => {
+                    showEncounterModal({
+                        title: 'Water Source',
+                        message: 'You found a water source. Roll a die: on a 4+, you gain 1 Ration.',
+                        dieRoll: true,
+                        dieCount: 1,
+                        requireContinue: true,
+                        onRoll: roll => {
+                            if (roll >= 4) {
+                                updatePlayerStats('food', 1);
+                                logEvent('Water: Gained 1 ration.');
+                            } else {
+                                logEvent('Water: No food gained.');
+                            }
+                            resolve();
+                        }
+                    });
+                });
             }
             break;
-        case 'Shrine':
-            console.log("Resolving Shrine effect.");
-            // TODO: Implement Shrine effect (gain shard) based on GAMERULES.md section 4.4
-             updatePlayerStats('shards', 1);
-            console.log("Gained a Shard of Brahm from the Shrine!");
-            // TODO: Check for win condition after gaining a shard
-            break;
-        default:
-            console.warn("Unknown Reference Card encountered:", refCard.name);
         }
-       // TODO: After all icons are resolved, proceed with the game turn (e.g., offer resolve/skip for next room)
+        case 'Treasure': {
+            await hideCombatBoard();
+            const t = legendCard.loot;
+            if (t === 'GainShard') {
+                await new Promise(resolve => {
+                    showEncounterModal({
+                        title: 'Treasure Found!',
+                        message: 'You open the chest and find a glowing Shard of Brahm!',
+                        image: 'assets/cards/misc/tracker4.png',
+                        choices: [{ label: 'Take the Shard', value: 'ok' }],
+                        onChoice: () => {
+                            updatePlayerStats('shards', 1);
+                            logEvent('Treasure: Found a Shard of Brahm!');
+                            resolve();
+                        }
+                    });
+                });
+            } else if (t && typeof t === 'string' && t.startsWith('Loot=')) {
+                const m2 = t.match(/^Loot=(.+)$/);
+                if (m2 && m2[1]) {
+                    const lootName = m2[1];
+                    if (lootName === 'Empty') {
+                        await new Promise(resolve => {
+                            showEncounterModal({
+                                title: 'Empty Chest',
+                                message: 'The treasure chest is empty. Nothing but dust.',
+                                choices: [{ label: 'Continue', value: 'ok' }],
+                                onChoice: resolve
+                            });
+                        });
+                    } else {
+                        const lootCard = Object.values(getAllCardsData()).find(c => c.name === lootName);
+                        if (lootCard) {
+                            await new Promise(resolve => {
+                                showEncounterModal({
+                                    title: 'Loot Found!',
+                                    message: `You found: ${lootCard.name}`,
+                                    image: lootCard.image,
+                                    choices: [{ label: 'Take It', value: 'take' }],
+                                    onChoice: () => {
+                                        gameState.inventory.push(lootCard);
+                                        displayInventory(gameState.inventory);
+                                        logEvent(`Treasure: Found ${lootCard.name}.`);
+                                        resolve();
+                                    }
+                                });
+                            });
+                        } else {
+                            console.warn(`Loot card not found for name in treasure: ${lootName}`);
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case 'Random': {
+            await hideCombatBoard();
+            const r = legendCard.random;
+            if (r && typeof r === 'string') {
+                const refMatch = r.match(/^Ref=(.+)$/);
+                if (refMatch && refMatch[1]) {
+                    const refName = refMatch[1];
+                    const refCard = Object.values(getAllCardsData()).find(c => c.name === refName);
+                    if (refCard) {
+                        await handleReferenceCard(refCard);
+                    } else {
+                        console.warn(`Reference card not found for name: ${refName}`);
+                    }
+                } else if (r.startsWith('Enemy=')) {
+                    const em = r.match(/^Enemy=(.+)$/);
+                    if (em && em[1]) {
+                        const enemyName = em[1];
+                        const enemyCard = Object.values(getAllCardsData()).find(c => c.name === enemyName);
+                        if (enemyCard) {
+                            await initiateCombat(enemyCard);
+                        } else {
+                            console.warn(`Enemy card not found for name: ${enemyName}`);
+                        }
+                    }
+                } else {
+                    console.warn("Could not parse random event format:", r);
+                }
+            } else {
+                console.warn("Random icon encountered, but no valid random event data found on the legend card.", { r });
+            }
+            break;
+        }
+        default:
+            console.warn("Unknown icon encountered:", icon);
     }
 
+    // After handling the current icon, process the rest.
+    await processNextIcon(rest, legendCard, done);
+}
+// Applies special effects based on reference card name (Altar, Grove, etc.).
+async function handleReferenceCard(refCard) {
+    hideCombatBoard(); // Unmount React components before showing new modal
+    console.log("Handling Reference Card effect for:", refCard.name);
+    await new Promise(async resolve => {
+        switch (refCard.name) {
+            case 'Altar':
+                const currentFavor = gameState.player.favor;
+                let altarMessage = 'You pray at the altar and feel a faint warmth.';
+                let altarChoices = [];
+                let onAltarChoice = () => {};
+
+                if (currentFavor >= 10) {
+                    altarMessage = 'Your devotion is recognized! The altar offers a powerful blessing. Choose your reward:';
+                    altarChoices = [
+                        { label: 'Gain a Shard', value: 'shard' },
+                        { label: 'Increase Max HP by 1', value: 'maxhp' }
+                    ];
+                    onAltarChoice = (val) => {
+                        if (val === 'shard') {
+                            updatePlayerStats('shards', 1);
+                            logEvent('Altar: Gained a Shard!');
+                        } else if (val === 'maxhp') {
+                            gameState.player.maxHealth += 1;
+                            updatePlayerStats('hp', 1);
+                            logEvent('Altar: Max HP increased!');
+                        }
+                    };
+                } else {
+                    let hpGain = 0;
+                    let enGain = 0;
+                    if (currentFavor >= 8) { hpGain = 4; enGain = 3; }
+                    else if (currentFavor >= 6) { hpGain = 3; enGain = 2; }
+                    else if (currentFavor >= 4) { hpGain = 2; enGain = 1; }
+                    else { hpGain = 1; }
+                    
+                    altarMessage = `Your prayer is answered. You gain +${hpGain} HP and +${enGain} Energy.`;
+                    altarChoices = [{ label: 'Accept Blessing', value: 'ok' }];
+                    onAltarChoice = () => {
+                        updatePlayerStats('hp', hpGain);
+                        updatePlayerStats('energy', enGain);
+                        logEvent(`Altar: Gained ${hpGain} HP and ${enGain} Energy.`);
+                    };
+                }
+
+                showEncounterModal({
+                    title: 'Altar',
+                    message: altarMessage,
+                    image: refCard.image,
+                    choices: altarChoices,
+                    onChoice: (val) => {
+                        onAltarChoice(val);
+                        resolve();
+                    }
+                });
+                break;
+        case 'Campsite': // Note: Campsite is also a direct icon, but can appear via Random
+            console.log("Resolving Campsite effect via Random.");
+             console.log("Campsite Options: 1. Gain +2 HP and +1 Energy, or 2. Gain +1 Food.");
+            // TODO: Implement player choice for Campsite benefit
+            break;
+            case 'Grove':
+                showEncounterModal({
+                    title: 'Whispering Grove',
+                    message: 'The air hums with ancient energy. Roll a die to see what the grove provides.',
+                    image: refCard.image,
+                    dieRoll: true,
+                    requireContinue: true,
+                    onRoll: (roll) => {
+                        let foodGained = 0;
+                        if (roll === 1) {
+                            updatePlayerStats('hp', -1);
+                            logEvent('Grove: A thorny vine lashes out! Lost 1 HP.');
+                        } else if (roll >= 3 && roll <= 4) {
+                            foodGained = 1;
+                        } else if (roll >= 5) {
+                            foodGained = 2;
+                        } else {
+                            logEvent('Grove: The grove remains silent.');
+                        }
+                        if (foodGained > 0) {
+                            updatePlayerStats('food', foodGained);
+                            logEvent(`Grove: Found ${foodGained} Rations.`);
+                        }
+                        resolve();
+                    }
+                });
+                break;
+            case 'Labyrinth':
+                let labyMessage = 'You are lost in a bewildering labyrinth!';
+                let labyChoices = [];
+                if (gameState.player.food > 0) {
+                    labyMessage += ' You must consume 1 Ration to find your way.';
+                    labyChoices.push({ label: 'Lose 1 Ration', value: 'ration' });
+                } else if (gameState.player.energy >= 2) {
+                    labyMessage += ' With no food, you must expend 2 Energy to escape.';
+                    labyChoices.push({ label: 'Lose 2 Energy', value: 'energy' });
+                } else {
+                    const hpLoss = Math.min(3, gameState.player.hp - 1);
+                    labyMessage += ` Weak and hungry, you suffer ${hpLoss} HP damage finding an exit.`;
+                    labyChoices.push({ label: `Lose ${hpLoss} HP`, value: 'hp' });
+                }
+
+                showEncounterModal({
+                    title: 'Labyrinth',
+                    message: labyMessage,
+                    image: refCard.image,
+                    choices: labyChoices,
+                    onChoice: (val) => {
+                        if (val === 'ration') {
+                            updatePlayerStats('food', -1);
+                            logEvent('Labyrinth: Lost 1 Ration.');
+                        } else if (val === 'energy') {
+                            updatePlayerStats('energy', -2);
+                            logEvent('Labyrinth: Lost 2 Energy.');
+                        } else if (val === 'hp') {
+                            const hpLoss = Math.min(3, gameState.player.hp - 1);
+                            updatePlayerStats('hp', -hpLoss);
+                            logEvent(`Labyrinth: Lost ${hpLoss} HP.`);
+                        }
+                        resolve();
+                    }
+                });
+                break;
+            case 'Pigman':
+                const turnipIndex = gameState.inventory.findIndex(item => item.id === 'LT06');
+                if (turnipIndex !== -1) {
+                    showEncounterModal({
+                        title: 'Friendly Pigman',
+                        message: 'A Pigman gestures towards your Turnip. He is willing to trade.',
+                        image: refCard.image,
+                        choices: [
+                            { label: 'Trade Turnip for a Shard', value: 'shard' },
+                            { label: 'Keep Turnip, Gain 1 Favor', value: 'favor' }
+                        ],
+                        onChoice: (val) => {
+                            if (val === 'shard') {
+                                // Discard turnip and gain a shard
+                                handleDiscardItem('LT06');
+                                updatePlayerStats('shards', 1);
+                                logEvent('Pigman: Traded Turnip for a Shard.');
+                            } else {
+                                updatePlayerStats('favor', 1);
+                                logEvent('Pigman: Gained 1 Favor.');
+                            }
+                            resolve();
+                        }
+                    });
+                } else {
+                    showEncounterModal({
+                        title: 'Friendly Pigman',
+                        message: 'A friendly Pigman grunts at you and pats you on the back, granting you 1 Favor.',
+                        image: refCard.image,
+                        choices: [{ label: 'Thanks!', value: 'ok' }],
+                        onChoice: () => {
+                            updatePlayerStats('favor', 1);
+                            logEvent('Pigman: Gained 1 Favor.');
+                            resolve();
+                        }
+                    });
+                }
+                break;
+            case 'Shrine':
+                showEncounterModal({
+                    title: 'Forgotten Shrine',
+                    message: 'You discover a forgotten shrine. A Shard of Brahm rests on the pedestal!',
+                    image: refCard.image,
+                    choices: [{ label: 'Take the Shard', value: 'ok' }],
+                    onChoice: () => {
+                        updatePlayerStats('shards', 1);
+                        logEvent('Shrine: Found a Shard of Brahm!');
+                        resolve();
+                    }
+                });
+                break;
+            default:
+                console.warn("Unknown Reference Card encountered:", refCard.name);
+                resolve(); // Resolve promise for unknown cards
+        }
+    });
+}
+
 // Function to restore the UI from gameState after loading
-function restoreGameUIFromState() {
+async function restoreGameUIFromState() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     if (!gameState.visibleCards) return;
     const { raceId, classId, inventory, roomCardId, resultCardId, enemyCardId } = gameState.visibleCards;
 
@@ -863,12 +921,16 @@ function restoreGameUIFromState() {
         // Do NOT restore innerHTML, let React render the combat board
         resumeCombat(gameState.encounter.enemyId, gameState.encounter.enemyHp, gameState.encounter.playerHp);
     } else {
-        combatArea.innerHTML = '';
+        if (combatArea) {
+            await hideCombatBoard(); // Ensure React component is unmounted and wait for it
+            combatArea.innerHTML = ''; // Clear non-React content
+        }
     }
 }
 
 // Resume combat logic after loading a save
 function resumeCombat(enemyId, enemyHp, playerHp) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Find the enemy card
     const enemyCard = enemyId ? getCardById(enemyId) : null;
     if (!enemyCard) return;
@@ -929,7 +991,18 @@ showCombatBoard({
     onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }),
     onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }),
     onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
-    onClose: () => { hideCombatBoard(); },
+    onClose: () => { 
+        // --- CLEAR ENCOUNTER STATE ON CLOSE ---
+        gameState.encounter = {
+            inProgress: false,
+            enemyId: null,
+            enemyHp: null,
+            playerHp: null,
+            html: ""
+        };
+        hideCombatBoard(); 
+        resolve(); 
+    },
     playerEnergy: gameState.player.energy
 });
 
@@ -1038,8 +1111,7 @@ if (!specialAttack) {
                 inProgress: !isCombatOver,
                 enemyId: enemyCard.id,
                 enemyHp: currentEnemyHealth,
-                playerHp: gameState.player.hp,
-                html: document.getElementById('combat-area')?.innerHTML || ""
+                playerHp: gameState.player.hp
             };
             // Update tracker cubes after any stat change
             updateAllTrackerCubes({
@@ -1058,6 +1130,7 @@ if (!specialAttack) {
 // Function to update player stats (can be used by icon handlers)
 // Updates a stat, clamps values, updates UI, checks for defeat, and saves state.
 function updatePlayerStats(stat, amount) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     if (gameState.player.hasOwnProperty(stat)) {
         gameState.player[stat] += amount;
         // Ensure stats don't go below zero or above max (for health and energy)
@@ -1108,7 +1181,8 @@ function updatePlayerStats(stat, amount) {
  *   ...etc
  * }
  */
-function processAllItemEffects(eventContext) {
+async function processAllItemEffects(eventContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Ensure discard piles exist
     if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
     if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
@@ -1327,21 +1401,24 @@ function processAllItemEffects(eventContext) {
                     // --- Toolkit: May optionally disarm a trap when encountered ---
                     case "bypass":
                         if (eventContext.trigger === "on_trap_encounter" && item.id === "TRA08") {
-                            // Prompt player to disarm trap
-                            showChoiceModal({
-                                title: 'Toolkit',
-                                message: 'Attempt to disarm the trap? Roll a die: 4+ = success (no effect), 1-3 = trap triggers as normal.',
-                                image: item.image,
-                                dieRoll: true,
-                                onRoll: (roll) => {
-                                    if (roll >= 4) {
-                                        eventContext.trapContext.bypassed = true;
-                                        logEvent(`${item.name}: Trap disarmed!`);
-                                    } else {
-                                        eventContext.trapContext.bypassed = false;
-                                        logEvent(`${item.name}: Disarm failed, trap triggers as normal.`);
+                            await new Promise(resolve => {
+                                showEncounterModal({
+                                    title: 'Toolkit',
+                                    message: 'You can use your Toolkit to try and disarm the trap. Roll a die: a 4+ means you succeed!',
+                                    image: item.image,
+                                    dieRoll: true,
+                                    requireContinue: true,
+                                    onRoll: (roll) => {
+                                        if (roll >= 4) {
+                                            eventContext.trapContext.bypassed = true;
+                                            logEvent(`${item.name}: Trap successfully disarmed!`);
+                                        } else {
+                                            eventContext.trapContext.bypassed = false;
+                                            logEvent(`${item.name}: Disarm attempt failed. The trap triggers!`);
+                                        }
+                                        resolve();
                                     }
-                                }
+                                });
                             });
                         }
                         break;
@@ -1355,6 +1432,7 @@ function processAllItemEffects(eventContext) {
 
 // Full combat logic for enemy encounters
 async function initiateCombat(enemyCard) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log('initiateCombat: gameState.raceId =', gameState.raceId);
 const classCard = getCardById(gameState.classId); // Use class card for combat logic
 console.log('initiateCombat: classCard =', classCard);
@@ -1390,8 +1468,7 @@ gameState.encounter = {
     inProgress: true,
     enemyId: enemyCard.id,
     enemyHp: currentEnemyHealth,
-    playerHp: gameState.player.hp,
-    html: document.getElementById('combat-area')?.innerHTML || ""
+    playerHp: gameState.player.hp
 };
 // Initialize enemy HP tracker
 updateAllTrackerCubes({
@@ -1540,8 +1617,7 @@ if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusD
                 inProgress: !isCombatOver,
                 enemyId: enemyCard.id,
                 enemyHp: currentEnemyHealth,
-                playerHp: gameState.player.hp,
-                html: document.getElementById('combat-area')?.innerHTML || ""
+                playerHp: gameState.player.hp
             };
 
             updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
@@ -1575,6 +1651,7 @@ showCombatBoard({
 
 // --- Next Room Button Logic ---
 function enableNextRoomButton() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const btn = document.getElementById('next-room-btn');
     const decisionButtons = document.getElementById('room-decision-buttons');
     if (btn && decisionButtons) {
@@ -1590,6 +1667,7 @@ function enableNextRoomButton() {
 }
 
 function disableNextRoomButton() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const btn = document.getElementById('next-room-btn');
     const decisionButtons = document.getElementById('room-decision-buttons');
     if (btn && decisionButtons) {
@@ -1606,6 +1684,7 @@ function disableNextRoomButton() {
 
 // Attach event listener for Next Room button (if not already attached)
 (function setupNextRoomButton() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const btn = document.getElementById('next-room-btn');
     if (btn && !btn.dataset.bound) {
         btn.addEventListener('click', async () => {
@@ -1645,6 +1724,7 @@ function disableNextRoomButton() {
  * @returns {[number, number]}
  */
 function rollDice() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.trace('DEBUG: rollDice called');
     const roll1 = Math.floor(Math.random() * 6) + 1;
     const roll2 = Math.floor(Math.random() * 6) + 1;
@@ -1657,6 +1737,7 @@ function rollDice() {
  * @param {object} eventContext - { trigger, trappingId }
  */
 function processTrappingUse(eventContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Ensure trappings discard pile exists
     if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
     // Only handle Scroll (TRA04) for now
@@ -1701,6 +1782,7 @@ window.processTrappingUse = processTrappingUse;
 // Example: Call after updating player stats (for passive triggers like on_receive_damage)
 const _originalUpdatePlayerStats = updatePlayerStats;
 function updatePlayerStatsWithItems(stat, amount) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Before stat update: check for on_receive_damage
     if (stat === 'hp' && amount < 0) {
         processAllItemEffects({ trigger: 'on_receive_damage', damage: Math.abs(amount) });
@@ -1714,6 +1796,7 @@ window.updatePlayerStats = updatePlayerStatsWithItems;
 
 // Example: Call after trap encounter
 function handleTrapEncounter(trapContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'on_trap_encounter', trapContext });
     // ...rest of trap logic
 }
@@ -1721,6 +1804,7 @@ window.handleTrapEncounter = handleTrapEncounter;
 
 // Example: Call after campsite
 function handleCampsite() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'on_campsite' });
     // ...rest of campsite logic
 }
@@ -1728,6 +1812,7 @@ window.handleCampsite = handleCampsite;
 
 // Example: Call after altar
 function handleAltar(altarContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'on_altar', altarContext });
     // ...rest of altar logic
 }
@@ -1735,6 +1820,7 @@ window.handleAltar = handleAltar;
 
             // Handle using items (like potions)
             function handleUseItem(itemId) {
+                hideCombatBoard(); // Unmount React components before showing new modal
                 if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
                 if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
                 const item = getCardById(itemId);
@@ -1783,6 +1869,7 @@ window.handleAltar = handleAltar;
 
             // Handle discarding items (separate from using them)
             function handleDiscardItem(itemId, context = {}) {
+                hideCombatBoard(); // Unmount React components before showing new modal
                 processAllItemEffects({ trigger: 'on_discard', discardItemId: itemId, ...context });
             }
 window.handleDiscardItem = handleDiscardItem;
@@ -1790,6 +1877,7 @@ window.handleUseItem = handleUseItem;
 
 // Example: Call after pigman reference
 function handlePigmanRef() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'during_ref_pigman' });
     // ...rest of pigman logic
 }

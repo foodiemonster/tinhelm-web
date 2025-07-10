@@ -183,58 +183,84 @@ if (cardZoomOverlay) {
 export function displayInventory(inventory) {
     const inventorySection = document.getElementById('inventory-section');
     if (inventorySection) {
-        // Clear existing inventory display
         inventorySection.innerHTML = '';
+        let zoomedCard = null;
+        inventory.forEach(item => {
+            // Create wrapper for each inventory item
+            const itemWrapper = document.createElement('div');
+            itemWrapper.className = 'inventory-item';
 
-        // Loop through inventory and create card elements
-            inventory.forEach(item => {
-                const cardElement = document.createElement('div');
-                cardElement.classList.add('inventory-card');
-                if (item.image) {
-                    const img = document.createElement('img');
-                    img.src = item.image;
-                    img.alt = item.name;
-                    // --- Card Zoom Mouseover ---
-                    img.addEventListener('mouseenter', (e) => showCardZoom(item.image, img));
-                    img.addEventListener('mouseleave', hideCardZoom);
-                    img.addEventListener('touchstart', (e) => showCardZoom(item.image, img), {passive:true});
-                    img.addEventListener('touchend', hideCardZoom, {passive:true});
-                    cardElement.appendChild(img);
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('inventory-card');
+            if (item.image) {
+                const img = document.createElement('img');
+                img.src = item.image;
+                img.alt = item.name;
+                cardElement.appendChild(img);
+            } else {
+                cardElement.textContent = item.name;
+            }
+
+            // Add Use button logic (as sibling, only show when zoomed)
+            let useBtn = null;
+            const isUsable = (item.id === "LT08" || item.id === "LT06" || item.id === "TRA04" || item.id === "TRA06");
+            if (isUsable) {
+                useBtn = document.createElement('button');
+                useBtn.textContent = 'Use';
+                useBtn.className = 'inventory-use-btn use-btn';
+                useBtn.style.display = 'none';
+                useBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (item.id === "LT08") {
+                        window.handleUseItem && window.handleUseItem(item.id);
+                    } else if (item.id === "LT06") {
+                        window.handleDiscardItem && window.handleDiscardItem(item.id);
+                    } else if (item.id === "TRA04") {
+                        window.processTrappingUse && window.processTrappingUse({ trigger: "on_use_scroll", trappingId: item.id });
+                    } else if (item.id === "TRA06") {
+                        window.handleUseItem && window.handleUseItem(item.id);
+                    }
+                };
+                // Add as sibling in wrapper
+                itemWrapper.appendChild(cardElement);
+                itemWrapper.appendChild(useBtn);
+            } else {
+                itemWrapper.appendChild(cardElement);
+            }
+
+            // Zoom/Glow effect on click
+            cardElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Unzoom any other card
+                if (zoomedCard && zoomedCard !== cardElement) {
+                    zoomedCard.classList.remove('zoomed', 'glow');
+                    const prevBtn = zoomedCard.parentElement.querySelector('.use-btn');
+                    if (prevBtn) prevBtn.style.display = 'none';
+                }
+                if (cardElement.classList.contains('zoomed')) {
+                    cardElement.classList.remove('zoomed', 'glow');
+                    if (useBtn) useBtn.style.display = 'none';
+                    zoomedCard = null;
                 } else {
-                    cardElement.textContent = item.name;
+                    cardElement.classList.add('zoomed', 'glow');
+                    if (useBtn) useBtn.style.display = 'block';
+                    zoomedCard = cardElement;
                 }
-                // Add "Use" button for anytime-usable loot (Potion, Turnip) and Scroll (TRA04)
-                if (item.id === "LT08" || item.id === "LT06" || item.id === "TRA04" || item.id === "TRA06") {
-                    const useBtn = document.createElement('button');
-                    useBtn.textContent = 'Use';
-                    useBtn.className = 'inventory-use-btn';
-                    useBtn.onclick = () => {
-                        // Backend: processLootAbilitiesAndEffects with correct context
-                        if (item.id === "LT08") {
-                            // Potion (Loot): Use to gain health/energy
-                            window.handleUseItem &&
-                                window.handleUseItem(item.id);
-                        } else if (item.id === "LT06") {
-                            // Turnip (Loot): Discard anytime to gain +3 energy
-                            window.handleDiscardItem &&
-                                window.handleDiscardItem(item.id);
-                        } else if (item.id === "TRA04") {
-                            // Scroll (Trapping): Use to defeat undead enemy
-                            window.processTrappingUse &&
-                                window.processTrappingUse({
-                                    trigger: "on_use_scroll",
-                                    trappingId: item.id
-                                });
-                        } else if (item.id === "TRA06") {
-                            // Potion (Trapping): Use to gain health/energy (handled by handleUseItem)
-                            window.handleUseItem &&
-                                window.handleUseItem(item.id);
-                        }
-                    };
-                    cardElement.appendChild(useBtn);
-                }
-                inventorySection.appendChild(cardElement);
             });
+            inventorySection.appendChild(itemWrapper);
+        });
+        // Clicking outside unzooms all
+        document.addEventListener('click', function unzoomAll(e) {
+            if (!inventorySection.contains(e.target)) {
+                const zoomed = inventorySection.querySelector('.inventory-card.zoomed');
+                if (zoomed) {
+                    zoomed.classList.remove('zoomed', 'glow');
+                    const btn = zoomed.parentElement.querySelector('.use-btn');
+                    if (btn) btn.style.display = 'none';
+                }
+                document.removeEventListener('click', unzoomAll);
+            }
+        });
     }
 }
 

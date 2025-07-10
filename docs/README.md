@@ -44,7 +44,7 @@ Starting in the early prototype you can save your progress to the browser's `loc
 
 ### Phase 4: Combat System
 - [x] Simulate dice rolls (2d6), implement rules for doubles
-- [ ] Add energy-expenditure mechanic to boost attack
+- [x] Add energy-expenditure mechanic to boost attack
 - [x] Add enemy defense, HP, attack response logic
 - [x] Apply damage to player/enemy
 - [x] End combat on win/loss

@@ -86,7 +86,7 @@
               <div class="dungeon-card deck" id="slot-deck">
                 <img id="deck-card-image" alt="Dungeon Deck Card" style="display:none;">
               </div>
-              <div class="dungeon-deck-buttons">
+              <div id="room-decision-buttons" class="dungeon-deck-buttons">
                 <button id="resolve-button">Resolve</button>
                 <button id="skip-button">Skip</button>
                 <button id="next-room-btn" style="display:none;">Next Room</button>
@@ -111,7 +111,7 @@
     </section>
 
     <!-- Bottom: Player/Inventory/Log Row -->
-    <section class="bottom-row" style="display:flex;flex-direction:row;gap:2em;width:100%;align-items:flex-start;">
+    <section class="bottom-row" style="display: flex; flex-direction: row; gap: 2em; width: 100%; align-items: flex-start; flex-wrap: wrap;">
       <!-- Player Cards -->
       <div class="player-card-container" style="flex:1;min-width:200px;display:flex;flex-direction:column;align-items:center;">
         <div id="player-cards-row" style="display:flex;flex-direction:row;gap:1em;">

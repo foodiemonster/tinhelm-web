@@ -1,3 +1,4 @@
+import { hideCombatBoard } from './ui.combatBoard.js';
 import { animateDiceRoll } from './ui.dice.js';
 
 /**
@@ -15,12 +16,15 @@ import { animateDiceRoll } from './ui.dice.js';
  * @param {number} [options.dieCount=1] - The number of dice to roll.
  * @param {function(Array<number>|number)} [options.onRoll] - Callback executed after dice are rolled.
  */
-export function showEncounterModal({ title = '', message = '', image, choices = [], onChoice, dieRoll = false, dieCount = 1, onRoll }) {
+export async function showEncounterModal({ title = '', message = '', image, choices = [], onChoice, dieRoll = false, dieCount = 1, onRoll }) {
     const encounterArea = document.getElementById('combat-area');
     if (!encounterArea) {
         console.error('Encounter area (#combat-area) not found.');
         return;
     }
+
+    // Before clearing, unmount any existing React component (like the combat board)
+    await hideCombatBoard();
 
     // Clear previous content (e.g., combat board or another modal)
     encounterArea.innerHTML = '';

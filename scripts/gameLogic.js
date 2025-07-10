@@ -10,6 +10,7 @@ import { applyPassiveEffects, promptForActiveAbilities } from './gameLogic.trapp
 
 // --- Session Log ---
 function logEvent(message) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     if (!gameState.log) gameState.log = [];
     const timestamp = new Date().toLocaleTimeString();
     gameState.log.push(`[${timestamp}] ${message}`);
@@ -17,6 +18,7 @@ function logEvent(message) {
 }
 
 function updateLogUI() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const logPanel = document.getElementById('session-log');
     if (!logPanel) return;
     logPanel.innerHTML = gameState.log.slice(-100).map(msg => `<div>${msg}</div>`).join('');
@@ -30,6 +32,7 @@ if (!gameState.discardPile) {
 }
 
 function discardPreviousRoomAndResult() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const { roomCardId, resultCardId } = gameState.visibleCards || {};
     if (roomCardId) gameState.discardPile.room.push(roomCardId);
     if (resultCardId) gameState.discardPile.result.push(resultCardId);
@@ -42,6 +45,7 @@ function discardPreviousRoomAndResult() {
 // Function to initialize player stats based on selected race and class
 // Sets up all player stats, inventory, and level in gameState, then updates the UI and saves the game.
 function initializePlayer(raceId, classId) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const raceCard = getCardById(raceId);
     const classCard = getCardById(classId);
 
@@ -133,6 +137,7 @@ function initializePlayer(raceId, classId) {
 // Function to start a new dungeon level
 // Increments dungeon level, resets room counter, shuffles decks, updates UI, and saves state.
 function startDungeonLevel() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     gameState.level++;
     gameState.currentRoom = 0;
     shuffleDeck(dungeonDeck);
@@ -144,6 +149,7 @@ function startDungeonLevel() {
 // Function to shuffle a deck (Fisher-Yates algorithm)
 // Used for dungeon and result decks at the start of each level.
 function shuffleDeck(deck) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j] ] = [deck[j], deck[i]]; // Swap elements
@@ -153,6 +159,7 @@ function shuffleDeck(deck) {
 // Function to handle a single room in the dungeon
 // Advances room counter, draws cards, prompts player for resolve/skip, and processes result.
 async function handleRoom() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // --- Always clear Room and Result slots at the very start ---
     displayRoomCard(null);
     displayResultCard(null);
@@ -236,6 +243,7 @@ async function handleRoom() {
 // Function to handle the end of a dungeon level
 // Advances level, consumes food or applies starvation damage, shuffles decks, checks win/loss.
 async function endDungeonLevel() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log(`Ending Dungeon Level ${gameState.level}.`);
     logEvent(`Cleared ${gameState.currentRoom} rooms on Dungeon Level ${gameState.level}.`);
 
@@ -302,6 +310,7 @@ async function endDungeonLevel() {
 // Function to check for win or loss conditions
 // Shows endgame message and returns true if game is over, otherwise false.
 function checkWinLossConditions() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log("Checking win/loss conditions...");
 
     // Loss condition: Health drops to 0 or less
@@ -328,6 +337,7 @@ function checkWinLossConditions() {
 
 // --- Endgame Modal ---
 function showEndgameMessage(message) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const modal = document.getElementById('endgame-message');
     const text = document.getElementById('endgame-text');
     if (modal && text) {
@@ -367,8 +377,10 @@ async function processNextIcon(icons, legendCard, done) {
     const [icon, ...rest] = icons;
     console.log("Resolving icon:", icon);
 
+    // Await the action for the current icon before proceeding
     switch (icon) {
         case 'Enemy': {
+            await hideCombatBoard();
             console.log("Enemy encounter:", legendCard.enemy);
             if (legendCard.enemy && typeof legendCard.enemy === 'string') {
                 const m = legendCard.enemy.match(/^Enemy=(.+)$/);
@@ -390,6 +402,7 @@ async function processNextIcon(icons, legendCard, done) {
             break;
         }
         case 'Loot': {
+            await hideCombatBoard();
             const lootOutcome = legendCard.loot;
             if (lootOutcome && typeof lootOutcome === 'string') {
                 if (lootOutcome === 'Empty') {
@@ -428,6 +441,7 @@ async function processNextIcon(icons, legendCard, done) {
             break;
         }
         case 'Trap': {
+            await hideCombatBoard();
             const trapEffect = legendCard.trap;
             if (trapEffect && typeof trapEffect === 'string') {
                 if (trapEffect !== 'None') {
@@ -453,6 +467,7 @@ async function processNextIcon(icons, legendCard, done) {
             break;
         }
         case 'Campsite': {
+            await hideCombatBoard();
             const campsiteCard = Object.values(getAllCardsData()).find(c => c.name === 'Campsite');
             await new Promise(resolve => {
                 showEncounterModal({
@@ -479,6 +494,7 @@ async function processNextIcon(icons, legendCard, done) {
             break;
         }
         case 'Water': {
+            await hideCombatBoard();
             const gillNetCard = gameState.inventory.find(it => it.id === 'LT01');
             if (gillNetCard) {
                 await new Promise(resolve => {
@@ -522,6 +538,7 @@ async function processNextIcon(icons, legendCard, done) {
             break;
         }
         case 'Treasure': {
+            await hideCombatBoard();
             const t = legendCard.loot;
             if (t === 'GainShard') {
                 await new Promise(resolve => {
@@ -576,6 +593,7 @@ async function processNextIcon(icons, legendCard, done) {
             break;
         }
         case 'Random': {
+            await hideCombatBoard();
             const r = legendCard.random;
             if (r && typeof r === 'string') {
                 const refMatch = r.match(/^Ref=(.+)$/);
@@ -610,10 +628,12 @@ async function processNextIcon(icons, legendCard, done) {
             console.warn("Unknown icon encountered:", icon);
     }
 
+    // After handling the current icon, process the rest.
     await processNextIcon(rest, legendCard, done);
 }
 // Applies special effects based on reference card name (Altar, Grove, etc.).
 async function handleReferenceCard(refCard) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log("Handling Reference Card effect for:", refCard.name);
     await new Promise(async resolve => {
         switch (refCard.name) {
@@ -793,7 +813,8 @@ async function handleReferenceCard(refCard) {
 }
 
 // Function to restore the UI from gameState after loading
-function restoreGameUIFromState() {
+async function restoreGameUIFromState() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     if (!gameState.visibleCards) return;
     const { raceId, classId, inventory, roomCardId, resultCardId, enemyCardId } = gameState.visibleCards;
 
@@ -881,12 +902,16 @@ function restoreGameUIFromState() {
         // Do NOT restore innerHTML, let React render the combat board
         resumeCombat(gameState.encounter.enemyId, gameState.encounter.enemyHp, gameState.encounter.playerHp);
     } else {
-        combatArea.innerHTML = '';
+        if (combatArea) {
+            await hideCombatBoard(); // Ensure React component is unmounted and wait for it
+            combatArea.innerHTML = ''; // Clear non-React content
+        }
     }
 }
 
 // Resume combat logic after loading a save
 function resumeCombat(enemyId, enemyHp, playerHp) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Find the enemy card
     const enemyCard = enemyId ? getCardById(enemyId) : null;
     if (!enemyCard) return;
@@ -947,7 +972,18 @@ showCombatBoard({
     onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }),
     onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }),
     onRoll: (selectedEnergy, cb, ab, forcedRolls) => handleRoll(selectedEnergy, cb, ab, forcedRolls),
-    onClose: () => { hideCombatBoard(); },
+    onClose: () => { 
+        // --- CLEAR ENCOUNTER STATE ON CLOSE ---
+        gameState.encounter = {
+            inProgress: false,
+            enemyId: null,
+            enemyHp: null,
+            playerHp: null,
+            html: ""
+        };
+        hideCombatBoard(); 
+        resolve(); 
+    },
     playerEnergy: gameState.player.energy
 });
 
@@ -1056,8 +1092,7 @@ if (!specialAttack) {
                 inProgress: !isCombatOver,
                 enemyId: enemyCard.id,
                 enemyHp: currentEnemyHealth,
-                playerHp: gameState.player.hp,
-                html: document.getElementById('combat-area')?.innerHTML || ""
+                playerHp: gameState.player.hp
             };
             // Update tracker cubes after any stat change
             updateAllTrackerCubes({
@@ -1076,6 +1111,7 @@ if (!specialAttack) {
 // Function to update player stats (can be used by icon handlers)
 // Updates a stat, clamps values, updates UI, checks for defeat, and saves state.
 function updatePlayerStats(stat, amount) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     if (gameState.player.hasOwnProperty(stat)) {
         gameState.player[stat] += amount;
         // Ensure stats don't go below zero or above max (for health and energy)
@@ -1127,6 +1163,7 @@ function updatePlayerStats(stat, amount) {
  * }
  */
 async function processAllItemEffects(eventContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Ensure discard piles exist
     if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
     if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
@@ -1375,6 +1412,7 @@ async function processAllItemEffects(eventContext) {
 
 // Full combat logic for enemy encounters
 async function initiateCombat(enemyCard) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.log('initiateCombat: gameState.raceId =', gameState.raceId);
 const classCard = getCardById(gameState.classId); // Use class card for combat logic
 console.log('initiateCombat: classCard =', classCard);
@@ -1410,8 +1448,7 @@ gameState.encounter = {
     inProgress: true,
     enemyId: enemyCard.id,
     enemyHp: currentEnemyHealth,
-    playerHp: gameState.player.hp,
-    html: document.getElementById('combat-area')?.innerHTML || ""
+    playerHp: gameState.player.hp
 };
 // Initialize enemy HP tracker
 updateAllTrackerCubes({
@@ -1560,8 +1597,7 @@ if (classData && classData.combatBonusDamageEnergyCost && classData.combatBonusD
                 inProgress: !isCombatOver,
                 enemyId: enemyCard.id,
                 enemyHp: currentEnemyHealth,
-                playerHp: gameState.player.hp,
-                html: document.getElementById('combat-area')?.innerHTML || ""
+                playerHp: gameState.player.hp
             };
 
             updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn, isCombatOver });
@@ -1595,6 +1631,7 @@ showCombatBoard({
 
 // --- Next Room Button Logic ---
 function enableNextRoomButton() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const btn = document.getElementById('next-room-btn');
     const decisionButtons = document.getElementById('room-decision-buttons');
     if (btn && decisionButtons) {
@@ -1610,6 +1647,7 @@ function enableNextRoomButton() {
 }
 
 function disableNextRoomButton() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const btn = document.getElementById('next-room-btn');
     const decisionButtons = document.getElementById('room-decision-buttons');
     if (btn && decisionButtons) {
@@ -1626,6 +1664,7 @@ function disableNextRoomButton() {
 
 // Attach event listener for Next Room button (if not already attached)
 (function setupNextRoomButton() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     const btn = document.getElementById('next-room-btn');
     if (btn && !btn.dataset.bound) {
         btn.addEventListener('click', async () => {
@@ -1665,6 +1704,7 @@ function disableNextRoomButton() {
  * @returns {[number, number]}
  */
 function rollDice() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     console.trace('DEBUG: rollDice called');
     const roll1 = Math.floor(Math.random() * 6) + 1;
     const roll2 = Math.floor(Math.random() * 6) + 1;
@@ -1677,6 +1717,7 @@ function rollDice() {
  * @param {object} eventContext - { trigger, trappingId }
  */
 function processTrappingUse(eventContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Ensure trappings discard pile exists
     if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
     // Only handle Scroll (TRA04) for now
@@ -1721,6 +1762,7 @@ window.processTrappingUse = processTrappingUse;
 // Example: Call after updating player stats (for passive triggers like on_receive_damage)
 const _originalUpdatePlayerStats = updatePlayerStats;
 function updatePlayerStatsWithItems(stat, amount) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     // Before stat update: check for on_receive_damage
     if (stat === 'hp' && amount < 0) {
         processAllItemEffects({ trigger: 'on_receive_damage', damage: Math.abs(amount) });
@@ -1734,6 +1776,7 @@ window.updatePlayerStats = updatePlayerStatsWithItems;
 
 // Example: Call after trap encounter
 function handleTrapEncounter(trapContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'on_trap_encounter', trapContext });
     // ...rest of trap logic
 }
@@ -1741,6 +1784,7 @@ window.handleTrapEncounter = handleTrapEncounter;
 
 // Example: Call after campsite
 function handleCampsite() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'on_campsite' });
     // ...rest of campsite logic
 }
@@ -1748,6 +1792,7 @@ window.handleCampsite = handleCampsite;
 
 // Example: Call after altar
 function handleAltar(altarContext) {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'on_altar', altarContext });
     // ...rest of altar logic
 }
@@ -1755,6 +1800,7 @@ window.handleAltar = handleAltar;
 
             // Handle using items (like potions)
             function handleUseItem(itemId) {
+                hideCombatBoard(); // Unmount React components before showing new modal
                 if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
                 if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
                 const item = getCardById(itemId);
@@ -1803,6 +1849,7 @@ window.handleAltar = handleAltar;
 
             // Handle discarding items (separate from using them)
             function handleDiscardItem(itemId, context = {}) {
+                hideCombatBoard(); // Unmount React components before showing new modal
                 processAllItemEffects({ trigger: 'on_discard', discardItemId: itemId, ...context });
             }
 window.handleDiscardItem = handleDiscardItem;
@@ -1810,6 +1857,7 @@ window.handleUseItem = handleUseItem;
 
 // Example: Call after pigman reference
 function handlePigmanRef() {
+    hideCombatBoard(); // Unmount React components before showing new modal
     processAllItemEffects({ trigger: 'during_ref_pigman' });
     // ...rest of pigman logic
 }

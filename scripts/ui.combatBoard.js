@@ -153,12 +153,15 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
 }
 
 export function hideCombatBoard() {
-    const combatRoot = document.getElementById('combat-area');
-    if (combatRoot && combatRoot._reactRootContainer) {
-        combatRoot._isUnmounted = true;
-        try {
-            combatRoot._reactRootContainer.render(window.React.createElement('div'));
-        } catch (e) {}
-    }
-    // Do NOT clear innerHTML or remove the node!
+    return new Promise(resolve => {
+        const combatRoot = document.getElementById('combat-area');
+        if (combatRoot && combatRoot._reactRootContainer) {
+            combatRoot._reactRootContainer.unmount();
+            combatRoot._reactRootContainer = null;
+            // Give React a moment to clean up before resolving
+            setTimeout(resolve, 50); 
+        } else {
+            resolve(); // Resolve immediately if nothing to unmount
+        }
+    });
 }

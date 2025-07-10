@@ -808,3 +808,23 @@ header, footer {
     padding: 0.5em 0;
   }
 }
+
+/* ====== Pulsing Glow Animation for Tracker Cube ====== */
+@keyframes tracker-cube-glow {
+  0% { box-shadow: 0 0 8px 2px #fff8, 0 0 0px 0px #fff0; }
+  50% { box-shadow: 0 0 24px 8px #fff8, 0 0 8px 2px #fff4; }
+  100% { box-shadow: 0 0 8px 2px #fff8, 0 0 0px 0px #fff0; }
+}
+.tracker-cube {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  z-index: 10;
+  opacity: 1;
+  display: block;
+  pointer-events: auto;
+  animation: tracker-cube-glow 1.8s ease-in-out infinite;
+  /* Color and border will be set by stat-specific classes */
+  transition: transform 0.35s cubic-bezier(0.4,1.4,0.6,1), box-shadow 1.8s ease-in-out;
+}

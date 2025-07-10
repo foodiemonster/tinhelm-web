@@ -380,8 +380,8 @@ export function updateTrackerCube(stat, value) {
   if (!posArr) return;
   let idx = Math.max(0, Math.min(posArr.length-1, value));
   const pos = posArr[idx];
-  cube.style.left = pos.left + 'px';
-  cube.style.top = pos.top + 'px';
+  // Use transform for smooth animation
+  cube.style.transform = `translate(${pos.left}px, ${pos.top}px)`;
   cube.style.display = 'block';
   // Set tooltip for accessibility and hover
   cube.title = value;

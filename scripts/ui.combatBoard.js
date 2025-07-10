@@ -111,11 +111,11 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                             disabled: isCombatOver
                         }, 'Enemy Roll'),
                         window.React.createElement('button', {
-                            id: 'combat-end-btn',
+                            id: 'combat-continue-btn',
                             className: 'combat-btn-end',
                             style: { display: isCombatOver ? 'block' : 'none', alignSelf: 'stretch', marginTop: '1.2em' },
                             onClick: handleEndCombat
-                        }, 'End Combat'),
+                        }, 'Continue'),
                         window.React.createElement('div', {
                             className: 'combat-energy-row' + (isPlayerTurn ? ' energy-row-active' : ' energy-row-inactive'),
                             style: { marginBottom: '0.5em', transition: 'opacity 0.2s, transform 0.2s' }

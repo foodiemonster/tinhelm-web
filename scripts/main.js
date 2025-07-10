@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Show new modal for character selection
     showCharacterModal(raceCards, classCards, (selectedRaceId, selectedClassId) => {
         initializePlayer(selectedRaceId, selectedClassId);
-        startDungeonLevel();
+        // startDungeonLevel(); // Removed: don't increment level at game start
         handleRoom();
         if (dungeonArea) {
             dungeonArea.classList.remove('hidden');

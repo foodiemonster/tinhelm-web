@@ -52,12 +52,23 @@ export function showChoiceModal({ title = '', message = '', choices = [], onChoi
                     `<span class="choice-die" style="font-size:2em;display:inline-block;min-width:1.5em;text-align:center;margin-right:0.3em;">?</span>`
                 ).join('')
             }<div><button id="choice-roll-btn">${dieCount > 1 ? `Roll ${dieCount} Dice` : 'Roll Die'}</button></div></div>` : ''}
-            ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
+            ${choices && choices.length ? `<div class="choice-modal-actions">${choices.map(opt => `<button class="choice-btn modal-confirm-btn" data-value="${opt.value}">${opt.label}</button>`).join('')}</div>` : ''}
           </div>
         `;
     }
     document.body.appendChild(modal);
     console.log("Modal element added to DOM");
+    // Add event listeners for choice buttons (vanilla JS fallback)
+    if (choices && choices.length) {
+        const btns = modal.querySelectorAll('.choice-btn');
+        btns.forEach(btn => {
+            btn.onclick = () => {
+                const value = btn.getAttribute('data-value');
+                if (onChoice) onChoice(value);
+                if (modal.parentNode) modal.parentNode.removeChild(modal);
+            };
+        });
+    }
     if (dieRoll) {
         const rollBtn = document.getElementById('choice-roll-btn');
         let rolled = false;

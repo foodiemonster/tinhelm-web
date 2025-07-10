@@ -262,7 +262,7 @@ async function endDungeonLevel() {
             choices: [
                 { label: 'Proceed to Next Level', value: 'proceed' }
             ],
-            onChoice: (choice) => {
+            onChoice: async (choice) => {
                 if (choice === 'proceed') {
                     // 1. Consume 1 food or take damage
                     if (gameState.player.food > 0) {
@@ -277,6 +277,15 @@ async function endDungeonLevel() {
                     gameState.level++;
                     gameState.currentRoom = 0; // Reset room counter for the new level
                     updateStatDisplay('level', gameState.level);
+                    // Update tracker cube for dungeon level
+                    updateAllTrackerCubes({
+                        hp: gameState.player.hp,
+                        energy: gameState.player.energy,
+                        food: gameState.player.food,
+                        favor: gameState.player.favor,
+                        level: gameState.level,
+                        enemyHp: 0 // or current enemy HP if relevant
+                    });
                     // logEvent(`Proceeding to Dungeon Level ${gameState.level}.`);
 
                     // 3. Reset and reshuffle the dungeon decks
@@ -296,15 +305,16 @@ async function endDungeonLevel() {
                     // logEvent("Dungeon and Result decks have been reset and reshuffled for the new level.");
                     saveGame();
                     checkWinLossConditions(); // Check win/loss after level up
+
+                    // Automatically start the next room (no Next Room button)
+                    await handleRoom();
                 }
                 resolve();
             }
         });
     });
 
-    // After handling level transition, prepare for the next room
-    // logEvent("Ready for the next room. Click 'Next Room' to continue.");
-    enableNextRoomButton();
+    // No need to enableNextRoomButton here; next room is started automatically
 }
 
 // Function to check for win or loss conditions
@@ -1082,7 +1092,6 @@ function updatePlayerStats(stat, amount) {
  */
 async function processAllItemEffects(eventContext) {
     // **FIX**: Removed hideCombatBoard() from here.
-    // ... rest of function is okay
     if (!gameState.lootDiscardPile) gameState.lootDiscardPile = [];
     if (!gameState.trappingsDiscardPile) gameState.trappingsDiscardPile = [];
     const allItems = gameState.inventory.filter(item =>

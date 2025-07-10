@@ -443,6 +443,7 @@ async function processNextIcon(icons, legendCard, done) {
         case 'Trap': {
             await hideCombatBoard();
             const trapEffect = legendCard.trap;
+            let trapMessage = '';
             if (trapEffect && typeof trapEffect === 'string') {
                 if (trapEffect !== 'None') {
                     let trapContext = { bypassed: false, effect: trapEffect };
@@ -452,18 +453,33 @@ async function processNextIcon(icons, legendCard, done) {
                         const enMatch = trapEffect.match(/^EN -(\d+)$/);
                         if (hpMatch && hpMatch[1]) {
                             updatePlayerStats('hp', -parseInt(hpMatch[1], 10));
+                            trapMessage = `A trap was triggered! You lost ${hpMatch[1]} HP.`;
                         } else if (enMatch && enMatch[1]) {
                             updatePlayerStats('energy', -parseInt(enMatch[1], 10));
+                            trapMessage = `A trap was triggered! You lost ${enMatch[1]} Energy.`;
                         } else {
                             console.warn("Could not parse trap effect:", trapEffect);
+                            trapMessage = 'A trap was triggered.';
                         }
                     } else {
                         logEvent('Toolkit: Trap bypassed, no effect.');
+                        trapMessage = 'You bypassed the trap.';
                     }
+                } else {
+                    trapMessage = 'There is no trap effect.';
                 }
             } else {
                 console.warn("Trap icon encountered, but no valid trap effect data found on the legend card.", { trapEffect });
+                trapMessage = 'A trap was encountered, but its effect is unclear.';
             }
+            await new Promise(resolve => {
+                showEncounterModal({
+                    title: 'Trap',
+                    message: trapMessage,
+                    choices: [{ label: 'Continue', value: 'ok' }],
+                    onChoice: resolve
+                });
+            });
             break;
         }
         case 'Campsite': {
@@ -504,6 +520,7 @@ async function processNextIcon(icons, legendCard, done) {
                         image: gillNetCard.image,
                         dieRoll: true,
                         dieCount: 3,
+                        requireContinue: true,
                         onRoll: rolls => {
                             const s = rolls.filter(r => r >= 4).length;
                             if (s > 0) {
@@ -523,6 +540,7 @@ async function processNextIcon(icons, legendCard, done) {
                         message: 'You found a water source. Roll a die: on a 4+, you gain 1 Ration.',
                         dieRoll: true,
                         dieCount: 1,
+                        requireContinue: true,
                         onRoll: roll => {
                             if (roll >= 4) {
                                 updatePlayerStats('food', 1);
@@ -698,6 +716,7 @@ async function handleReferenceCard(refCard) {
                     message: 'The air hums with ancient energy. Roll a die to see what the grove provides.',
                     image: refCard.image,
                     dieRoll: true,
+                    requireContinue: true,
                     onRoll: (roll) => {
                         let foodGained = 0;
                         if (roll === 1) {
@@ -1388,6 +1407,7 @@ async function processAllItemEffects(eventContext) {
                                     message: 'You can use your Toolkit to try and disarm the trap. Roll a die: a 4+ means you succeed!',
                                     image: item.image,
                                     dieRoll: true,
+                                    requireContinue: true,
                                     onRoll: (roll) => {
                                         if (roll >= 4) {
                                             eventContext.trapContext.bypassed = true;

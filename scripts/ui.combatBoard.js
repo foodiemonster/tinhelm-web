@@ -133,6 +133,27 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                                     }
                                 }, energyCost)
                             )
+                        ),
+                        // Axe card and buttons
+                        props.canDiscardAxe && window.React.createElement('div', { className: 'combat-axe-row', style: { display: 'flex', alignItems: 'center', marginTop: '1em' } },
+                            window.React.createElement('img', {
+                                src: 'assets/cards/trappings/TRA01.png',
+                                alt: 'Axe',
+                                className: 'combat-card-img',
+                                style: { width: '60px', height: '90px', marginRight: '1em', border: '2px solid #a52', borderRadius: '6px', background: '#222' }
+                            }),
+                            window.React.createElement('button', {
+                                className: 'combat-axe-btn',
+                                style: { marginRight: '0.5em', display: props.canUseAxeReroll && isPlayerTurn && rolls[0] === rolls[1] && !isCombatOver ? 'inline-block' : 'none' },
+                                onClick: () => props.onAxeReroll && props.onAxeReroll(updateCallback),
+                                disabled: isCombatOver
+                            }, 'Reroll (Axe)'),
+                            window.React.createElement('button', {
+                                className: 'combat-axe-btn',
+                                style: { display: props.canDiscardAxe && isPlayerTurn && !isCombatOver ? 'inline-block' : 'none' },
+                                onClick: () => props.onAxeDiscard && props.onAxeDiscard(updateCallback),
+                                disabled: isCombatOver
+                            }, 'Discard Axe (2d6 dmg)')
                         )
                     )
                 ),

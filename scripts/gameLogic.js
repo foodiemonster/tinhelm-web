@@ -5,6 +5,7 @@ import { showCombatBoard, hideCombatBoard } from './ui.combatBoard.js';
 import { showChoiceModal } from './ui.choiceModal.js';
 import { showEncounterModal } from './ui.encounterModal.js';
 import { applyPassiveEffects, promptForActiveAbilities } from './gameLogic.trappings.js';
+import { handleAbilityTrigger } from './abilityHandler.js';
 
 // Refactored: Use gameState.player and gameState.level instead of local playerStats/currentDungeonLevel
 
@@ -964,9 +965,16 @@ async function resumeCombat(enemyId, enemyHp, playerHp) {
         let isPlayerTurn = true;
         let combatOver = false;
         let axeRerollUsed = false;
-        function canUseAxeReroll() { return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed; }
+        // Track last player roll for Axe reroll logic
+        let lastPlayerRoll = null;
+        function canUseAxeReroll() {
+            // Once per dungeon level, only if player has Axe and hasn't used this level
+            return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
+        }
         function useAxeReroll() { axeRerollUsed = true; }
-        function canDiscardAxe() { return gameState.inventory.some(item => item.id === 'TRA01'); }
+        function canDiscardAxe() {
+            return gameState.inventory.some(item => item.id === 'TRA01');
+        }
         function discardAxe() {
             const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
             if (idx !== -1) gameState.inventory.splice(idx, 1);
@@ -998,11 +1006,27 @@ async function resumeCombat(enemyId, enemyHp, playerHp) {
         });
 
         async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
+            selectedEnergy = Number(selectedEnergy);
             let [roll1, roll2] = forcedRolls ? forcedRolls : rollDice();
-            let context = { inventory: gameState.inventory, roll1, roll2, attackBonus: 0 };
-            context = applyPassiveEffects('on_attack', context);
+            if (isPlayerTurn) lastPlayerRoll = [roll1, roll2];
+            // Centralized ability/effect handling
+            let abilityContext = {
+                inventory: gameState.inventory,
+                enemy: enemyCard,
+                race: getCardById(gameState.raceId),
+                class: classCard,
+                roll1,
+                roll2,
+                attackBonus: 0
+            };
+            // Player attack phase: apply all 'on_attack' effects
+            if (isPlayerTurn) {
+                abilityContext = handleAbilityTrigger('on_attack', abilityContext);
+            } else {
+                // Enemy attack phase: apply all 'on_attack' effects from enemy
+                abilityContext = handleAbilityTrigger('on_attack', { ...abilityContext, inventory: [], class: null, race: null });
+            }
             let message = '';
-            let showRollBtn = true;
             let isCombatOver = false;
             let specialAttack = false;
 
@@ -1030,19 +1054,23 @@ async function resumeCombat(enemyId, enemyHp, playerHp) {
                     if (context.roll1 === context.roll2) {
                         message += ` You rolled doubles (${context.roll1}) and missed!`;
                     } else {
-                        const raw = Math.abs(context.roll1 - context.roll2);
+                        const rawAttack = Math.abs(context.roll1 - context.roll2);
                         const classData = getCardById(gameState.classId);
-                        let bonus = 0;
+                        let bonusDamage = 0;
                         if (classData?.combatBonusDamageEnergyCost && Number(selectedEnergy) > 0) {
                             const costs = classData.combatBonusDamageEnergyCost.map(Number);
                             const bonuses = classData.combatBonusDamage.map(Number);
                             const idx = costs.indexOf(Number(selectedEnergy));
-                            if (idx !== -1) bonus = bonuses[idx];
+                            if (idx !== -1) bonusDamage = bonuses[idx];
                         }
-                        const totalDamage = raw + bonus + (context.attackBonus || 0);
-                        const finalDamage = Math.max(0, totalDamage - enemyCard.defense);
-                        currentEnemyHealth -= finalDamage;
-                        message += ` Rolled ${context.roll1},${context.roll2}. Spent ${selectedEnergy}EN for +${bonus}DMG. Final Damage: ${finalDamage}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                        // Apply ability effects to combat outcome
+                        const totalDamage = rawAttack + bonusDamage + (abilityContext.attackBonus || 0);
+                        const damageAfterDefense = Math.max(0, totalDamage - enemyCard.defense);
+                        currentEnemyHealth -= damageAfterDefense;
+                        if (abilityContext._abilityLogs && abilityContext._abilityLogs.length) {
+                            message += '\n' + abilityContext._abilityLogs.join('\n');
+                        }
+                        message += ` You rolled ${abilityContext.roll1}, ${abilityContext.roll2}. Spent ${selectedEnergy} energy for ${bonusDamage} bonus. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
                     }
                 } else { // Enemy's turn
                     if (context.roll1 === context.roll2) {
@@ -1164,9 +1192,14 @@ async function initiateCombat(enemyCard) {
         let isPlayerTurn = true;
         let axeRerollUsed = false;
 
-        function canUseAxeReroll() { return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed; }
+        function canUseAxeReroll() {
+            // Once per dungeon level, only if player has Axe and hasn't used this level
+            return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
+        }
         function useAxeReroll() { axeRerollUsed = true; }
-        function canDiscardAxe() { return gameState.inventory.some(item => item.id === 'TRA01'); }
+        function canDiscardAxe() {
+            return gameState.inventory.some(item => item.id === 'TRA01');
+        }
         function discardAxe() {
             const idx = gameState.inventory.findIndex(item => item.id === 'TRA01');
             if (idx !== -1) gameState.inventory.splice(idx, 1);
@@ -1176,22 +1209,34 @@ async function initiateCombat(enemyCard) {
         async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
             selectedEnergy = Number(selectedEnergy);
             let [roll1, roll2] = forcedRolls ? forcedRolls : rollDice();
-            let context = { inventory: gameState.inventory, roll1, roll2, attackBonus: 0 };
-            context = applyPassiveEffects('on_attack', context);
+            if (isPlayerTurn) lastPlayerRoll = [roll1, roll2];
+            // Centralized ability/effect handling
+            let abilityContext = {
+                inventory: gameState.inventory,
+                enemy: enemyCard,
+                race: getCardById(gameState.raceId),
+                class: classCard,
+                roll1,
+                roll2,
+                attackBonus: 0
+            };
+            // Player attack phase: apply all 'on_attack' effects
+            if (isPlayerTurn) {
+                abilityContext = handleAbilityTrigger('on_attack', abilityContext);
+            } else {
+                // Enemy attack phase: apply all 'on_attack' effects from enemy
+                abilityContext = handleAbilityTrigger('on_attack', { ...abilityContext, inventory: [], class: null, race: null });
+            }
             let message = '';
             let isCombatOver = false;
             let specialAttack = false;
 
-            if (isPlayerTurn && selectedEnergy > 0) {
-                updatePlayerStats('energy', -selectedEnergy);
-            }
-
+            // Handle Axe abilities
             if (usedAbility) {
                 if (usedAbility.type === 'axe-discard') {
                     discardAxe();
                     const d1 = Math.floor(Math.random() * 6) + 1;
                     const d2 = Math.floor(Math.random() * 6) + 1;
-                    context.roll1 = d1; context.roll2 = d2;
                     const total = d1 + d2;
                     const damage = Math.max(0, total - enemyCard.defense);
                     currentEnemyHealth -= damage;
@@ -1201,7 +1246,7 @@ async function initiateCombat(enemyCard) {
                     useAxeReroll();
                     [roll1, roll2] = rollDice();
                     context.roll1 = roll1; context.roll2 = roll2;
-                    message = `Axe Reroll! New roll: ${roll1}, ${roll2}`;
+                    message = `Axe Reroll! New: ${roll1}, ${roll2}`;
                 }
             }
 
@@ -1211,31 +1256,34 @@ async function initiateCombat(enemyCard) {
                         message += ` You rolled doubles (${context.roll1}) and missed!`;
                     } else {
                         const rawAttack = Math.abs(context.roll1 - context.roll2);
+                        const classData = getCardById(gameState.classId);
                         let bonusDamage = 0;
-                        if (classCard?.combatBonusDamageEnergyCost) {
-                            const energyCosts = classCard.combatBonusDamageEnergyCost.map(Number);
-                            const bonusArray = classCard.combatBonusDamage.map(Number);
-                            const energyIndex = energyCosts.indexOf(selectedEnergy);
-                            if (energyIndex !== -1) {
-                                bonusDamage = bonusArray[energyIndex];
-                            }
+                        if (classData?.combatBonusDamageEnergyCost && Number(selectedEnergy) > 0) {
+                            const costs = classData.combatBonusDamageEnergyCost.map(Number);
+                            const bonuses = classData.combatBonusDamage.map(Number);
+                            const idx = costs.indexOf(Number(selectedEnergy));
+                            if (idx !== -1) bonusDamage = bonuses[idx];
                         }
-                        const totalDamage = rawAttack + bonusDamage + (context.attackBonus || 0);
+                        // Apply ability effects to combat outcome
+                        const totalDamage = rawAttack + bonusDamage + (abilityContext.attackBonus || 0);
                         const damageAfterDefense = Math.max(0, totalDamage - enemyCard.defense);
                         currentEnemyHealth -= damageAfterDefense;
-                        message += ` You rolled ${context.roll1}, ${context.roll2}. Spent ${selectedEnergy} energy for ${bonusDamage} bonus. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                        if (abilityContext._abilityLogs && abilityContext._abilityLogs.length) {
+                            message += '\n' + abilityContext._abilityLogs.join('\n');
+                        }
+                        message += ` You rolled ${abilityContext.roll1}, ${abilityContext.roll2}. Spent ${selectedEnergy} energy for ${bonusDamage} bonus. Damage after defense: ${damageAfterDefense}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
                     }
-                } else { // Enemy turn
+                } else { // Enemy's turn
                     if (context.roll1 === context.roll2) {
-                        message = `${enemyCard.name} rolled doubles (${context.roll1}, ${context.roll2}) and missed!`;
+                        message = `${enemyCard.name} rolled doubles (${context.roll1}) and missed!`;
                     } else {
-                        let damageDealt = Math.abs(context.roll1 - context.roll2) + enemyCard.attack;
-                        updatePlayerStats('hp', -damageDealt);
-                        message = `${enemyCard.name} rolled ${context.roll1}, ${context.roll2}. Damage dealt: ${damageDealt}. Player HP: ${gameState.player.hp}`;
+                        const damage = Math.abs(context.roll1 - context.roll2) + enemyCard.attack;
+                        updatePlayerStats('hp', -damage);
+                        message = `${enemyCard.name} rolled ${context.roll1},${context.roll2}. Dealt ${damage} damage. Player HP: ${gameState.player.hp}`;
                     }
                 }
             }
-
+            
             // Check for combat end
             if (currentEnemyHealth <= 0) {
                 // Dynamically resolve favor if needed
@@ -1252,13 +1300,7 @@ async function initiateCombat(enemyCard) {
             }
 
             isPlayerTurn = !isPlayerTurn;
-            gameState.encounter = {
-                inProgress: !isCombatOver,
-                enemyId: enemyCard.id,
-                enemyHp: currentEnemyHealth,
-                playerHp: gameState.player.hp
-            };
-            
+            gameState.encounter = { inProgress: !isCombatOver, enemyId: enemyCard.id, enemyHp: currentEnemyHealth, playerHp: gameState.player.hp };
             updateAllTrackerCubes({ hp: gameState.player.hp, energy: gameState.player.energy, food: gameState.player.food, favor: gameState.player.favor, level: gameState.level, enemyHp: currentEnemyHealth });
             updateModal({ roll1: context.roll1, roll2: context.roll2, message, showRollBtn: !isCombatOver, isCombatOver });
         }
@@ -1266,11 +1308,29 @@ async function initiateCombat(enemyCard) {
         showCombatBoard({
             classCard: classCard,
             enemyCard,
-            abilities: [], // Simplified for this example
+            abilities: [], // Will be extended for Axe UI
             canUseAxeReroll,
             canDiscardAxe,
-            onAxeReroll: (cb) => handleRoll(0, cb, { type: 'axe-reroll' }),
-            onAxeDiscard: (cb) => handleRoll(0, cb, { type: 'axe-discard' }),
+            onAxeReroll: (cb) => {
+                // Only allow if player rolled doubles and hasn't used reroll this level
+                if (canUseAxeReroll() && isPlayerTurn && lastPlayerRoll && lastPlayerRoll[0] === lastPlayerRoll[1]) {
+                    useAxeReroll();
+                    // Reroll both dice, do not spend energy
+                    handleRoll(0, cb, { type: 'axe-reroll' });
+                }
+            },
+            onAxeDiscard: (cb) => {
+                if (canDiscardAxe() && isPlayerTurn) {
+                    discardAxe();
+                    // Roll 2 dice, sum for damage
+                    const d1 = Math.floor(Math.random() * 6) + 1;
+                    const d2 = Math.floor(Math.random() * 6) + 1;
+                    // Apply as direct damage (ignore defense)
+                    currentEnemyHealth -= (d1 + d2);
+                    let message = `Axe Special! Rolled ${d1}+${d2}=${d1 + d2}. Damage: ${d1 + d2}. Enemy HP: ${Math.max(0, currentEnemyHealth)}`;
+                    cb({ roll1: d1, roll2: d2, message, showRollBtn: false, isCombatOver: currentEnemyHealth <= 0 });
+                }
+            },
             onRoll: handleRoll,
             onClose: async () => {
                 // **FIX**: This is the single point of exit. It cleans up and resolves the promise.

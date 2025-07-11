@@ -191,7 +191,7 @@ export function displayInventory(inventory) {
             itemWrapper.className = 'inventory-item';
 
             const cardElement = document.createElement('div');
-            cardElement.classList.add('inventory-card');
+            cardElement.classList.add('inventory-card', 'tilt-interactive');
             if (item.image) {
                 const img = document.createElement('img');
                 img.src = item.image;
@@ -234,21 +234,41 @@ export function displayInventory(inventory) {
                 // Unzoom any other card
                 if (zoomedCard && zoomedCard !== cardElement) {
                     zoomedCard.classList.remove('zoomed', 'glow');
+                    zoomedCard.classList.add('tilt-interactive');
+                    zoomedCard.style.transform = '';
+                    if (window.enableCardTilt) window.enableCardTilt('.inventory-card.tilt-interactive');
                     const prevBtn = zoomedCard.parentElement.querySelector('.use-btn');
                     if (prevBtn) prevBtn.style.display = 'none';
                 }
                 if (cardElement.classList.contains('zoomed')) {
                     cardElement.classList.remove('zoomed', 'glow');
+                    cardElement.classList.add('tilt-interactive');
+                    if (window.enableCardTilt) window.enableCardTilt('.inventory-card.tilt-interactive');
                     if (useBtn) useBtn.style.display = 'none';
                     zoomedCard = null;
                 } else {
                     cardElement.classList.add('zoomed', 'glow');
+                    cardElement.classList.remove('tilt-interactive');
+                    cardElement.style.transform = '';
+                    if (window.enableCardTilt) window.enableCardTilt('.inventory-card.tilt-interactive');
                     if (useBtn) useBtn.style.display = 'block';
                     zoomedCard = cardElement;
                 }
             });
             inventorySection.appendChild(itemWrapper);
         });
+        // After all inventory cards are rendered, enable tilt effect
+        setTimeout(() => {
+          if (window.enableCardTilt) {
+            try {
+              window.enableCardTilt('.inventory-card.tilt-interactive');
+            } catch (err) {
+              console.error('[TiltEffect] enableCardTilt threw error:', err);
+            }
+          } else {
+            console.warn('[TiltEffect] window.enableCardTilt is not defined!');
+          }
+        }, 0);
         // Clicking outside unzooms all
         document.addEventListener('click', function unzoomAll(e) {
             if (!inventorySection.contains(e.target)) {

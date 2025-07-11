@@ -489,25 +489,46 @@ async function processIcon(icon, legendCard) {
         }
         case 'Campsite': {
             const campsiteCard = Object.values(getAllCardsData()).find(c => c.name === 'Campsite');
-            await showEncounterModal({
-                title: 'Campsite',
-                message: 'You find a moment of respite. Choose your benefit:',
-                image: campsiteCard ? campsiteCard.image : null,
-                choices: [
-                    { label: '+2 HP & +1 Energy', value: 'heal' },
-                    { label: '+1 Food', value: 'food' }
-                ],
-                onChoice: val => {
-                    if (val === 'heal') {
-                        updatePlayerStats('hp', 2);
-                        updatePlayerStats('energy', 1);
-                        // logEvent('Campsite: Gained +2 HP and +1 Energy.');
-                    } else if (val === 'food') {
-                        updatePlayerStats('food', 1);
-                        // logEvent('Campsite: Gained +1 Food.');
+            const raceCard = getCardById(gameState.raceId);
+            const hasBedroll = gameState.inventory.some(item => item.id === 'TRA05');
+            if (raceCard && raceCard.name === 'Gnome') {
+                const gnomeHp = hasBedroll ? 3 : 2;
+                await showEncounterModal({
+                    title: 'Campsite',
+                    message: `Gnome Ability: gain ${gnomeHp} HP, 1 Energy and 1 Food (Gnomes receive both effects)`,
+                    image: campsiteCard ? campsiteCard.image : null,
+                    choices: [
+                        { label: `Gain ${gnomeHp} HP, 1 Energy, and 1 Food`, value: 'gnome' }
+                    ],
+                    onChoice: val => {
+                        if (val === 'gnome') {
+                            updatePlayerStats('hp', gnomeHp);
+                            updatePlayerStats('energy', 1);
+                            updatePlayerStats('food', 1);
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                await showEncounterModal({
+                    title: 'Campsite',
+                    message: 'You find a moment of respite. Choose your benefit:',
+                    image: campsiteCard ? campsiteCard.image : null,
+                    choices: [
+                        { label: `+${hasBedroll ? 3 : 2} HP & +1 Energy`, value: 'heal' },
+                        { label: '+1 Food', value: 'food' }
+                    ],
+                    onChoice: val => {
+                        // Re-check Bedroll at the moment of choice to ensure accuracy
+                        const hasBedrollNow = gameState.inventory.some(item => item.id === 'TRA05');
+                        if (val === 'heal') {
+                            updatePlayerStats('hp', hasBedrollNow ? 3 : 2);
+                            updatePlayerStats('energy', 1);
+                        } else if (val === 'food') {
+                            updatePlayerStats('food', 1);
+                        }
+                    }
+                });
+            }
             break;
         }
         case 'Water': {
@@ -695,23 +716,46 @@ async function handleReferenceCard(refCard) {
             break;
     case 'Campsite': // Note: Campsite is also a direct icon, but can appear via Random
         const campsiteCard = Object.values(getAllCardsData()).find(c => c.name === 'Campsite');
-        await showEncounterModal({
-            title: 'Campsite',
-            message: 'You find a moment of respite. Choose your benefit:',
-            image: campsiteCard ? campsiteCard.image : null,
-            choices: [
-                { label: '+2 HP & +1 Energy', value: 'heal' },
-                { label: '+1 Food', value: 'food' }
-            ],
-            onChoice: val => {
-                if (val === 'heal') {
-                    updatePlayerStats('hp', 2);
-                    updatePlayerStats('energy', 1);
-                } else if (val === 'food') {
-                    updatePlayerStats('food', 1);
+        const raceCard = getCardById(gameState.raceId);
+        const hasBedroll = gameState.inventory.some(item => item.id === 'TRA05');
+        if (raceCard && raceCard.name === 'Gnome') {
+            const gnomeHp = hasBedroll ? 3 : 2;
+            await showEncounterModal({
+                title: 'Campsite',
+                message: `Gnome Ability: gain ${gnomeHp} HP, 1 Energy and 1 Food (Gnomes receive both effects)`,
+                image: campsiteCard ? campsiteCard.image : null,
+                choices: [
+                    { label: `Gain ${gnomeHp} HP, 1 Energy, and 1 Food`, value: 'gnome' }
+                ],
+                onChoice: val => {
+                    if (val === 'gnome') {
+                        updatePlayerStats('hp', gnomeHp);
+                        updatePlayerStats('energy', 1);
+                        updatePlayerStats('food', 1);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            await showEncounterModal({
+                title: 'Campsite',
+                message: 'You find a moment of respite. Choose your benefit:',
+                image: campsiteCard ? campsiteCard.image : null,
+                choices: [
+                    { label: `+${hasBedroll ? 3 : 2} HP & +1 Energy`, value: 'heal' },
+                    { label: '+1 Food', value: 'food' }
+                ],
+                onChoice: val => {
+                    // Re-check Bedroll at the moment of choice to ensure accuracy
+                    const hasBedrollNow = gameState.inventory.some(item => item.id === 'TRA05');
+                    if (val === 'heal') {
+                        updatePlayerStats('hp', hasBedrollNow ? 3 : 2);
+                        updatePlayerStats('energy', 1);
+                    } else if (val === 'food') {
+                        updatePlayerStats('food', 1);
+                    }
+                }
+            });
+        }
         break;
         case 'Grove':
             await showEncounterModal({

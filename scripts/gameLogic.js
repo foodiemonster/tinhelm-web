@@ -1191,9 +1191,9 @@ async function initiateCombat(enemyCard) {
     await new Promise((resolve) => {
         let isPlayerTurn = true;
         let axeRerollUsed = false;
-        // Track last player roll for Axe reroll logic
+        let awaitingPlayerContinue = false;
         let lastPlayerRoll = null;
-
+        // Move helper functions above handleRoll so they are always defined
         function canUseAxeReroll() {
             // Once per dungeon level, only if player has Axe and hasn't used this level
             return gameState.inventory.some(item => item.id === 'TRA01') && !axeRerollUsed;
@@ -1207,7 +1207,7 @@ async function initiateCombat(enemyCard) {
             if (idx !== -1) gameState.inventory.splice(idx, 1);
             displayInventory(gameState.inventory);
         }
-        
+
         async function handleRoll(selectedEnergy, updateModal, usedAbility, forcedRolls) {
             selectedEnergy = Number(selectedEnergy);
             let [roll1, roll2] = forcedRolls ? forcedRolls : rollDice();
@@ -1285,7 +1285,7 @@ async function initiateCombat(enemyCard) {
                     }
                 }
             }
-            
+
             // Check for combat end
             if (currentEnemyHealth <= 0) {
                 // Dynamically resolve favor if needed
@@ -1301,6 +1301,20 @@ async function initiateCombat(enemyCard) {
                 isCombatOver = true;
             }
 
+            // --- PAUSE after player turn, before enemy turn ---
+            if (isPlayerTurn && !isCombatOver) {
+                awaitingPlayerContinue = true;
+                // Show the result and allow Axe reroll if eligible (doubles)
+                const rolledDoubles = abilityContext.roll1 === abilityContext.roll2;
+                const canShowAxeReroll = canUseAxeReroll() && lastPlayerRoll && lastPlayerRoll[0] === lastPlayerRoll[1];
+                gameState.encounter = { inProgress: true, enemyId: enemyCard.id, enemyHp: currentEnemyHealth, playerHp: gameState.player.hp };
+                updateAllTrackerCubes({ hp: gameState.player.hp, energy: gameState.player.energy, food: gameState.player.food, favor: gameState.player.favor, level: gameState.level, enemyHp: currentEnemyHealth });
+                updateModal({ roll1: abilityContext.roll1, roll2: abilityContext.roll2, message, showRollBtn: true, isCombatOver: false, canUseAxeReroll: canShowAxeReroll });
+                // Wait for player to click Continue or use Axe reroll
+                return;
+            }
+
+            // --- Enemy turn or combat over ---
             isPlayerTurn = !isPlayerTurn;
             gameState.encounter = { inProgress: !isCombatOver, enemyId: enemyCard.id, enemyHp: currentEnemyHealth, playerHp: gameState.player.hp };
             updateAllTrackerCubes({ hp: gameState.player.hp, energy: gameState.player.energy, food: gameState.player.food, favor: gameState.player.favor, level: gameState.level, enemyHp: currentEnemyHealth });
@@ -1314,8 +1328,9 @@ async function initiateCombat(enemyCard) {
             canUseAxeReroll,
             canDiscardAxe,
             onAxeReroll: (cb) => {
-                // Only allow if player rolled doubles and hasn't used reroll this level
-                if (canUseAxeReroll() && isPlayerTurn && lastPlayerRoll && lastPlayerRoll[0] === lastPlayerRoll[1]) {
+                // Only allow if player rolled doubles and hasn't used reroll this level and we're awaiting player input
+                if (canUseAxeReroll() && isPlayerTurn && lastPlayerRoll && lastPlayerRoll[0] === lastPlayerRoll[1] && awaitingPlayerContinue) {
+                    awaitingPlayerContinue = false;
                     useAxeReroll();
                     // Reroll both dice, do not spend energy
                     handleRoll(0, cb, { type: 'axe-reroll' });
@@ -1333,7 +1348,16 @@ async function initiateCombat(enemyCard) {
                     cb({ roll1: d1, roll2: d2, message, showRollBtn: false, isCombatOver: currentEnemyHealth <= 0 });
                 }
             },
-            onRoll: handleRoll,
+            onRoll: (selectedEnergy, cb, ab, forcedRolls) => {
+                if (awaitingPlayerContinue) {
+                    // Player clicked Continue after seeing their roll, now advance to enemy turn
+                    awaitingPlayerContinue = false;
+                    isPlayerTurn = false;
+                    handleRoll(selectedEnergy, cb, ab, forcedRolls);
+                } else {
+                    handleRoll(selectedEnergy, cb, ab, forcedRolls);
+                }
+            },
             onClose: async () => {
                 // **FIX**: This is the single point of exit. It cleans up and resolves the promise.
                 gameState.encounter = { inProgress: false, enemyId: null, enemyHp: null, playerHp: null };

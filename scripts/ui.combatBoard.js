@@ -144,7 +144,7 @@ export function showCombatBoard({ classCard, enemyCard, abilities, canUseAxeRero
                             }),
                             window.React.createElement('button', {
                                 className: 'combat-axe-btn',
-                                style: { marginRight: '0.5em', display: props.canUseAxeReroll && isPlayerTurn && rolls[0] === rolls[1] && !isCombatOver ? 'inline-block' : 'none' },
+                                style: { marginRight: '0.5em', display: props.canUseAxeReroll ? 'inline-block' : 'none' },
                                 onClick: () => props.onAxeReroll && props.onAxeReroll(updateCallback),
                                 disabled: isCombatOver
                             }, 'Reroll (Axe)'),

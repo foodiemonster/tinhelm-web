@@ -407,6 +407,19 @@ async function processIcon(icon, legendCard) {
         }
         case 'Loot': {
             const lootOutcome = legendCard.loot;
+            // Special case: RES_08 (Sanctum) loot triggers Mimic combat
+            if (legendCard.id === 'RES_08' && lootOutcome === 'Enemy=Mimic') {
+                const mimicCard = Object.values(getAllCardsData()).find(c => c.id === 'ENE02');
+                if (mimicCard) {
+                    await initiateCombat(mimicCard);
+                } else {
+                    await showEncounterModal({
+                        title: 'Mimic!',
+                        message: 'A Mimic appears, but its card could not be found!'
+                    });
+                }
+                break;
+            }
             if (lootOutcome && typeof lootOutcome === 'string') {
                 if (lootOutcome === 'Empty') {
                     await showEncounterModal({
@@ -536,6 +549,19 @@ async function processIcon(icon, legendCard) {
             break;
         }
         case 'Treasure': {
+            // Special case: RES_08 (Sanctum) treasure triggers Mimic combat
+            if (legendCard.id === 'RES_08' && legendCard.loot === 'Enemy=Mimic') {
+                const mimicCard = Object.values(getAllCardsData()).find(c => c.id === 'ENE02');
+                if (mimicCard) {
+                    await initiateCombat(mimicCard);
+                } else {
+                    await showEncounterModal({
+                        title: 'Mimic!',
+                        message: 'A Mimic appears, but its card could not be found!'
+                    });
+                }
+                break;
+            }
             const t = legendCard.loot;
             if (t === 'GainShard') {
                 await showEncounterModal({

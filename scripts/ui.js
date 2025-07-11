@@ -426,6 +426,11 @@ export function updateTrackerCube(stat, value) {
   if (!posArr) return;
   let idx = Math.max(0, Math.min(posArr.length-1, value));
   const pos = posArr[idx];
+  if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') {
+    console.warn(`[updateTrackerCube] No position for stat '${stat}' at value`, value, pos);
+    cube.style.display = 'none';
+    return;
+  }
   // Use transform for smooth animation
   cube.style.transform = `translate(${pos.left}px, ${pos.top}px)`;
   cube.style.display = 'block';

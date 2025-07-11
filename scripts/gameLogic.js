@@ -1057,8 +1057,13 @@ async function resumeCombat(enemyId, enemyHp, playerHp) {
             
             // Check for combat end
             if (currentEnemyHealth <= 0) {
-                message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
-                updatePlayerStats('favor', enemyCard.favor);
+                // Dynamically resolve favor if needed
+                let favorValue = enemyCard.favor;
+                if (typeof favorValue === 'string' && favorValue.toLowerCase().includes('equalsdungeonlevel')) {
+                    favorValue = gameState.level;
+                }
+                message += `\n${enemyCard.name} defeated! Gained ${favorValue} favor.`;
+                updatePlayerStats('favor', favorValue);
                 isCombatOver = true;
             } else if (gameState.player.hp <= 0) {
                 message += `\nYou were defeated by ${enemyCard.name}!`;
@@ -1231,9 +1236,15 @@ async function initiateCombat(enemyCard) {
                 }
             }
 
+            // Check for combat end
             if (currentEnemyHealth <= 0) {
-                message += `\n${enemyCard.name} defeated! Gained ${enemyCard.favor} favor.`;
-                updatePlayerStats('favor', enemyCard.favor);
+                // Dynamically resolve favor if needed
+                let favorValue = enemyCard.favor;
+                if (typeof favorValue === 'string' && favorValue.toLowerCase().includes('equalsdungeonlevel')) {
+                    favorValue = gameState.level;
+                }
+                message += `\n${enemyCard.name} defeated! Gained ${favorValue} favor.`;
+                updatePlayerStats('favor', favorValue);
                 isCombatOver = true;
             } else if (gameState.player.hp <= 0) {
                 message += `\nYou were defeated by ${enemyCard.name}!`;

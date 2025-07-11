@@ -17,8 +17,8 @@ window.enableCardTilt = function(selector = '.tilt-interactive') {
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
       // Tilt AWAY from mouse (pressed-in effect)
-      const rotateY = -((x - centerX) / centerX) * 12;
-      const rotateX = ((y - centerY) / centerY) * 12;
+      const rotateY = -((x - centerX) / centerX) * 15;
+      const rotateX = ((y - centerY) / centerY) * 15;
       let scale = 1.06;
       card.style.transform = `scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
     });
